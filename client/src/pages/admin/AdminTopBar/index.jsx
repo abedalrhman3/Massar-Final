@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import SearchBar from "../../components/SearchBar/SearchBar";
-import NotificationDropdown from "../../components/NotificationDropdown/NotificationDropdown";
+import SearchBar from "@/components/SearchBar/SearchBar";
+import NotificationDropdown from "@/components/NotificationDropdown/NotificationDropdown";
 import styles from "./AdminTopBar.module.css";
 
 const USER_PROFILE_KEY = "massar_user_profile";

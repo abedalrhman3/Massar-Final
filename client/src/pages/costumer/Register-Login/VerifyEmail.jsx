@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import styles from "./ForgotPassword.module.css";
+import client from "../../../api/client";
 
 const VerifyEmail = () => {
   const { token } = useParams();
@@ -10,21 +11,14 @@ const VerifyEmail = () => {
   useEffect(() => {
     const verify = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:5000/api/auth/verify-email/${token}`,
-        );
-        const data = await res.json();
-
-        if (data.success) {
-          setStatus("success");
-          setMessage(data.message);
-        } else {
-          setStatus("error");
-          setMessage(data.message);
-        }
-      } catch {
+        const res = await client.get(`/auth/verify-email/${token}`);
+        setStatus("success");
+        setMessage(res.data.message || "Your email has been verified.");
+      } catch (err) {
         setStatus("error");
-        setMessage("Network error. Please try again.");
+        setMessage(
+          err.response?.data?.message || "Verification failed. The link may have expired."
+        );
       }
     };
 

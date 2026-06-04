@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { destinations as initialDestinations } from "../../data/destinations";
+import { destinations as initialDestinations } from "@/data/destinations";
 import styles from "./DestinationsManagement.module.css";
-import * as destinationService from "../../services/destinationService";
+import * as destinationService from "@/services/destinationService";
 
 const STORAGE_KEY = "massar_destinations";
 

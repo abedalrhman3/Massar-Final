@@ -1,24 +1,18 @@
 import axios from 'axios';
-import storage from '../utils/storage';
 
-// ← غيّر هذا إلى IP جهازك: ipconfig في Windows ثم ابحث عن IPv4
-// في الإنتاج: 'https://your-domain.com'
-export const BASE_URL = 'https://1eac29fa4737bc.lhr.life'; // Direct Local IP
-// export const BASE_URL = 'http://192.168.1.x:5000'; // جهاز حقيقي
+export const BASE_URL = import.meta.env.VITE_API_URL;
 
-const api = axios.create({ baseURL: BASE_URL, timeout: 15000 });
+const api = axios.create({
+  baseURL: `${BASE_URL}/api`,
+  timeout: 15000,
+  withCredentials: true, // send HTTPOnly cookie on every request
+});
 
-api.interceptors.request.use(async (config) => {
-  try {
-    // Bypass localtunnel anti-phishing reminder page for API requests
+api.interceptors.request.use((config) => {
+  // Strip localtunnel's anti-phishing interstitial in dev
+  if (import.meta.env.DEV) {
     config.headers['Bypass-Tunnel-Reminder'] = 'true';
-
-    const user = await storage.getItem('massair_user');
-    if (user) {
-      const parsed = JSON.parse(user);
-      config.headers['x-user-id'] = parsed._id;
-    }
-  } catch (_) { }
+  }
   return config;
 });
 

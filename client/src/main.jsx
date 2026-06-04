@@ -19,6 +19,7 @@ import "./i18n";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from './context/AuthContext';
 import App from "./App.jsx";
 
 // FIXED: Added the .jsx extension so Vite knows exactly how to parse this file
@@ -28,7 +29,9 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary message="The application encountered a critical error. Please refresh the page.">
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,

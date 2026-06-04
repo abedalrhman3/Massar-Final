@@ -2,41 +2,35 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Input from "./input.jsx";
 import styles from "./ForgotPassword.module.css";
+import client from "../../../api/client";
 
 const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
 
   const [password, setPassword] = useState("");
-  const [valid, setValid] = useState(false);
+  const [isPasswordValid, setPasswordValid] = useState(false);
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!valid) return;
+    if (!isPasswordValid) return;
+
+    setMessage("");
+    setIsLoading(true);
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
-        },
-      );
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setMessage(data.message || "Reset failed");
-        return;
-      }
-
-      setMessage("Password updated successfully!");
-
+      await client.post(`/auth/reset-password/${token}`, { password });
+      setIsError(false);
+      setMessage("Password updated successfully! Redirecting to login...");
       setTimeout(() => navigate("/"), 2000);
-    } catch {
-      setMessage("Network error");
+    } catch (err) {
+      setIsError(true);
+      setMessage(err.response?.data?.message || "Reset failed. The link may have expired.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -45,6 +39,9 @@ const ResetPassword = () => {
       <div className={styles.card}>
         <form onSubmit={handleSubmit}>
           <h1>Reset Password</h1>
+          <h6 className={styles.informationText}>
+            Enter your new password below.
+          </h6>
 
           <Input
             type="password"
@@ -52,13 +49,21 @@ const ResetPassword = () => {
             value={password}
             setValue={setPassword}
             enableStrength
-            onValidChange={setValid}
+            onValidChange={setPasswordValid}
           />
 
-          {message && <p>{message}</p>}
+          {message && (
+            <p className={isError ? styles.errorMsg : styles.successMsg}>
+              {message}
+            </p>
+          )}
 
-          <button type="submit" className={styles.submitBtn} disabled={!valid}>
-            Update Password
+          <button
+            type="submit"
+            className={styles.submitBtn}
+            disabled={!isPasswordValid || isLoading}
+          >
+            {isLoading ? "Updating..." : "Update Password"}
           </button>
         </form>
       </div>

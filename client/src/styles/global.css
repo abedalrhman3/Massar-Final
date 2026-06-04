@@ -1,8 +1,8 @@
-
 html {
     /* 1ren = 10px */
-    font-size : 62.5%;
+    font-size: 62.5%;
 }
+
 body {
     min-height: 100vh;
     font-family: var(--font-body), serif;

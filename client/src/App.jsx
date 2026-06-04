@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Home from "./pages/costumer/Home/Home";
 import About from "./pages/costumer/About/About";
 import DestinationDetails from "./pages/costumer/DestinationsDetails/DestinationDetails";
@@ -26,44 +27,39 @@ import Settings from "./pages/admin/Settings";
 import AdminUserProfile from "./pages/admin/UserProfile";
 import AdminChat from "./pages/admin/AdminChat";
 
-// Chatbot Component
+// Shared Components
 import Chatbot from "./components/Chatbot/Chatbot";
-
-// Footer Component
 import Footer from "./components/Footer/Footer";
-
-// Navbar Component
 import Navbar from "./components/Navbar/Navbar";
-
-// Error Boundary Component
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 
-// ── Private Route Guard for User Dashboard ────────────────────────
+// ── Private Route Guard — requires logged-in user ────────────────
 const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+  if (loading) return null; // AuthProvider already blocks render until resolved
+  return user ? children : <Navigate to="/login" replace />;
 };
 
-// ── Admin Route Guard ─────────────────────────────────────────────
-function isAdmin() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  return user.is_admin === true;
-}
+const testEnv = import.meta.env.VITE_API_URL;
+console.log(testEnv);
 
-function AdminGuard() {
-  return isAdmin() ? <AdminLayout /> : <Navigate to="/login" replace />;
-}
-
-// ── Customer Layout (Includes Navbar & Footer) ─────────────────────────────
-const CustomerLayout = () => {
-  return (
-    <>
-      <Navbar />
-      <Outlet />
-      <Footer />
-    </>
-  );
+// ── Admin Route Guard — requires admin role ───────────────────────
+const AdminGuard = () => {
+  const { user, isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <AdminLayout />;
 };
+
+// ── Customer Layout (Navbar + Footer) ────────────────────────────
+const CustomerLayout = () => (
+  <>
+    <Navbar />
+    <Outlet />
+    <Footer />
+  </>
+);
 
 function App() {
   return (
@@ -115,7 +111,7 @@ function App() {
           />
         </Route>
 
-        {/* ── Register-Login Pages ──────────────────────────────── */}
+        {/* ── Auth Pages ────────────────────────────────────────── */}
         <Route path="/login" element={<RegisterLogin />} />
         <Route path="/register" element={<RegisterLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -160,7 +156,7 @@ function App() {
           <Route path="chat" element={<AdminChat />} />
         </Route>
 
-        {/* Fallback redirect */}
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Chatbot />

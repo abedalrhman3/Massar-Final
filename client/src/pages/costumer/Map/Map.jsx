@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import CheckInModal from "./CheckInModal";
 import LocationReviews from "./LocationReviews";
 import styles from "./Map.module.css";
-
-const SERVER = "http://localhost:5000";
+import { getLocations } from "../../../api/locations";
+import { getQuests } from "../../../api/quests";
+import { useAuth } from "../../../context/AuthContext";
+import { BASE_URL } from "../../../api/client";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -38,10 +39,10 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
       if (!position) {
         try {
           map.flyTo(e.latlng, 14);
-        } catch (_) {}
+        } catch (_) { }
       }
     },
-    locationerror() {},
+    locationerror() { },
   });
 
   useEffect(() => {
@@ -52,12 +53,11 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
   if (!position) return null;
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-  const avatarSrc = userAvatarUrl ? `${SERVER}${userAvatarUrl}` : defaultAvatar;
+  const avatarSrc = userAvatarUrl ? `${BASE_URL}${userAvatarUrl}` : defaultAvatar;
 
   const avatarIcon = new L.divIcon({
-    html: `<img src="${avatarSrc}" class="user-avatar-marker ${
-      isCelebrating ? "celebrate-animation" : ""
-    }" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1B56FD; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); object-fit: cover;" />`,
+    html: `<img src="${avatarSrc}" class="user-avatar-marker ${isCelebrating ? "celebrate-animation" : ""
+      }" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1B56FD; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); object-fit: cover;" />`,
     className: "custom-avatar-container",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -94,8 +94,8 @@ const Map = () => {
   const [manualPos, setManualPos] = useState(null);
   const [autoPos, setAutoPos] = useState(null);
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
 
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const userPosition = manualMode ? manualPos : autoPos;
 
   const triggerCelebration = () => {
@@ -104,23 +104,21 @@ const Map = () => {
   };
 
   useEffect(() => {
-    const url =
-      budget && budget !== "All"
-        ? `${SERVER}/api/locations?budgetCategory=${budget}`
-        : `${SERVER}/api/locations`;
-    axios
-      .get(url)
-      .then((res) => setLocations(res.data))
-      .catch(() => {});
-    axios
-      .get(`${SERVER}/api/quests`)
-      .then((res) => setQuests(res.data))
-      .catch(() => {});
+    // getLocations returns a plain array (res.data = Location[]) per your api comment
+    const params = budget && budget !== "All" ? { budgetCategory: budget } : {};
+    getLocations(params)
+      .then((res) => setLocations(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setLocations([]));
+
+    // getQuests returns { success, data: Quest[] }
+    getQuests()
+      .then((res) => setQuests(res.data?.data ?? []))
+      .catch(() => setQuests([]));
   }, [budget]);
 
   const createQuestIcon = (url) =>
     new L.Icon({
-      iconUrl: `${SERVER}${url}`,
+      iconUrl: `${BASE_URL}${url}`,
       iconSize: [40, 40],
       className: "quest-map-icon",
     });
@@ -199,7 +197,7 @@ const Map = () => {
             <AutoLocationTracker
               onFound={setAutoPos}
               isCelebrating={isCelebrating}
-              userAvatarUrl={currentUser.avatar_url}
+              userAvatarUrl={user?.avatar_url}
             />
           )}
 
@@ -281,9 +279,7 @@ const Map = () => {
               <Marker
                 key={quest._id}
                 position={[quest.start_coordinates.lat, quest.start_coordinates.lng]}
-                icon={
-                  quest.icon_url ? createQuestIcon(quest.icon_url) : new L.Icon.Default()
-                }
+                icon={quest.icon_url ? createQuestIcon(quest.icon_url) : new L.Icon.Default()}
               >
                 <Popup>
                   <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
@@ -307,7 +303,7 @@ const Map = () => {
       {activeLocation && (
         <CheckInModal
           location={activeLocation}
-          currentUser={currentUser}
+          currentUser={user}
           manualPosition={userPosition}
           onClose={() => setActiveLocation(null)}
           onCheckInSuccess={() => {
