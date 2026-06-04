@@ -1,0 +1,6 @@
+get local host run 
+use ssh -R 80:127.0.0.1:5000 nokey@localhost.run in server 
+to run mobile app 
+use npx expo star --tunnel -c in mobile client and don't forgot to change the base url in client.js in mobile file 
+to run a fornt in client in massiar use npm run dev or npm start 
+to run a back or aser in maair go to server and use npm run dev or npm start 

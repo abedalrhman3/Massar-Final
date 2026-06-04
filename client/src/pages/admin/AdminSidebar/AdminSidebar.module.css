@@ -1,0 +1,85 @@
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: #F9F2F2;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.25rem;
+  z-index: 100;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.brand {
+  margin-bottom: 2.5rem;
+  padding: 0 0.5rem;
+}
+
+.logo {
+  font-family: 'Newsreader', 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-style: italic;
+  color: #1D1B1B;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  text-transform: uppercase;
+  margin: 0.2rem 0 0 0;
+}
+
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: #1749D6;
+}
+
+.navItem .material-symbols-outlined {
+  font-size: 1.2rem;
+}
+
+.navItem.active {
+  background: #ffffff;
+  color: #1B56FD;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1.5rem;
+}

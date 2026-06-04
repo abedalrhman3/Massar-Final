@@ -1,0 +1,8 @@
+.map-view {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+}

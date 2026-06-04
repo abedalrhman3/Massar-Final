@@ -1,0 +1,37 @@
+
+.main {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+.map-view {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background-color: green;
+
+}
+.left-panel {
+    width: 70rem;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    overflow-y: auto;
+    background-color: var(--color-primary);
+}
+.right-panel {
+    width: 70rem;
+    height: 30rem;
+    position: absolute;
+    right: 4%;
+    bottom: 2rem;
+    z-index: 10;
+    background-color: var(--color-primary);
+    border-radius: var(--radius-lg);
+}

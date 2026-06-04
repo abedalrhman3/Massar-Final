@@ -1,0 +1,43 @@
+:root {
+    /* Fonts */
+    /*
+        font-ui : Logo, links, and buttons.
+        font-body : headers and paragraphs.
+    */
+    --font-ui: 'Inter', sans-serif;
+    --font-body: 'Playfair Display', sans-serif;
+
+    /* Colors */
+    --color-black: #000000;
+    --color-white: #FFFFFF;
+    --color-primary: #FFF8F8;
+    --color-secondary: #E9DFC3;
+    --color-main-blue: #1B56FD;
+    --color-dark-blue: #7AAACE;
+    --color-pale-blue: #9CD5FF;
+
+    /* Missing — derived from design */
+    --color-accent: var(--color-main-blue);
+    /* #1B56FD — buttons, active tabs, highlights */
+    --color-border: #E8E8E8;
+    /* light gray — dividers, card borders */
+    --color-text-secondary: #8A8A8A;
+    /* medium gray — subtitles, addresses, meta */
+
+    /* Border Radius */
+    --radius-md: 25px;
+    --radius-lg: 30px;
+    --radius-hero: 50px;
+    --radius-bg: 100px;
+
+    /* Border Wight */
+    --border-wight-lg: 5px;
+
+    /* Font Size  */
+    --font-size-header: 6.4rem;
+    --font-size-title: 2rem;
+    --font-size-xl: 1.6rem;
+    --font-size-lg: 1.4rem;
+    --font-size-md: 1.2rem;
+    --font-size-sm: 0.8rem;
+}

@@ -1,0 +1,74 @@
+.eb-wrapper {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: var(--font-ui, sans-serif);
+}
+
+.eb-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: 3rem 2.5rem;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.eb-icon {
+  font-size: 3rem;
+  color: var(--color-main-blue, #4a6cf7);
+  margin-bottom: 1.25rem;
+}
+
+.eb-title {
+  font-family: var(--font-body, serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.75rem;
+}
+
+.eb-message {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.eb-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.eb-btn {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.eb-btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.eb-btn-primary {
+  background: var(--color-main-blue, #4a6cf7);
+  color: white;
+}
+
+.eb-btn-secondary {
+  background: transparent;
+  color: var(--color-main-blue, #4a6cf7);
+  border: 2px solid var(--color-main-blue, #4a6cf7);
+}

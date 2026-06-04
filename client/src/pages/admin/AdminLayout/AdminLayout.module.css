@@ -1,0 +1,19 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #FFF8F8;
+}
+
+.content {
+  margin-left: 220px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}

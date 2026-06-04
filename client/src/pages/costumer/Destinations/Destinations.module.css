@@ -1,0 +1,53 @@
+.toursPage {
+  padding: 4rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.toursHero {
+  text-align: center;
+  padding-top: 120px;
+  padding-bottom: 60px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.toursHero h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.toursGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.toursMore {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 40px auto 0;
+  padding: 12px 40px;
+  background: white;
+  border: 2px solid #2d6bff;
+  color: #2d6bff;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: "Playfair Display", serif;
+  white-space: nowrap;
+  height: 50px;
+  width: 150px;
+}
+
+.toursMore:hover {
+  background: #2d6bff;
+  color: white;
+}

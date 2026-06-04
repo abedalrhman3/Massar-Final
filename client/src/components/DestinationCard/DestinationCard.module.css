@@ -1,0 +1,58 @@
+.destCard {
+  width: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.destCardImg {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.destCardBody {
+  padding: 12px;
+}
+
+.destCardName {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.destCardDesc {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.destCardRating {
+  color: #f5a623;
+  font-size: 14px;
+}
+
+.destCardRatingLabel {
+  color: black;
+  font-weight: normal;
+  font-family: var(--font-ui);
+}
+
+.destCardLikes {
+  color: #555;
+  font-size: 14px;
+}
+
+.destCardLikes i {
+  cursor: pointer;
+}
+
+.destCardFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #333;
+}

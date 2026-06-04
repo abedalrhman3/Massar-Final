@@ -1,0 +1,385 @@
+.section {
+    width: 100%;
+    padding: 1.6rem 2rem;
+    border-top: 1px solid hsl(0, 0%, 50%, 0.5);
+}
+
+.section-title {
+    font-family: var(--font-body);
+    font-size: var(--font-size-title);
+    font-weight: 800;
+    color: var(--color-black);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.4rem;
+    flex-wrap: wrap;
+}
+
+.count-badge {
+    background: var(--color-main-blue);
+    color: var(--color-white);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.15rem 0.75rem;
+    line-height: 1.6;
+}
+
+.sort-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0;
+    transition: color 0.15s;
+    
+}
+
+.sort-btn:hover { background-color: var(--color-main-blue); }
+
+.composer {
+    background: #f3f3f3;
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.composer-input {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--color-black);
+    resize: none;
+    min-height: 3.5rem;
+    line-height: 1.6;
+}
+
+.composer-input::placeholder { color: #bbb; }
+
+.composer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    margin-top: 0.8rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.8rem;
+    gap: 1rem;
+}
+
+.composer-tools {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 2rem;
+}
+
+.tool-btn {
+    width: 5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 0.3rem 0.45rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.tool-btn:hover { background: hsl(0, 0%, 50%, 0.5); }
+
+.tool-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--color-border);
+    margin: 0 0.35rem;
+}
+
+.submit-btn {
+    background: var(--color-main-blue);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.55rem 1.6rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.submit-btn:hover { 
+    opacity: 0.85; 
+    background: var(--color-main-blue);
+}
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+}
+
+.comment {
+    display: flex;
+    gap: 0.9rem;
+}
+
+.avatar {
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    color: var(--color-white);
+}
+
+.comment-body { flex: 1; min-width: 0; }
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.comment-author {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    font-weight: 900;
+    color: var(--color-black);
+    
+}
+
+.verified {
+    color: var(--color-main-blue);
+    display: flex;
+    align-items: center;
+}
+
+.comment-time {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.edited-tag {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.comment-text {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--color-black);
+    font-weight: 500;
+    line-height: 1.7;
+    margin-bottom: 0.6rem;
+    word-break: break-word;
+}
+
+.edit-area {
+    width: 100%;
+    background: #f3f3f3;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.5rem 0.8rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--color-black);
+    resize: none;
+    outline: none;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.btn-sm {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.3rem 1.1rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-sm:hover:not(:disabled) { opacity: 0.8; }
+
+.btn-save {
+     display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--color-main-blue);
+    color: var(--color-white);
+}
+
+.btn-cancel {
+     display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f3f3f3;
+    color: var(--color-white);
+    border: 1px solid var(--color-border);
+    background-color: red;
+    
+}
+.btn-save:hover, 
+.btn-cancel:hover {
+    opacity: 0.8;
+}
+.btn-save:hover {
+    background-color: var(--color-main-blue);
+}
+.btn-cancel:hover {
+    background-color: red;
+}
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    width: 5rem;
+     display: flex;
+    justify-content: center;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    padding: 0;
+    transition: color 0.15s;
+}
+
+.action-btn:hover { background-color: hsl(0, 0%, 50%, 0.5); }
+.action-btn.liked { color: var(--color-main-blue); }
+.action-btn.disliked { color: #e53e3e; }
+.action-btn.reply-active { color: var(--color-main-blue); }
+
+.more-wrap { position: relative; display: inline-flex; }
+
+.more-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.3rem 0;
+    z-index: 50;
+    min-width: 130px;
+}
+
+.more-menu button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    color: var(--color-black);
+    text-align: left;
+    transition: background 0.12s;
+}
+
+.more-menu button:hover { background: #f3f3f3; }
+.more-menu button.danger { color: #e53e3e; }
+
+.reply-thread {
+    margin-top: 1rem;
+    padding-left: 1.2rem;
+    border-left: 2px solid var(--color-border);
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.reply-composer {
+    background: #f3f3f3;
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    margin-top: 0.8rem;
+}
+
+.reply-input {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--color-black);
+    resize: none;
+    min-height: 2.5rem;
+    line-height: 1.6;
+}
+
+.reply-input::placeholder { color: #bbb; }
+
+.reply-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.5rem;
+}
+
+.deleted-note {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-style: italic;
+    padding: 0.3rem 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--color-text-secondary);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+}

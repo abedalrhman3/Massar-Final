@@ -1,0 +1,184 @@
+.topnav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  font-family: var(--font-ui);
+  background: transparent;
+}
+
+.topnav h2 {
+  font-size: var(--font-size-sm);
+  color: white;
+  margin: 0;
+}
+
+.navLinks a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  font-size: 17px;
+}
+
+.navLinks a:hover {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+/* ── Desktop "Get started" button ── */
+.getStartedBtn {
+  background: white;
+  color: #111;
+  width: 100px;
+  height: 34px;
+  border-radius: var(--radius-hero);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.getStartedBtn:hover {
+  background: #111;
+  color: white;
+}
+
+/* ── Hamburger — hidden on desktop, visible on mobile ── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: none !important;
+  border: none !important;
+  cursor: pointer;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 4px !important;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white;
+}
+
+/* Pure CSS bars — no Font Awesome dependency */
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+}
+
+/* ── Mobile fullscreen overlay ── */
+.mobileOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.overlayTitle {
+  font-size: 28px;
+  color: white;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.overlayLinks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.overlayLinks a {
+  text-decoration: none;
+  color: white;
+  font-size: 22px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.overlayLinks a:hover {
+  opacity: 0.75;
+}
+
+.overlayGetStarted {
+  margin-top: 16px;
+  background: white;
+  color: #111;
+  width: 140px;
+  height: 44px;
+  border-radius: var(--radius-hero);
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.overlayGetStarted:hover {
+  background: #111;
+  color: white;
+}
+
+/* ── Mobile breakpoint ── */
+@media (max-width: 768px) {
+  .topnav {
+    padding: 1rem 1.5rem;
+  }
+
+  .navLinks {
+    display: none;
+  }
+
+  .getStartedBtn {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

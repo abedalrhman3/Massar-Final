@@ -1,0 +1,687 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+.container {
+  position: relative;
+  width: 1000px;
+  height: 900px;
+  background: #fff;
+  margin: 20px;
+  border-radius: 30px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+.container h1 {
+  font-size: 36px;
+  margin: -10px 0;
+}
+
+.container p {
+  font-size: 14.5px;
+  margin: 15px 0;
+}
+
+.formBox form {
+  width: 100%;
+}
+
+.formBox {
+  position: absolute;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  color: #333;
+  text-align: center;
+  padding: 40px;
+  z-index: 1;
+  transition:
+    0.6s ease-in-out 1.2s,
+    visibility 0s 1s;
+}
+
+.formBox h1 {
+  margin-bottom: 5px;
+}
+
+.container.active .formBox {
+  right: 50%;
+}
+
+.formBox.register {
+  visibility: hidden;
+}
+.container.active .formBox.register {
+  visibility: visible;
+}
+
+.inputBox {
+  position: relative;
+  margin: 30px 0;
+  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.inputBox input {
+  width: 100%;
+  padding: 13px 50px 13px 20px;
+  background: #eee;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  font-family: "Poppins", sans-serif;
+}
+
+.inputBox input::placeholder {
+  color: #888;
+  font-weight: 400;
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+  transition: width 0.3s ease;
+}
+
+.inputWrapper input {
+  width: 100%;
+  padding-right: 50px;
+  box-sizing: border-box;
+}
+
+.inputWrapper.shrink {
+  width: 75%;
+}
+
+.fieldIcon,
+.eyeIcon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #555;
+  z-index: 2;
+}
+
+.eyeIcon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.forgotLink {
+  margin: 15px 0 15px;
+}
+.forgotLink a {
+  font-size: 14.5px;
+  color: #7494ec;
+  text-decoration: none;
+}
+
+.forgotLink a:hover {
+  text-decoration: underline;
+  color: #033258;
+}
+
+.btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #fff;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn .btnLayer {
+  position: absolute;
+  inset: 0;
+  width: 300%;
+  left: -100%;
+  background: #7494ec;
+  transition:
+    left 0.3s ease,
+    background 0.3s ease;
+  z-index: 0;
+}
+
+.btn:hover:not(:disabled) .btnLayer {
+  background: linear-gradient(to right, #04467c, #033258, #046cc2, #0261af);
+  left: 0;
+}
+
+.btn span.btnText {
+  position: relative;
+  z-index: 1;
+}
+
+.btn:disabled {
+  cursor: default;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.btn:disabled .btnLayer {
+  background: #6d6d6d;
+}
+
+.toggleBox {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.toggleBox::before {
+  content: "";
+  position: absolute;
+  left: -250%;
+  width: 300%;
+  height: 100%;
+  background: #7494ec;
+  border-radius: 150px;
+  z-index: 2;
+  transition: 1.8s ease-in-out;
+}
+
+.container.active .toggleBox::before {
+  left: 50%;
+}
+
+.togglePanel {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  transition: 0.6s ease-in-out;
+  font-family: "Poppins", sans-serif;
+}
+
+.togglePanel.toggleLeft {
+  left: 0;
+  transition-delay: 1.2s;
+}
+.container.active .togglePanel.toggleLeft {
+  left: -50%;
+  transition-delay: 0.6s;
+}
+
+.togglePanel.toggleRight {
+  right: -50%;
+  transition-delay: 0.6s;
+}
+.container.active .togglePanel.toggleRight {
+  right: 0;
+  transition-delay: 1.2s;
+}
+
+.togglePanel p {
+  margin-bottom: 20px;
+}
+
+.togglePanel .btn {
+  width: 160px;
+  height: 46px;
+  border: 2px solid #fff;
+  box-shadow: none;
+  background: transparent;
+}
+
+.togglePanel .btn .btnLayer {
+  display: block;
+  background: transparent;
+}
+
+.togglePanel .btn:hover:not(:disabled) .btnLayer {
+  background: linear-gradient(to right, #04467c, #033258, #046cc2, #0261af);
+  left: 0;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 12px 0 10px;
+  color: #aaa;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+
+.socialBtns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.socialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+  color: #fff;
+}
+
+.socialBtn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.socialBtn.google {
+  background: #fff;
+  color: #444;
+  border: 1.5px solid #ddd;
+}
+
+.socialBtn.facebook {
+  background: #1877f2;
+}
+
+.socialBtn.discord {
+  background: #5865f2;
+}
+
+.socialBtn.instagram {
+  background: linear-gradient(
+    45deg,
+    #f09433,
+    #e6683c,
+    #dc2743,
+    #cc2366,
+    #bc1888
+  );
+}
+
+.pageWrapper {
+  min-height: 150vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(90deg, #e2e2e2, #c9d6ff);
+}
+
+@media screen and (max-width: 650px) {
+  .container {
+    height: calc(100vh - 40px);
+  }
+
+  .formBox {
+    bottom: 0;
+    width: 100%;
+    height: 70%;
+  }
+
+  .container.active .formBox {
+    right: 0;
+    bottom: 30%;
+  }
+
+  .toggleBox::before {
+    left: 0;
+    top: -270%;
+    width: 100%;
+    height: 300%;
+    border-radius: 20vw;
+  }
+
+  .container.active .toggleBox::before {
+    left: 0;
+    top: 70%;
+  }
+
+  .container.active .togglePanel.toggleLeft {
+    left: 0;
+    top: -30%;
+  }
+
+  .togglePanel {
+    width: 100%;
+    height: 30%;
+  }
+  .togglePanel.toggleLeft {
+    top: 0;
+  }
+  .togglePanel.toggleRight {
+    right: 0;
+    bottom: -30%;
+  }
+
+  .container.active .togglePanel.toggleRight {
+    bottom: 0;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .formBox {
+    padding: 20px;
+  }
+
+  .togglePanel h1 {
+    font-size: 30px;
+  }
+}
+
+.strengthMeter {
+  position: relative;
+  height: 6px;
+  width: 75%;
+  background: #eee;
+  border-radius: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.strengthBar {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  transition:
+    width 0.4s ease-in-out,
+    background 0.3s ease-in-out;
+}
+
+.passwordRules {
+  position: absolute;
+  right: -25px;
+  top: 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  width: 120px;
+  font-family: "Poppins", sans-serif;
+}
+
+.passwordRules li {
+  list-style: none;
+  position: relative;
+  margin: 4px 0;
+}
+
+.passwordRules li::before {
+  content: "✖";
+  position: absolute;
+  left: -16px;
+  color: #ff4d4d;
+}
+
+.passwordRules li.ok {
+  color: #18e605;
+}
+
+.passwordRules li.ok::before {
+  content: "✔";
+  color: #18e605;
+}
+
+.inputBox.mismatch input {
+  border: 2px solid #ff4d4d;
+}
+
+/* Shake animation */
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.formBox.shake {
+  animation: shake 0.4s;
+}
+
+.confirmText,
+.mismatchText {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.confirmText.ok {
+  color: #18e605;
+}
+
+.mismatchText {
+  color: #ff4d4d;
+  font-size: 12px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.emailHints {
+  position: absolute;
+  top: -5px;
+  right: 0;
+  transform: translateY(-100%);
+  background: #7494ec;
+  color: #fff;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+.hintText {
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0px;
+}
+
+.fieldGroup label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  text-align: left;
+}
+
+.fieldGroup label span {
+  color: #bf0017;
+}
+
+.fieldGroup .inputBox {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.birthdateGroup {
+  display: flex;
+  gap: 5px;
+}
+
+.customDropdown {
+  position: relative;
+  flex: 1;
+  font-size: 16px;
+  font-family: "Poppins", sans-serif;
+}
+
+.customDropdown .selected {
+  background: #eee;
+  border-radius: 8px;
+  padding: 13px 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.customDropdown .arrow {
+  border: solid #555;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 4px;
+  transform: rotate(45deg);
+  margin-left: 10px;
+  transition: transform 0.2s ease;
+}
+
+.customDropdown .arrow.up {
+  transform: rotate(-135deg);
+}
+
+.dropdownList {
+  position: absolute;
+  width: 100%;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 8px;
+  margin-top: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.dropdownList li {
+  padding: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dropdownList li:hover {
+  background: #7494ec;
+  color: #fff;
+}
+
+.checkBox {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.checkBox a {
+  color: #7494ec;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.checkBox a:hover {
+  text-decoration: underline;
+  color: #033258;
+}
+
+.checkBox input.customCheckbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #000;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  vertical-align: middle;
+  transition:
+    border-color 0.3s,
+    background-color 0.3s;
+  background-color: #fff;
+}
+
+.checkBox input.customCheckbox:hover {
+  border-color: var(--color-main-blue);
+}
+
+.checkBox input.customCheckbox:checked {
+  border-color: hsl(224, 76%, 69%);
+}
+
+.checkBox input.customCheckbox:checked::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  width: 4px;
+  height: 9px;
+  border: solid #7494ec;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkBox .agreeLabel {
+  color: #000;
+  cursor: pointer;
+  margin-left: 7px;
+}
+
+/* Server messages */
+.successMsg {
+  color: #18e605;
+  font-size: 13px;
+  margin: 8px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.errorMsg {
+  color: #ff4d4d;
+  font-size: 13px;
+  margin: 8px 0;
+  text-align: center;
+  font-weight: 500;
+}

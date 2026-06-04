@@ -1,0 +1,86 @@
+.card-container {
+    width: 100%;
+    height: 20rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    cursor: pointer;
+    padding: 2rem 2rem;
+    border-radius: var(--radius-lg);
+    user-select: none;
+}
+.card-container:hover {
+    background-color: hsl(224, 98%, 55%, 0.3);
+    transition: 0.1s all ease-in-out;
+}
+.card-container .title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+.card-container .title .icon-container {
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.card-container .title .icon-container .icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+.card-container .title .icon-container .order {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    z-index: 100;
+    color: var(--color-white);
+    font-size: var(--font-size-title);
+}
+.card-container .title .icon-container .order-place {
+    transform: translateX(-50%) translateY(-70%);
+}
+.card-container .title .icon-container .order.order-restaurant {
+    transform: translateX(-80%) translateY(-45%);
+}
+.card-container .title .name {
+    font-size: var(--font-size-title);
+    font-weight: 600;
+}
+.card-container .right {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    justify-content: space-between;
+
+}
+.card-container .right .save-button {
+    width: 8rem;
+    height: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: black;
+    color: var(--color-white);
+    border-radius: var(--radius-lg);
+    transition: 0.2s all ease-in-out;
+}
+.card-container .right .save-button:hover {
+    background-color: var(--color-white);
+    color: black;
+}
+.card-container .right .image-container {
+    height: 12rem;
+    width: 20rem;
+}
+.card-container .right .image-container img {
+    height: 100%;
+    width: 100%;
+    border-radius: 1rem;
+}
