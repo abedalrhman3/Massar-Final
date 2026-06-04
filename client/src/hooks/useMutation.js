@@ -4,11 +4,11 @@ import { useState } from 'react';
 //
 // Usage:
 //   const { mutate, loading, error } = useMutation(saveItem);
-//   await mutate('place', placeId);  // args forwarded to the apiFn
+//   await mutate('place', placeId);  // args forwarded to the apiFunction
 //
 // onSuccess / onError callbacks are optional.
 
-export function useMutation(apiFn, { onSuccess, onError } = {}) {
+export function useMutation(apiFunction, { onSuccess, onError } = {}) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -16,7 +16,7 @@ export function useMutation(apiFn, { onSuccess, onError } = {}) {
         setLoading(true);
         setError(null);
         try {
-            const res = await apiFn(...args);
+            const res = await apiFunction(...args);
             onSuccess?.(res.data);
             return res.data;
         } catch (err) {
