@@ -3,7 +3,12 @@
    Used across: Chatbot.jsx, ChatForm.jsx, ChatMessage.jsx
    ============================================================ */
 
-
+body {
+  font-family: var(--font-ui);
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(#f4f0ff, #dacdff);
+}
 
 .materialSymbolsRounded {
   font-family: "Material Symbols Rounded";
@@ -17,39 +22,99 @@
    Chatbot.jsx
    ============================================================ */
 
-/* -- Toggler button -- */
-.chatbotToggler {
+/* -- Avatar toggler -- */
+.avatarWrapper {
   position: fixed;
-  bottom: 30px;
-  right: 35px;
-  border: none;
-  height: 50px;
-  width: 50px;
+  bottom: 5px;
+  right: 25px;
   display: flex;
-  cursor: pointer;
-  border-radius: var(--radius-hero);
-  background: #4d7bf3;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 1000;
 }
 
-.chatbotToggler span {
-  position: absolute;
-  color: #fff;
+/* Wrapper for avatar and tooltip to animate together */
+.avatarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  animation: floatUpDown 2s ease-in-out infinite;
 }
 
-.container.showChatbot .chatbotToggler {
-  transform: rotate(90deg);
-}
-
-.chatbotToggler span:last-child,
-.container.showChatbot .chatbotToggler span:first-child {
+.avatarTooltip {
+  background: white;
+  color: #333;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  white-space: nowrap;
   opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
 }
 
-.container.showChatbot .chatbotToggler span:last-child {
+.avatarTooltip::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  right: 24px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white;
+}
+
+.avatarWrapper:hover .avatarTooltip {
   opacity: 1;
+  transform: translateY(0);
+}
+
+.avatarImg {
+  border-radius: 50%;
+  border: 7px solid #fff;
+  background-color: white;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 30px;
+  margin-right: 5px;
+  object-fit: cover;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.avatarImg:hover {
+  box-shadow:
+    0 0 0 6px rgba(77, 123, 243, 0.25),
+    0 14px 30px rgba(0, 0, 0, 0.3);
+  transform: scale(1.07);
+}
+
+.avatarImg.avatarOpen {
+  box-shadow:
+    0 0 0 6px rgba(77, 123, 243, 0.4),
+    0 14px 30px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes floatUpDown {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 /* -- Popup -- */
@@ -57,8 +122,8 @@
   position: fixed;
   opacity: 0;
   pointer-events: none;
-  bottom: 90px;
-  right: 35px;
+  bottom: 120px;
+  right: 20px;
   width: 420px;
   transform: scale(0.2);
   max-height: calc(100vh - 120px);
@@ -401,9 +466,8 @@
    ============================================================ */
 
 @media (max-width: 520px) {
-  .chatbotToggler {
-    right: 20px;
-    bottom: 20px;
+  .avatarWrapper {
+    display: none;
   }
 
   .chatbotPopup {

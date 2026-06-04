@@ -47,13 +47,6 @@
   padding: 0;
 }
 
-<<<<<<< HEAD
-.socialIcons img {
-  width: 30px;
-  margin-right: 10px;
-}
-=======
->>>>>>> 14c8dc0546fae9b45ecf22f2aadf24b12f0e7df1
 .newsletter {
   display: flex;
   margin-bottom: 10px;
@@ -102,8 +95,8 @@
     font-size 350ms ease-in;
 }
 
-.newsletterInput:focus ~ .newsletterLabel,
-.newsletterInput:not(:placeholder-shown) ~ .newsletterLabel {
+.newsletterInput:focus~.newsletterLabel,
+.newsletterInput:not(:placeholder-shown)~.newsletterLabel {
   top: 0;
   font-size: 11px;
 }
@@ -160,9 +153,12 @@
 }
 
 .socialIcons a {
-  display: inline-flex; /* Crucial: Activates Flexbox layout */
-  align-items: center; /* Centers icon vertically */
-  justify-content: center; /* Centers icon horizontally */
+  display: inline-flex;
+  /* Crucial: Activates Flexbox layout */
+  align-items: center;
+  /* Centers icon vertically */
+  justify-content: center;
+  /* Centers icon horizontally */
   width: 45px;
   height: 45px;
   margin-top: 15px;
@@ -190,19 +186,18 @@
 :global(#face1):hover {
   background-color: #3b5998;
 }
+
 :global(#face1):hover i {
   color: #fff;
 }
 
 :global(#insta1):hover {
-  background: radial-gradient(
-    circle at 30% 107%,
-    #fdf497 0%,
-    #fdf497 5%,
-    #fd5949 45%,
-    #d6249f 60%,
-    #285aeb 90%
-  );
+  background: radial-gradient(circle at 30% 107%,
+      #fdf497 0%,
+      #fdf497 5%,
+      #fd5949 45%,
+      #d6249f 60%,
+      #285aeb 90%);
   color: #fff;
 }
 

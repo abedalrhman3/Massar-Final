@@ -136,3 +136,32 @@
 .avatar .material-symbols-outlined {
   font-size: 2rem;
 }
+
+.mainPageBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6b7280;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mainPageBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1d1b1b;
+}
+
+.mainPageBtn:active {
+  transform: scale(0.96);
+}
+
+.mainPageBtn .material-symbols-outlined {
+  font-size: 1.1rem;
+}

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import styles from "./Home.module.css";
-import Footer from "../../../components/Footer/Footer";
 import Navbar from "../../../components/Navbar/Navbar";
 
 // Heroes
@@ -14,7 +13,6 @@ const petraDest = "/images/destinationCard/Petra.jpg";
 const deadSeaDest = "/images/destinationCard/dead sea.webp";
 
 // Decor
-const chatbot = "/images/homepage/chatbot.png";
 const route = "/images/homepage/route2.png";
 const guide = "/images/homepage/guide.png";
 const halfPhone = "/images/homepage/half-phone.PNG";
@@ -55,12 +53,7 @@ function Home() {
             <button className={styles.secondBtn}>Let's start</button>
           </p>
         </div>
-        <div className={styles.avatarWrapper}>
-          <img className={styles.avatarImg} src={chatbot} alt="avatar" />
-          <div className={styles.avatarTooltip}>
-            <span>How can I help you?</span>
-          </div>
-        </div>
+
       </div>
 
       <div className={styles.discoverContainer}>
@@ -106,7 +99,7 @@ function Home() {
             <button className={styles.learnMoreBtn}>learn more</button>
           </figcaption>
         </figure>
-        <h3 className={styles.h3}>
+        <h3 className={styles.adventure}>
           Adventure,
           <br />
           Theerpay,
@@ -177,7 +170,6 @@ function Home() {
           <span className={styles.adventureLabel}>Culture</span>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

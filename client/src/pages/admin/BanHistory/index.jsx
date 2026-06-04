@@ -55,6 +55,7 @@ function BanHistory() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [unbanModal, setUnbanModal] = useState(null);
 
   // Stats
   const [stats, setStats] = useState({ totalBanned: 0, bannedThisMonth: 0 });
@@ -125,14 +126,19 @@ function BanHistory() {
   }, [bannedUsers]);
 
   const handleUnban = async (user) => {
-    if (!confirm(`Are you sure you want to unban ${user.username}?`)) return;
+    setUnbanModal(user);
+  };
+
+  const confirmUnban = async () => {
+    if (!unbanModal) return;
 
     try {
-      await accountsService.unbanAccount(user.email);
+      await accountsService.unbanAccount(unbanModal.email);
       await fetchData();
     } catch (err) {
       alert("Failed to unban account: " + err.message);
     }
+    setUnbanModal(null);
   };
 
   // Loading state
@@ -268,6 +274,29 @@ function BanHistory() {
       <p className={styles.showing}>
         Showing 1 to {filtered.length} of {filtered.length} banned accounts
       </p>
+
+      {/* Unban Confirmation Modal */}
+      {unbanModal && (
+        <div className={styles.modalOverlay} onClick={() => setUnbanModal(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Unban User?</h2>
+            <p className={styles.modalBody}>
+              Are you sure you want to unban {unbanModal.username}? They will regain access to the platform.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setUnbanModal(null)}
+              >
+                Cancel
+              </button>
+              <button className={styles.unbanConfirmBtn} onClick={confirmUnban}>
+                Unban
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

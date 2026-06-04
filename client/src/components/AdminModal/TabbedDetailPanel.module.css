@@ -1,0 +1,522 @@
+.panelOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.panelContent {
+  background: #fff;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.panelContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panelContent::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.panelContent::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+}
+
+.panelTitle {
+  font-family: "Newsreader", "Playfair Display", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1b1b;
+  margin: 0;
+}
+
+.panelClose {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.panelClose:hover {
+  background: #e5e7eb;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  position: sticky;
+  top: 72px;
+  z-index: 10;
+}
+
+.tabBtn {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tabBtn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.tabBtnActive {
+  background: #1b56fd;
+  color: #fff;
+}
+
+.tabBtnActive:hover {
+  background: #1b56fd;
+  color: #fff;
+}
+
+/* Tab Content */
+.tabContent {
+  padding: 1.5rem 2rem 2rem;
+  min-height: 300px;
+}
+
+/* About Tab */
+.aboutTab {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+}
+
+.aboutLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.aboutItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.aboutItem .material-symbols-outlined {
+  font-size: 1.25rem;
+  margin-top: 0.125rem;
+}
+
+.aboutLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 0.25rem;
+}
+
+.aboutValue {
+  font-size: 0.95rem;
+  color: #1d1b1b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.aboutRight {
+  flex-shrink: 0;
+}
+
+.coverThumbnail {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Day Pills */
+.dayPills {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.dayPill {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.dayPillActive {
+  background: #1d1b1b;
+  color: #fff;
+}
+
+/* Reviews Tab */
+.reviewsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reviewsSummary {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.scoreBox {
+  background: #1d1b1b;
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.scoreValue {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.scoreLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #10b981;
+  margin-top: 0.25rem;
+}
+
+.scoreReviews {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+}
+
+.scoreSource {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.ratingBars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.ratingBarRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ratingBarLabel {
+  width: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ratingBarTrack {
+  flex: 1;
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ratingBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.ratingBarCount {
+  width: 40px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.reviewItem {
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.reviewerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reviewerAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1b56fd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.reviewerName {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1d1b1b;
+}
+
+.reviewDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.reviewRating {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.reviewText {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Contact Tab */
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.contactIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+}
+
+.contactIcon[data-type="phone"] {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.contactIcon[data-type="whatsapp"] {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.contactIcon[data-type="facebook"] {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.contactIcon[data-type="instagram"] {
+  background: #fce7f3;
+  color: #db2777;
+}
+
+.contactIcon[data-type="x"] {
+  background: #1f2937;
+  color: #fff;
+}
+
+.contactIcon[data-type="discord"] {
+  background: #e0e7ff;
+  color: #5865f2;
+}
+
+.contactIcon[data-type="url"] {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.contactValue {
+  font-size: 0.9rem;
+  color: #1d1b1b;
+  font-weight: 500;
+}
+
+.emptyContact,
+.emptyPhotos,
+.emptyBook {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.emptyContact p,
+.emptyPhotos p,
+.emptyBook p {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0.75rem 0 0 0;
+}
+
+/* Photos Tab */
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.photoItem {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.photoItem:hover {
+  transform: scale(1.02);
+}
+
+/* Book Tab */
+.bookTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.bookPrompt {
+  font-size: 1.1rem;
+  color: #1d1b1b;
+  margin: 0 0 1.5rem 0;
+}
+
+.bookButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  background: #1b56fd;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bookButton:hover {
+  background: linear-gradient(to right, #04467c, #033258, #046cc2, #0261af);
+  background-size: 200%;
+  background-position: right;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .aboutTab {
+    grid-template-columns: 1fr;
+  }
+
+  .coverThumbnail {
+    width: 100%;
+    height: 200px;
+  }
+
+  .reviewsSummary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .photoGrid {
+    grid-template-columns: 1fr;
+  }
+}

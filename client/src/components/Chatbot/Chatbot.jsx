@@ -5,6 +5,7 @@ import ChatForm from "./ChatForm";
 import { useEffect, useRef, useState } from "react";
 import ChatMessage from "./ChatMessage";
 import { companyInfo } from "./ChatbotData";
+const chatbot = "images/homepage/chatbot.png";
 
 function Chatbot() {
   // Chat history state — initialized with a hidden system prompt (companyInfo)
@@ -87,14 +88,20 @@ function Chatbot() {
     <div
       className={`${styles.container} ${showChatbot ? styles.showChatbot : ""}`}
     >
-      {/* Floating toggle button — opens/closes the chatbot */}
-      <button
-        onClick={() => setShowChatbot((prev) => !prev)}
-        className={styles.chatbotToggler}
-      >
-        <span className={styles.materialSymbolsRounded}>mode_comment</span>
-        <span className={styles.materialSymbolsRounded}>close</span>
-      </button>
+      {/* Floating avatar toggle button — opens/closes the chatbot */}
+      <div className={styles.avatarWrapper}>
+        <div className={styles.avatarContainer}>
+          <div className={styles.avatarTooltip}>
+            <span>How can I help you?</span>
+          </div>
+          <img
+            className={`${styles.avatarImg} ${showChatbot ? styles.avatarOpen : ""}`}
+            src={chatbot}
+            alt="avatar"
+            onClick={() => setShowChatbot((prev) => !prev)}
+          />
+        </div>
+      </div>
 
       <div className={styles.chatbotPopup}>
         {/* Header — shows bot icon, name, and close button */}
@@ -117,8 +124,13 @@ function Chatbot() {
           <div className={`${styles.message} ${styles.botMessage}`}>
             <ChatbotIcon />
             <p className={styles.messageText}>
-              Hi there
-              <br /> How can i help u today?
+              Welcome to Masar! Your journey through Jordan's beauty starts
+              here.
+              <br />
+              Whether you're looking for hidden gems, historical landmarks, or
+              cultural experiences — I'm here to guide you.
+              <br />
+              Where would you like to explore today?
             </p>
           </div>
 

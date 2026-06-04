@@ -1,0 +1,550 @@
+/* Modal Overlay */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+  padding: 1rem;
+}
+
+.modalOverlayVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modalContent {
+  background: #fff;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 24px;
+  padding: 2rem;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.modalContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modalContent::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.modalOverlayVisible .modalContent {
+  transform: scale(1) translateY(0);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.modalTitle {
+  font-family: "Newsreader", "Playfair Display", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1b1b;
+  margin: 0;
+}
+
+.modalClose {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.modalClose:hover {
+  background: #e5e7eb;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Form Elements */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.input,
+.textarea {
+  padding: 0.875rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #1b56fd;
+  box-shadow: 0 0 0 3px rgba(27, 86, 253, 0.1);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+/* Section Title */
+.sectionTitle {
+  font-family: "Newsreader", "Playfair Display", serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1d1b1b;
+  margin: 1.5rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sectionTitle:first-of-type {
+  margin-top: 0;
+}
+
+/* Image Upload */
+.imageUpload {
+  width: 100%;
+  height: 200px;
+}
+
+.uploadLabel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadLabel:hover {
+  border-color: #1b56fd;
+  background: #f0f5ff;
+}
+
+.uploadLabel .material-symbols-outlined {
+  font-size: 2.5rem;
+  color: #9ca3af;
+}
+
+.uploadLabel span:last-child {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.imagePreview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeImageBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Multi Image Upload */
+.multiImageUpload {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.imagePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.multiImagePreview {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.multiImagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadLabelSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadLabelSmall:hover {
+  border-color: #1b56fd;
+  background: #f0f5ff;
+}
+
+.uploadLabelSmall .material-symbols-outlined {
+  font-size: 1.5rem;
+  color: #9ca3af;
+}
+
+.uploadLabelSmall span:last-child {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Working Days */
+.workingDaysRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dayToggle {
+  flex: 1;
+  padding: 0.625rem 0.5rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dayToggle:hover {
+  background: #e5e7eb;
+}
+
+.dayToggleActive {
+  background: #1b56fd;
+  border-color: #1b56fd;
+  color: #fff;
+}
+
+.dayToggleActive:hover {
+  background: #1b56fd;
+}
+
+/* Time Range Picker */
+.timeRangeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timeInput {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.timeInput:focus {
+  outline: none;
+  border-color: #1b56fd;
+  box-shadow: 0 0 0 3px rgba(27, 86, 253, 0.1);
+}
+
+.timeSeparator {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Contact List */
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: fadeSlideIn 0.3s ease forwards;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.contactItem .input {
+  flex: 1;
+}
+
+.removeContactBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  border: none;
+  border-radius: 50%;
+  color: #dc2626;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.removeContactBtn:hover {
+  background: #fecaca;
+}
+
+.addContactBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #f0f5ff;
+  border: 1px dashed #1b56fd;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1b56fd;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.addContactBtn:hover {
+  background: #e0eaff;
+}
+
+.addContactBtn .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+/* Event Schedule */
+.scheduleOptions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.scheduleOptionBtn {
+  flex: 1;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.scheduleOptionBtn:hover {
+  background: #e5e7eb;
+}
+
+.scheduleOptionActive {
+  background: #1b56fd;
+  border-color: #1b56fd;
+  color: #fff;
+}
+
+.scheduleOptionActive:hover {
+  background: #1b56fd;
+}
+
+/* Calendar Picker */
+.calendarPicker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.calendarDay {
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.calendarDay:hover {
+  border-color: #1b56fd;
+}
+
+.calendarDayActive {
+  background: #1b56fd;
+  border-color: #1b56fd;
+  color: #fff;
+}
+
+/* Buttons */
+.cancelBtn {
+  padding: 0.75rem 1.5rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancelBtn:hover {
+  background: #e5e7eb;
+}
+
+.saveBtn {
+  padding: 0.75rem 1.5rem;
+  background: #1b56fd;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.saveBtn:hover {
+  background: linear-gradient(to right, #04467c, #033258, #046cc2, #0261af);
+  background-size: 200%;
+  background-position: right;
+}
+
+/* Section Error */
+.sectionError {
+  border: 1px solid #dc2626;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fef2f2;
+}
+
+/* Read Only Input */
+.readOnlyInput {
+  padding: 0.875rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Optional Label */
+.optionalLabel {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 400;
+}

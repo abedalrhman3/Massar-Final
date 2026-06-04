@@ -1,5 +1,5 @@
 .topnav {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -10,10 +10,33 @@
   padding: 15px 40px;
   font-family: var(--font-ui);
   background: transparent;
+
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s ease,
+    backdrop-filter 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.navVisible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.navHidden {
+  transform: translateY(-110%);
+  opacity: 0;
+}
+
+.scrolled {
+  background-color: var(--color-main-blue);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
 }
 
 .topnav h2 {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-title);
   color: white;
   margin: 0;
 }
@@ -31,7 +54,6 @@
   font-weight: bold;
 }
 
-/* ── Desktop "Get started" button ── */
 .getStartedBtn {
   background: white;
   color: #111;
@@ -74,7 +96,6 @@
   color: white;
 }
 
-/* Pure CSS bars — no Font Awesome dependency */
 .hamburger span {
   display: block;
   width: 22px;
@@ -83,7 +104,6 @@
   border-radius: 2px;
 }
 
-/* ── Mobile fullscreen overlay ── */
 .mobileOverlay {
   position: fixed;
   inset: 0;

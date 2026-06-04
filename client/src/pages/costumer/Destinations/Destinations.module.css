@@ -1,6 +1,8 @@
 .toursPage {
-  padding: 4rem 2rem;
-  max-width: 1400px;
+  box-sizing: border-box;
+  padding: 4rem 9rem;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -23,17 +25,78 @@
   color: #fff;
 }
 
-.toursGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+/* ── Sections ── */
+.section {
+  margin-bottom: 64px;
 }
 
+.sectionTitle {
+  font-family: "Playfair Display", serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toursGrid {
+  display: grid;
+  grid-template-columns: repeat(4, calc(25% - 18px));
+  gap: 24px;
+  width: 100%;
+}
+
+.toursGrid>div,
+.toursGrid>article,
+.toursGrid>[class*="card"] {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.toursGrid>div:hover,
+.toursGrid>article:hover,
+.toursGrid>[class*="card"]:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 1200px) {
+  .toursPage {
+    padding: 4rem 4rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .toursGrid {
+    grid-template-columns: repeat(2, calc(50% - 12px));
+  }
+}
+
+@media (max-width: 500px) {
+  .toursPage {
+    padding: 3rem 1.5rem;
+  }
+
+  .toursGrid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .cardWrapper {
+    max-width: 320px;
+  }
+}
+
+/* ── Show More button ── */
 .toursMore {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 40px auto 0;
+  margin: 40px 573px;
   padding: 12px 40px;
   background: white;
   border: 2px solid #2d6bff;
@@ -45,9 +108,80 @@
   white-space: nowrap;
   height: 50px;
   width: 150px;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .toursMore:hover {
   background: #2d6bff;
   color: white;
+}
+
+/* ── Tooltip ── */
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltipTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #d0d8e8;
+  color: #5a6a85;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: default;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.tooltipWrapper:hover .tooltipTrigger {
+  background: #b0bccc;
+}
+
+.tooltipBox {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: 260px;
+  background: #1a1a2e;
+  color: #eef0f5;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  padding: 10px 14px;
+  border-radius: 8px;
+  white-space: normal;
+  text-align: left;
+  z-index: 100;
+  transition: opacity 0.18s ease;
+}
+
+/* small arrow */
+.tooltipBox::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1a1a2e;
+}
+
+.tooltipWrapper:hover .tooltipBox {
+  visibility: visible;
+  opacity: 1;
 }

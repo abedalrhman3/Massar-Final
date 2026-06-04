@@ -1,42 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+  const lastScrollY = useRef(0);
 
+  // Scroll behavior: hide on scroll down, show on scroll up, add background when not at top
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-    
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setIsAdmin(user.is_admin === true);
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+
+      setScrolled(currentY > 10);
+
+      if (currentY < 10) {
+        // Always show at top
+        setVisible(true);
+      } else if (currentY > lastScrollY.current + 8) {
+        // Scrolling down — hide
+        setVisible(false);
+        setMenuOpen(false); // close mobile menu on hide
+      } else if (currentY < lastScrollY.current - 8) {
+        // Scrolling up — show
+        setVisible(true);
+      }
+
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
+    document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setIsAdmin(false);
-    window.location.href = "/";
-  };
-
   return (
-    <div className={styles.topnav}>
+    <div
+      className={`${styles.topnav} ${scrolled ? styles.scrolled : ""} ${visible ? styles.navVisible : styles.navHidden}`}
+    >
       <h2>Massar</h2>
 
       {/* Desktop nav links */}
@@ -45,21 +54,10 @@ function Navbar() {
         <Link to="/about">About</Link>
         <Link to="/destinations">Destinations</Link>
         <Link to="/map">Map</Link>
-        {isLoggedIn && <Link to="/dashboard">Dashboard</Link>}
-        {isLoggedIn && <Link to="/profile">Profile</Link>}
-        {isAdmin && <Link to="/admin" style={{ color: "#7C3AED", fontWeight: "bold" }}>Admin</Link>}
       </div>
 
       {/* Desktop button */}
-      {isLoggedIn ? (
-        <button className={styles.getStartedBtn} onClick={handleLogout}>
-          Sign Out
-        </button>
-      ) : (
-        <Link to="/login" className={styles.getStartedBtn} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-          Get started
-        </Link>
-      )}
+      <button className={styles.getStartedBtn}>Get started</button>
 
       {/* Hamburger icon (mobile only) */}
       <button
@@ -92,49 +90,15 @@ function Navbar() {
             <Link to="/about" onClick={() => setMenuOpen(false)}>
               About
             </Link>
-            <Link to="/destinations" onClick={() => setMenuOpen(false)}>
-              Destinations
+            <Link to="/tours" onClick={() => setMenuOpen(false)}>
+              Tours
             </Link>
             <Link to="/map" onClick={() => setMenuOpen(false)}>
               Map
             </Link>
-            {isLoggedIn && (
-              <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-                Dashboard
-              </Link>
-            )}
-            {isLoggedIn && (
-              <Link to="/profile" onClick={() => setMenuOpen(false)}>
-                Profile
-              </Link>
-            )}
-            {isAdmin && (
-              <Link to="/admin" onClick={() => setMenuOpen(false)} style={{ color: "#7C3AED", fontWeight: "bold" }}>
-                Admin
-              </Link>
-            )}
           </nav>
 
-          {isLoggedIn ? (
-            <button
-              className={styles.overlayGetStarted}
-              onClick={() => {
-                setMenuOpen(false);
-                handleLogout();
-              }}
-            >
-              Sign Out
-            </button>
-          ) : (
-            <Link
-              to="/login"
-              className={styles.overlayGetStarted}
-              onClick={() => setMenuOpen(false)}
-              style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-            >
-              Let's start
-            </Link>
-          )}
+          <button className={styles.overlayGetStarted}>Let's start</button>
         </div>
       )}
     </div>

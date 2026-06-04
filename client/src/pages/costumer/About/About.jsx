@@ -1,5 +1,5 @@
 import styles from "./About.module.css";
-//import Footer from "../../../components/Footer/Footer";
+//import Footer from "../../components/Footer/Footer";
 
 // Icons
 import star from "../../../assets/images/icons/star.png";
@@ -19,6 +19,8 @@ import video from "../../../assets/images/decor/video.jpg";
 export default function AboutPage() {
   return (
     <>
+      <div style={{ backgroundColor: "#2D6BFF" }}>
+      </div>
       <div className={styles.aboutPage}>
         <div className={styles.aboutHero}>
           <div className={styles.aboutHeroTitle}>

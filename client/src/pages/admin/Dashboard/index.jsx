@@ -237,7 +237,6 @@ function Dashboard() {
               </div>
             ))}
           </div>
-          <button className={styles.viewAllBtn} onClick={handleViewAllLogs}>VIEW ALL LOGS</button>
         </div>
       </div>
 
