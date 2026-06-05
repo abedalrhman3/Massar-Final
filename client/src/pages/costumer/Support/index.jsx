@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Support.module.css";
-import { ADMIN_AVATARS } from "../AdminChat";
+import { ADMIN_AVATARS } from "../../admin/AdminChat";
 
 const team = [
   {

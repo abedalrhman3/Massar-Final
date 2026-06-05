@@ -6,10 +6,11 @@ import L from "leaflet";
 import CheckInModal from "./CheckInModal";
 import LocationReviews from "./LocationReviews";
 import styles from "./Map.module.css";
-import { getLocations } from "../../../api/locations";
-import { getQuests } from "../../../api/quests";
-import { useAuth } from "../../../context/AuthContext";
-import { BASE_URL } from "../../../api/client";
+import { getLocations } from "@/api/locations";
+import { getQuests } from "@/api/quests";
+import { useAuth } from "@/context/AuthContext";
+import { BASE_URL } from "@/api/client";
+import { useNavigate } from "react-router-dom";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -32,6 +33,7 @@ const ManualLocationPicker = ({ onPick }) => {
 // Auto GPS tracker
 const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
   const [position, setPosition] = useState(null);
+  const navigate = useNavigate();
   const map = useMapEvents({
     locationfound(e) {
       setPosition(e.latlng);
@@ -83,6 +85,8 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
   );
 };
 
+// ... (Keep all your existing imports, icon fixes, and helper components exactly the same)
+
 const Map = () => {
   const [locations, setLocations] = useState([]);
   const [quests, setQuests] = useState([]);
@@ -95,6 +99,7 @@ const Map = () => {
   const [autoPos, setAutoPos] = useState(null);
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate(); // Assured this is active
 
   const userPosition = manualMode ? manualPos : autoPos;
 
@@ -104,13 +109,11 @@ const Map = () => {
   };
 
   useEffect(() => {
-    // getLocations returns a plain array (res.data = Location[]) per your api comment
     const params = budget && budget !== "All" ? { budgetCategory: budget } : {};
     getLocations(params)
       .then((res) => setLocations(Array.isArray(res.data) ? res.data : []))
       .catch(() => setLocations([]));
 
-    // getQuests returns { success, data: Quest[] }
     getQuests()
       .then((res) => setQuests(res.data?.data ?? []))
       .catch(() => setQuests([]));
@@ -136,57 +139,64 @@ const Map = () => {
   ];
 
   return (
-    <div className={styles.container} style={{ flexDirection: "column", minHeight: "85vh", justifyContent: "flex-start", alignItems: "stretch", padding: "20px 40px" }}>
+    // FIXED: Ensured the main wrapper explicitly controls the full screen layout
+    <div className={styles.container} style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", justifyContent: "flex-start", alignItems: "stretch" }}>
+
       {/* Controls Bar */}
-      <div className={styles.controlsBar}>
-        <select
-          value={budget}
-          onChange={(e) => setBudget(e.target.value)}
-          className={styles.selectField}
-        >
-          <option value="All">
-            {i18n.language === "ar" ? "جميع الميزانيات" : "All Budgets"}
-          </option>
-          <option value="Low">
-            {i18n.language === "ar" ? "منخفضة (Low)" : "Low Budget"}
-          </option>
-          <option value="Medium">
-            {i18n.language === "ar" ? "متوسطة (Medium)" : "Medium Budget"}
-          </option>
-          <option value="High">
-            {i18n.language === "ar" ? "عالية (High)" : "High Budget"}
-          </option>
-        </select>
+      <div className={styles.controlsBar} style={{ zIndex: 10 }}>
+        <div className={styles.leftContainer}>
+          <select
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            className={styles.selectField}
+          >
+            <option value="All">{i18n.language === "ar" ? "جميع الميزانيات" : "All Budgets"}</option>
+            <option value="Low">{i18n.language === "ar" ? "منخفضة (Low)" : "Low Budget"}</option>
+            <option value="Medium">{i18n.language === "ar" ? "متوسطة (Medium)" : "Medium Budget"}</option>
+            <option value="High">{i18n.language === "ar" ? "عالية (High)" : "High Budget"}</option>
+          </select>
 
+          <button
+            onClick={() => {
+              setManualMode(!manualMode);
+              setManualPos(null);
+            }}
+            className={`${styles.btn} ${manualMode ? styles.btnActive : ""}`}
+          >
+            {manualMode
+              ? "📍 " + (i18n.language === "ar" ? "انقر لتحديد موقعك" : "Click to set location")
+              : "🖱️ " + (i18n.language === "ar" ? "تحديد الموقع يدوياً" : "Set Location Manually")}
+          </button>
+
+          {manualMode && (
+            <span className={styles.statusIndicator}>
+              {manualPos
+                ? `✅ ${i18n.language === "ar" ? "تم تحديد الموقع" : "Location set"}`
+                : `⬇️ ${i18n.language === "ar" ? "انقر على خريطتك الفعلية" : "Click your real position on map"}`}
+            </span>
+          )}
+
+        </div>
+
+        {/* Home Button inside the controls bar to keep it safely on top of Leaflet layers */}
         <button
-          onClick={() => {
-            setManualMode(!manualMode);
-            setManualPos(null);
-          }}
-          className={`${styles.btn} ${manualMode ? styles.btnActive : ""}`}
+          className={styles.hBtn}
+          onClick={() => navigate("/")}
+          style={{ cursor: "pointer", zIndex: 20, marginLeft: "auto" }}
         >
-          {manualMode
-            ? "📍 " + (i18n.language === "ar" ? "انقر لتحديد موقعك" : "Click to set location")
-            : "🖱️ " + (i18n.language === "ar" ? "تحديد الموقع يدوياً" : "Set Location Manually")}
+          🏠 Home
         </button>
-
-        {manualMode && (
-          <span className={styles.statusIndicator}>
-            {manualPos
-              ? `✅ ${i18n.language === "ar" ? "تم تحديد الموقع" : "Location set"}`
-              : `⬇️ ${i18n.language === "ar" ? "انقر على خريطتك الفعلية" : "Click your real position on map"}`}
-          </span>
-        )}
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, borderRadius: "25px", overflow: "hidden", border: "1px solid var(--color-border, #E8E8E8)", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+      {/* FIXED: Added explicit flex growth and height rules to the Map wrapper */}
+      <div style={{ flex: 1, position: "relative", zIndex: 1, borderRadius: "25px", overflow: "hidden", border: "1px solid var(--color-border, #E8E8E8)", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", height: "calc(100vh - 80px)" }}>
         <MapContainer
           center={[31.2, 36.5]}
           zoom={8}
           minZoom={7}
           maxBounds={JORDAN_BOUNDS}
           maxBoundsViscosity={0.8}
-          style={{ height: "70vh", width: "100%" }}
+          style={{ height: "100%", width: "100%" }} // Changed to 100% of parent wrapper
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -215,7 +225,7 @@ const Map = () => {
                 radius={500}
                 pathOptions={{
                   color: "#1B56FD",
-                  fillColor: "#1B56FD",
+                  fillFillColor: "#1B56FD",
                   fillOpacity: 0.08,
                   weight: 1,
                   dashArray: "6",
@@ -237,33 +247,13 @@ const Map = () => {
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button
                       onClick={() => setActiveLocation(loc)}
-                      style={{
-                        flex: 1,
-                        background: "#1B56FD",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "8px",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        fontSize: "1.1rem"
-                      }}
+                      style={{ flex: 1, background: "#1B56FD", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
                     >
                       {t("check_in")}
                     </button>
                     <button
                       onClick={() => setActiveReviewsLocation(loc)}
-                      style={{
-                        flex: 1,
-                        background: "#2E7D32",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "8px",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        fontSize: "1.1rem"
-                      }}
+                      style={{ flex: 1, background: "#2E7D32", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
                     >
                       {i18n.language === "ar" ? "الآراء" : "Reviews"}
                     </button>

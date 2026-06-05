@@ -1,7 +1,48 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AccountsManagement.module.css";
-//import * as accountsService from "@/services/accountsService";
+import { getAllUsers, toggleBanUser } from "@/api/auth";
+
+// ─── Field mapping helpers ────────────────────────────────────────────────────
+//
+// Your API returns User objects shaped like:
+//   { _id, name, email, role, isBanned, createdAt, profilePicture?, ... }
+//
+// The UI expects:
+//   { id, username, email, avatar, subscription_date, tier, status }
+//
+// normalizeUser converts one API user → UI shape.
+// status is derived: isBanned → 'banned', else 'active'
+// tier is derived from role: 'admin' → 'Elite', else 'Standard'
+// (extend this logic once you add a real tier/subscription field)
+
+function normalizeUser(user) {
+  return {
+    id: user._id,
+    username: user.name,
+    email: user.email,
+    avatar: user.profilePicture || null,
+    subscription_date: user.createdAt,
+    tier: user.role === "admin" ? "Elite" : "Standard",
+    status: user.isBanned ? "banned" : "active",
+    // keep original for reference
+    _raw: user,
+  };
+}
+
+// Derive stats from the full users array (no dedicated stats endpoint)
+function deriveStats(users) {
+  return users.reduce(
+    (acc, u) => {
+      if (u.isBanned) acc.banned++;
+      else acc.active++;
+      return acc;
+    },
+    { active: 0, suspended: 0, banned: 0, reported: 0 },
+  );
+}
+
+// ─── Sub-components (unchanged from original) ────────────────────────────────
 
 function SearchInput({ value, onChange, placeholder }) {
   return (
@@ -17,7 +58,6 @@ function SearchInput({ value, onChange, placeholder }) {
   );
 }
 
-// Utility function to calculate relative time
 function formatRelativeTime(date) {
   if (!date) return "N/A";
   const now = new Date();
@@ -38,7 +78,6 @@ function formatRelativeTime(date) {
   });
 }
 
-// Animation hook for number counting
 function useAnimatedNumber(targetValue, duration = 400) {
   const [displayValue, setDisplayValue] = useState(targetValue);
   const previousValue = useRef(targetValue);
@@ -70,6 +109,8 @@ function useAnimatedNumber(targetValue, duration = 400) {
   return displayValue;
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 function AccountsManagement() {
   const navigate = useNavigate();
   const accountsSectionRef = useRef(null);
@@ -85,7 +126,7 @@ function AccountsManagement() {
   const [showFilter, setShowFilter] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
 
-  // Stats
+  // Stats — derived client-side from the users array
   const [stats, setStats] = useState({
     active: 0,
     suspended: 0,
@@ -93,45 +134,36 @@ function AccountsManagement() {
     reported: 0,
   });
 
-  // Pagination states
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [reportedPage, setReportedPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Dialog states
+  // Dialogs
   const [banDialog, setBanDialog] = useState({
     open: false,
     account: null,
     reason: "",
   });
-
   const [clearDialog, setClearDialog] = useState({
     open: false,
     account: null,
   });
 
-  // Fetch accounts from API
+  // ── Data fetching ─────────────────────────────────────────────────────────
+
   const fetchAccounts = useCallback(async () => {
     try {
-      const data = await accountsService.getAccounts({
-        status: statusFilter,
-        tier: tierFilter,
-        search: debouncedSearch,
-      });
-      setAccounts(data);
+      // GET /api/auth/users — returns { success, data: User[] } (or similar)
+      // Adjust res.data path if your getAllUsers response shape differs.
+      const res = await getAllUsers();
+      const rawUsers = res.data.data ?? res.data.users ?? res.data ?? [];
+      const normalized = rawUsers.map(normalizeUser);
+      setAccounts(normalized);
+      setStats(deriveStats(rawUsers));
     } catch (err) {
       console.error("Error fetching accounts:", err);
-      setError(err.message);
-    }
-  }, [statusFilter, tierFilter, debouncedSearch]);
-
-  // Fetch stats from API
-  const fetchStats = useCallback(async () => {
-    try {
-      const data = await accountsService.getAccountStats();
-      setStats(data);
-    } catch (err) {
-      console.error("Error fetching stats:", err);
+      setError(err.response?.data?.message || err.message);
     }
   }, []);
 
@@ -139,33 +171,32 @@ function AccountsManagement() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchAccounts(), fetchStats()]);
+      await fetchAccounts();
       setLoading(false);
     };
     loadData();
-  }, [fetchAccounts, fetchStats]);
+  }, [fetchAccounts]);
 
-  // Debounce search input - wait 300ms after typing stops
+  // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 300);
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Refetch when filters change
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-    fetchAccounts();
-  }, [statusFilter, tierFilter, debouncedSearch, fetchAccounts]);
+  }, [statusFilter, tierFilter, debouncedSearch]);
 
-  // Animated stat values
+  // ── Animated stat counters ────────────────────────────────────────────────
+
   const animatedActive = useAnimatedNumber(stats.active);
   const animatedBanned = useAnimatedNumber(stats.banned);
   const animatedSuspended = useAnimatedNumber(stats.suspended);
   const animatedReported = useAnimatedNumber(stats.reported);
 
-  // Format date
+  // ── Formatting ────────────────────────────────────────────────────────────
+
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("en-US", {
@@ -175,12 +206,23 @@ function AccountsManagement() {
     });
   };
 
-  // Filtered accounts
-  const filteredAccounts = useMemo(() => {
-    return [...accounts];
-  }, [accounts]);
+  // ── Filtering (client-side — API returns all users at once) ───────────────
 
-  // Pagination for filtered accounts
+  const filteredAccounts = useMemo(() => {
+    return accounts.filter((acc) => {
+      const matchesStatus =
+        statusFilter === "all" || acc.status === statusFilter;
+      const matchesTier =
+        tierFilter === "all" ||
+        acc.tier?.toLowerCase() === tierFilter.toLowerCase();
+      const matchesSearch =
+        !debouncedSearch ||
+        acc.username?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        acc.email?.toLowerCase().includes(debouncedSearch.toLowerCase());
+      return matchesStatus && matchesTier && matchesSearch;
+    });
+  }, [accounts, statusFilter, tierFilter, debouncedSearch]);
+
   const paginatedAccounts = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredAccounts.slice(start, start + itemsPerPage);
@@ -188,75 +230,86 @@ function AccountsManagement() {
 
   const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage);
 
-  // Reported accounts
-  const [reportedAccounts, setReportedAccounts] = useState([]);
+  // ── Reported accounts ─────────────────────────────────────────────────────
+  // NOTE: Your API has no reported-users endpoint.
+  // This section is wired to show banned users as a placeholder.
+  // Replace this logic once a /api/auth/reported-users endpoint is added.
+
   const [reportedSearchInput, setReportedSearchInput] = useState("");
   const [debouncedReportedSearch, setDebouncedReportedSearch] = useState("");
 
-  // Debounce reported accounts search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedReportedSearch(reportedSearchInput);
-    }, 300);
+    const timer = setTimeout(
+      () => setDebouncedReportedSearch(reportedSearchInput),
+      300,
+    );
     return () => clearTimeout(timer);
   }, [reportedSearchInput]);
 
-  useEffect(() => {
-    const fetchReported = async () => {
-      try {
-        const data = await accountsService.getReportedAccounts(
-          debouncedReportedSearch,
-        );
-        setReportedAccounts(data);
-      } catch (err) {
-        console.error("Error fetching reported accounts:", err);
-      }
-    };
-    fetchReported();
-    setReportedPage(1);
-  }, [debouncedReportedSearch, stats.reported]);
-
-  const filteredReported = useMemo(() => {
-    return [...reportedAccounts];
-  }, [reportedAccounts]);
+  // Derive "reported" accounts from banned users as a stand-in
+  const reportedAccounts = useMemo(() => {
+    return accounts
+      .filter((acc) => acc.status === "banned")
+      .filter(
+        (acc) =>
+          !debouncedReportedSearch ||
+          acc.username
+            ?.toLowerCase()
+            .includes(debouncedReportedSearch.toLowerCase()) ||
+          acc.email
+            ?.toLowerCase()
+            .includes(debouncedReportedSearch.toLowerCase()),
+      )
+      .map((acc) => ({
+        ...acc,
+        flags: 1, // placeholder — replace with real flags field when available
+        last_incident: acc.subscription_date,
+      }));
+  }, [accounts, debouncedReportedSearch]);
 
   const paginatedReported = useMemo(() => {
     const start = (reportedPage - 1) * itemsPerPage;
-    return filteredReported.slice(start, start + itemsPerPage);
-  }, [filteredReported, reportedPage]);
+    return reportedAccounts.slice(start, start + itemsPerPage);
+  }, [reportedAccounts, reportedPage]);
 
-  const reportedTotalPages = Math.ceil(filteredReported.length / itemsPerPage);
+  const reportedTotalPages = Math.ceil(reportedAccounts.length / itemsPerPage);
 
-  // Relative time updates
   const [lastIncidentTimes, setLastIncidentTimes] = useState([]);
-
   useEffect(() => {
-    const times = filteredReported.map((rep) =>
-      formatRelativeTime(rep.last_incident),
+    setLastIncidentTimes(
+      reportedAccounts.map((rep) => formatRelativeTime(rep.last_incident)),
     );
-    setLastIncidentTimes(times);
-  }, [filteredReported]);
+  }, [reportedAccounts]);
 
-  // Action handlers
+  // ── Action handlers ───────────────────────────────────────────────────────
+
+  // No suspend endpoint — maps to ban (toggleBanUser) as the closest action.
+  // The UI shows "Suspend Account" but the effect is a ban toggle until a
+  // dedicated suspend endpoint is added to the API.
   const handleSuspend = async (account) => {
     try {
-      await accountsService.suspendAccount(account.email);
+      await toggleBanUser(account.id); // PUT /api/auth/users/:id/ban
       await fetchAccounts();
-      await fetchStats();
       setActiveMenu(null);
     } catch (err) {
-      alert("Failed to suspend account: " + err.message);
+      alert(
+        "Failed to suspend account: " +
+        (err.response?.data?.message || err.message),
+      );
     }
   };
 
+  // No reactivate endpoint — toggleBanUser on a banned user unbans them.
   const handleReactivate = async (account) => {
     try {
-      await accountsService.reactivateAccount(account.email);
+      await toggleBanUser(account.id);
       await fetchAccounts();
-      await fetchStats();
       setActiveMenu(null);
     } catch (err) {
-      alert("Failed to reactivate account: " + err.message);
+      alert(
+        "Failed to reactivate account: " +
+        (err.response?.data?.message || err.message),
+      );
     }
   };
 
@@ -267,41 +320,52 @@ function AccountsManagement() {
 
   const confirmBan = async () => {
     if (!banDialog.reason.trim()) return;
-
     try {
-      await accountsService.banAccount(
-        banDialog.account.email,
-        banDialog.reason,
-      );
+      // toggleBanUser bans/unbans — calling it here bans an active user.
+      // The reason field is accepted by the UI but your current API endpoint
+      // doesn't take a reason body. Pass it once the endpoint supports it.
+      await toggleBanUser(banDialog.account.id);
       setBanDialog({ open: false, account: null, reason: "" });
-      await Promise.all([fetchAccounts(), fetchStats()]);
+      await fetchAccounts();
     } catch (err) {
-      alert("Failed to ban account: " + err.message);
+      alert(
+        "Failed to ban account: " +
+        (err.response?.data?.message || err.message),
+      );
     }
   };
 
+  // No clear-flags endpoint — closes the dialog without an API call.
+  // Replace with a real API call once the endpoint is available.
   const handleClearFlags = (account) => {
     setClearDialog({ open: true, account });
   };
 
   const confirmClearFlags = async () => {
     try {
-      await accountsService.clearAccountFlags(clearDialog.account.email);
+      // TODO: call a clearFlags(clearDialog.account.id) endpoint when available
+      alert(
+        `Flags cleared for ${clearDialog.account.username} (UI only — no API endpoint yet)`,
+      );
       setClearDialog({ open: false, account: null });
-      await Promise.all([fetchAccounts(), fetchStats()]);
     } catch (err) {
-      alert("Failed to clear flags: " + err.message);
+      alert(
+        "Failed to clear flags: " +
+        (err.response?.data?.message || err.message),
+      );
     }
   };
 
   const handleUnban = async (account) => {
     if (!confirm(`Are you sure you want to unban ${account.username}?`)) return;
-
     try {
-      await accountsService.unbanAccount(account.email);
-      await Promise.all([fetchAccounts(), fetchStats()]);
+      await toggleBanUser(account.id);
+      await fetchAccounts();
     } catch (err) {
-      alert("Failed to unban account: " + err.message);
+      alert(
+        "Failed to unban account: " +
+        (err.response?.data?.message || err.message),
+      );
     }
   };
 
@@ -324,7 +388,7 @@ function AccountsManagement() {
     }
   };
 
-  // Close menu when clicking outside
+  // Close action menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
     if (activeMenu) {
@@ -333,10 +397,8 @@ function AccountsManagement() {
     }
   }, [activeMenu]);
 
-  // Fix scroll jump on pagination - Task 7
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    // Scroll accounts section to top
     if (accountsSectionRef.current) {
       accountsSectionRef.current.scrollIntoView({
         behavior: "smooth",
@@ -345,7 +407,8 @@ function AccountsManagement() {
     }
   };
 
-  // Loading state
+  // ── Render ────────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className={styles.page}>
@@ -354,7 +417,6 @@ function AccountsManagement() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className={styles.page}>

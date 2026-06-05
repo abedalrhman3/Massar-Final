@@ -29,7 +29,7 @@ exports.getOne = async (req, res, next) => {
     if (!req.user || req.user.role !== 'admin') {
       filter.isPublished = true;
     }
-    
+
     const destination = await Destination.findOne(filter);
     if (!destination) return next(new AppError('Destination not found', 404));
     res.json({ success: true, data: destination });
@@ -41,13 +41,20 @@ exports.getOne = async (req, res, next) => {
 // -------------------------------------------------------
 // GET /api/destinations/:id/details  — public
 // -------------------------------------------------------
+// Inside your destinationController's getDetails function:
 exports.getDetails = async (req, res, next) => {
   try {
+    // req.params.id holds the destination ID sent via the URL
     const details = await DestinationDetail.findOne({ destinationId: req.params.id });
-    if (!details) return next(new AppError('Details not found', 404));
-    res.json({ success: true, data: details });
-  } catch (err) {
-    next(err);
+
+    if (!details) {
+      // Option A: If details object doesn't exist yet, return an empty tracking template instead of a 404 error
+      return res.status(200).json({ success: true, data: { overview: {}, activities: [], guideSections: [] } });
+    }
+
+    res.status(200).json({ success: true, data: details });
+  } catch (error) {
+    next(error);
   }
 };
 

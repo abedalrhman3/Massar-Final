@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
-import { useAuth } from '../../context/AuthContext';
-import UserAvatar from '../UserAvatar';
+import { useAuth } from '@/context/AuthContext';
+import UserAvatar from '@/components/UserAvatar';
+import Support from "@/pages/costumer/Support";
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -54,6 +55,7 @@ function Navbar() {
         <Link to="/about">About</Link>
         <Link to="/destinations">Destinations</Link>
         <Link to="/map">Map</Link>
+        <Link to="/support">Support</Link>
         {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
       </div>
 

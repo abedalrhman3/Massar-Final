@@ -1,16 +1,49 @@
 .mapWrapper {
   position: relative;
-  height: 80vh;
+  height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 .controlsBar {
+  width: 95%;
+  position: absolute;
+  left: 5rem;
+  top: 1rem;
   display: flex;
+  justify-content: space-between;
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 15px;
   font-family: var(--font-ui), sans-serif;
+  z-index: 10000;
+}
+
+.hBtn {
+
+  z-index: 10000;
+  background-color: var(--color-main-blue, #1B56FD);
+  color: var(--color-white, #FFFFFF);
+  font-weight: 600;
+  font-size: 1.3rem;
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(27, 86, 253, 0.2);
+}
+
+.hBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(27, 86, 253, 0.3);
+  filter: brightness(1.1);
+}
+
+.leftContainer {
+  display: flex;
+  gap: 1rem;
 }
 
 .selectField {

@@ -56,15 +56,7 @@ function AdminSidebar() {
             <span>Accounts</span>
           </NavLink>
 
-          <NavLink
-            to="/admin/support"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-          >
-            <span className="material-symbols-outlined">support_agent</span>
-            <span>Support</span>
-          </NavLink>
+
         </nav>
 
         <div className={styles.footer}>

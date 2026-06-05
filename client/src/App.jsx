@@ -6,6 +6,7 @@ import About from "./pages/costumer/About/About";
 import DestinationDetails from "./pages/costumer/DestinationsDetails/DestinationDetails";
 import Destinations from "./pages/costumer/Destinations/Destinations";
 import Map from "./pages/costumer/Map/Map";
+import Support from "./pages/costumer/Support";
 
 // Register-Login Pages
 import RegisterLogin, {
@@ -27,7 +28,6 @@ import DestinationsManagement from "./pages/admin/DestinationsManagement";
 import AdminDestinationDetail from "./pages/admin/DestinationDetail/DestinationDetail";
 import AccountManagement from "./pages/admin/AccountsManagement";
 import BanHistory from "./pages/admin/BanHistory";
-import Support from "./pages/admin/Support";
 import AdminSettings from "./pages/admin/Settings";
 import AdminUserProfile from "./pages/admin/UserProfile";
 import AdminChat from "./pages/admin/AdminChat";
@@ -95,24 +95,34 @@ function App() {
             }
           />
           <Route
-            path="/destinations/:id"
+            path="/support"
             element={
-              <ErrorBoundary message="Unable to load this destination's details.">
-                <DestinationDetails />
+              <ErrorBoundary message="Unable to load support.">
+                <Support />
               </ErrorBoundary>
             }
           />
-          <Route
-            path="/map"
-            element={
-              <PrivateRoute>
-                <ErrorBoundary message="The map failed to load. Please refresh.">
-                  <Map />
-                </ErrorBoundary>
-              </PrivateRoute>
-            }
-          />
         </Route>
+        <Route
+          path="/destinations/:slug"
+          element={
+            <ErrorBoundary message="Unable to load this destination's details.">
+              <DestinationDetails />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/map"
+          element={
+            <PrivateRoute>
+              <ErrorBoundary message="The map failed to load. Please refresh.">
+                <Map />
+              </ErrorBoundary>
+            </PrivateRoute>
+          }
+        />
+
+
 
         {/* ── Auth Pages ────────────────────────────────────────── */}
         <Route path="/login" element={<RegisterLogin />} />
@@ -154,7 +164,6 @@ function App() {
           <Route path="destinations/:slug" element={<AdminDestinationDetail />} />
           <Route path="accounts" element={<AccountManagement />} />
           <Route path="ban-history" element={<BanHistory />} />
-          <Route path="support" element={<Support />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="profile" element={<AdminUserProfile />} />
           <Route path="chat" element={<AdminChat />} />

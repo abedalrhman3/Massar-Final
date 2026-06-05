@@ -1,45 +1,37 @@
 import client from './client';
 
-// GET /api/destinations  — public (admin sees unpublished too)
-// returns: { success, data: Destination[] }
+// GET /api/destinations — public
 export const getDestinations = () =>
     client.get('/destinations');
 
-// GET /api/destinations/:slug  — public
-// returns: { success, data: Destination }
+// GET /api/destinations/:slug — public
 export const getDestination = (slug) =>
     client.get(`/destinations/${slug}`);
 
-// GET /api/destinations/:id/details  — public
-// returns: { success, data: DestinationDetail }
+// GET /api/destinations/details/:id — public
 export const getDestinationDetails = (id) =>
-    client.get(`/destinations/${id}/details`);
+    client.get(`/destinations/details/${id}`); // Swapped structure
 
 // ── Admin ─────────────────────────────────────────────
 
-// POST /api/destinations  — admin, multipart/form-data
-// fields: name(string), budget(number), isPublished(bool), image(file), location(JSON string)
-// returns: { success, data: Destination }
+// POST /api/destinations — admin, multipart/form-data
 export const createDestination = (formData) =>
     client.post('/destinations', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-// PUT /api/destinations/:id  — admin, multipart/form-data
-// same fields as create (all optional)
-// returns: { success, data: Destination }
+// 1. Keeps FormData intact for image files
+// PUT /api/destinations/:id — admin, multipart/form-data
 export const updateDestination = (id, formData) =>
     client.put(`/destinations/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-// PUT /api/destinations/:id/details  — admin, JSON
-// body: { overview: {...}, activities: [...], guideSections: [...] }
-// returns: { success, data: DestinationDetail }
+// 2. Keeps pure raw JSON object data intact for guide text updates
+// PUT /api/destinations/details/:id — admin, JSON
 export const updateDestinationDetails = (id, data) =>
-    client.put(`/destinations/${id}/details`, data);
+    client.put(`/destinations/details/${id}`, data); // Swapped structure
 
-// DELETE /api/destinations/:id  — admin
-// returns: { success, message }
+// DELETE /api/destinations/:id — admin
 export const deleteDestination = (id) =>
     client.delete(`/destinations/${id}`);

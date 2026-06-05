@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema(
       enum: ['admin', 'editor', 'user'],
       default: 'user',
     },
+    avatar_url: {
+      type: String,
+      default: null,
+    },
     isVerified: {
       type: Boolean,
       default: false,

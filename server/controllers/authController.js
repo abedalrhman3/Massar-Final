@@ -164,3 +164,70 @@ exports.toggleBanUser = async (req, res, next) => {
     next(err);
   }
 };
+// Add these exports at the bottom of your authController.js file
+
+// PUT /api/auth/update-profile
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const updates = {};
+    if (req.body.name) updates.name = req.body.name;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select('-passwordHash');
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /api/auth/update-password
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.userId);
+
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) return next(new AppError('Incorrect current password', 401));
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+// POST /api/auth/upload-avatar
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    // 1. Ensure multer parsed the file stream from the frontend request successfully[cite: 3]
+    if (!req.file) {
+      return next(new AppError('Please provide an image file', 400));
+    }
+
+    // 2. CORRECT SERVICE PATH: Pull the Cloudinary upload execution function[cite: 5]
+    const { uploadPhoto } = require('../services/uploadService');
+
+    // Pass the memory buffer directly to Cloudinary[cite: 3, 5]
+    const secureUrl = await uploadPhoto(req.file.buffer);
+
+    // 3. Save the returned Cloudinary URL string into MongoDB
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: { avatar_url: secureUrl } },
+      { new: true }
+    ).select('-passwordHash');
+
+    res.json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
+};
