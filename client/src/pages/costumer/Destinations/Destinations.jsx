@@ -108,7 +108,7 @@ function Tours() {
                 <div className={styles.toursHero}>
                     <span className={styles.heroEyebrow}>Discover Jordan</span>
                     <h1 className={styles.heroTitle}>Explore travel guides &amp; itineraries</h1>
-                    <p className={styles.heroSubtitle}>Search from {all.length || '—'} curated destinations</p>
+
                     <SearchBar
                         placeholder="Search destinations, regions, seasons…"
                         onSearch={setQuery}
