@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
@@ -7,7 +7,7 @@ import CheckInModal from "./CheckInModal";
 import LocationReviews from "./LocationReviews";
 import styles from "./Map.module.css";
 import { getLocations } from "@/api/locations";
-import { getQuests } from "@/api/quests";
+import { getQuests, joinQuest } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
 import { BASE_URL } from "@/api/client";
 import { useNavigate } from "react-router-dom";
@@ -30,7 +30,15 @@ const ManualLocationPicker = ({ onPick }) => {
   return null;
 };
 
-// Auto GPS tracker
+// Handles map click to clear route coordinates
+const MapClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click() {
+      onMapClick();
+    },
+  });
+  return null;
+};
 const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
   const [position, setPosition] = useState(null);
   const navigate = useNavigate();
@@ -97,9 +105,59 @@ const Map = () => {
   const [manualMode, setManualMode] = useState(false);
   const [manualPos, setManualPos] = useState(null);
   const [autoPos, setAutoPos] = useState(null);
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [joiningQuestId, setJoiningQuestId] = useState(null);
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate(); // Assured this is active
+
+  const drawRoute = async (destLat, destLng) => {
+    if (!userPosition) {
+      alert(i18n.language === "ar" ? "يرجى تحديد موقعك أولاً" : "Please set your location first");
+      return;
+    }
+    const userLat = userPosition.lat;
+    const userLng = userPosition.lng;
+
+    const url = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.routes && data.routes.length > 0) {
+        const coords = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+        setRouteCoords(coords);
+      } else {
+        setRouteCoords([[userLat, userLng], [destLat, destLng]]);
+      }
+    } catch (error) {
+      console.error("Error drawing route:", error);
+      setRouteCoords([[userLat, userLng], [destLat, destLng]]);
+    }
+  };
+
+  const handleJoinQuest = async (questId) => {
+    setJoiningQuestId(questId);
+    try {
+      const res = await joinQuest(questId);
+      if (res.data.success) {
+        alert(i18n.language === "ar" ? "تم الانضمام للمسار بنجاح! تم فتح المواقع المرتبطة به." : "Successfully joined the quest! Linked locations are unlocked.");
+        
+        setUser(res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
+        // Re-fetch locations to show/hide quest locations
+        const params = budget && budget !== "All" ? { budgetCategory: budget } : {};
+        getLocations(params)
+          .then((res) => setLocations(Array.isArray(res.data) ? res.data : []))
+          .catch(() => setLocations([]));
+      }
+    } catch (error) {
+      console.error("Error joining quest", error);
+      alert(i18n.language === "ar" ? "فشل الانضمام للمسار" : "Failed to join quest");
+    } finally {
+      setJoiningQuestId(null);
+    }
+  };
 
   const userPosition = manualMode ? manualPos : autoPos;
 
@@ -213,6 +271,20 @@ const Map = () => {
 
           {manualMode && <ManualLocationPicker onPick={(pos) => setManualPos(pos)} />}
 
+          <MapClickHandler onMapClick={() => setRouteCoords([])} />
+
+          {routeCoords.length > 0 && (
+            <Polyline
+              positions={routeCoords}
+              pathOptions={{
+                color: "#1B56FD",
+                weight: 5,
+                opacity: 0.8,
+                dashArray: "5, 10"
+              }}
+            />
+          )}
+
           {manualMode && manualPos && (
             <>
               <Marker position={manualPos} icon={manualIcon}>
@@ -244,19 +316,29 @@ const Map = () => {
                   <p style={{ fontSize: "1.2rem", color: "#666", margin: "0 0 10px 0" }}>
                     {i18n.language === "ar" ? loc.description : loc.description_en}
                   </p>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      onClick={() => setActiveLocation(loc)}
-                      style={{ flex: 1, background: "#1B56FD", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
-                    >
-                      {t("check_in")}
-                    </button>
-                    <button
-                      onClick={() => setActiveReviewsLocation(loc)}
-                      style={{ flex: 1, background: "#2E7D32", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
-                    >
-                      {i18n.language === "ar" ? "الآراء" : "Reviews"}
-                    </button>
+                  <div style={{ display: "flex", gap: "8px", flexDirection: "column", marginTop: "8px" }}>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => setActiveLocation(loc)}
+                        style={{ flex: 1, background: "#1B56FD", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
+                      >
+                        {t("check_in")}
+                      </button>
+                      <button
+                        onClick={() => setActiveReviewsLocation(loc)}
+                        style={{ flex: 1, background: "#2E7D32", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
+                      >
+                        {i18n.language === "ar" ? "الآراء" : "Reviews"}
+                      </button>
+                    </div>
+                    {userPosition && (
+                      <button
+                        onClick={() => drawRoute(loc.coordinates.lat, loc.coordinates.lng)}
+                        style={{ background: "#4F46E5", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
+                      >
+                        🗺️ {i18n.language === "ar" ? "ارسم المسار" : "Draw Route"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </Popup>
@@ -282,6 +364,36 @@ const Map = () => {
                     <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
                       <strong>Title:</strong> {quest.title_reward}
                     </p>
+                    {user && (
+                      <button
+                        onClick={() => handleJoinQuest(quest._id)}
+                        disabled={joiningQuestId === quest._id}
+                        style={{
+                          background: user.joined_quests?.map(String).includes(String(quest._id)) ? "#2E7D32" : "#1B56FD",
+                          color: "white",
+                          border: "none",
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          fontSize: "1.1rem",
+                          width: "100%",
+                          marginTop: "8px"
+                        }}
+                      >
+                        {user.joined_quests?.map(String).includes(String(quest._id))
+                          ? (i18n.language === "ar" ? "مشارك فيه ✅" : "Joined ✅")
+                          : (i18n.language === "ar" ? "انضمام للمسار" : "Join Quest")}
+                      </button>
+                    )}
+                    {userPosition && (
+                      <button
+                        onClick={() => drawRoute(quest.start_coordinates.lat, quest.start_coordinates.lng)}
+                        style={{ background: "#4F46E5", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem", width: "100%", marginTop: "8px" }}
+                      >
+                        🗺️ {i18n.language === "ar" ? "ارسم المسار" : "Draw Route"}
+                      </button>
+                    )}
                   </div>
                 </Popup>
               </Marker>

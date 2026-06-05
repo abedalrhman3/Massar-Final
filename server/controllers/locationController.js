@@ -29,7 +29,56 @@ exports.getAll = async (req, res, next) => {
     }
 
     const locations = await Location.find(query).populate('badge_id');
-    res.json(locations); // Abed's client expects array directly
+
+    // FILTER QUEST-BOUND LOCATIONS:
+    // Locations under a quest should NOT appear unless user has joined that quest.
+    const Quest = require('../models/Quest');
+    const allQuests = await Quest.find();
+    
+    // 1. Gather all location IDs that are part of ANY quest
+    const questBoundLocationIds = new Set();
+    allQuests.forEach(q => {
+      if (q.locations && Array.isArray(q.locations)) {
+        q.locations.forEach(locId => {
+          questBoundLocationIds.add(locId.toString());
+        });
+      }
+    });
+
+    // 2. Identify the quests joined by the current user (if logged in)
+    let joinedQuestIds = [];
+    if (req.user && req.user.userId) {
+      const User = require('../models/User');
+      const user = await User.findById(req.user.userId);
+      if (user && user.joined_quests) {
+        joinedQuestIds = user.joined_quests.map(id => id.toString());
+      }
+    }
+
+    // 3. Gather all location IDs that are part of the quests joined by the user
+    const allowedLocationIds = new Set();
+    allQuests.forEach(q => {
+      if (joinedQuestIds.includes(q._id.toString())) {
+        if (q.locations && Array.isArray(q.locations)) {
+          q.locations.forEach(locId => {
+            allowedLocationIds.add(locId.toString());
+          });
+        }
+      }
+    });
+
+    // 4. Filter locations
+    const filteredLocations = locations.filter(loc => {
+      const locIdStr = loc._id.toString();
+      // If the location belongs to a quest, show it ONLY if user has joined that quest
+      if (questBoundLocationIds.has(locIdStr)) {
+        return allowedLocationIds.has(locIdStr);
+      }
+      // Otherwise, it's a standalone location, always show it
+      return true;
+    });
+
+    res.json(filteredLocations); // Abed's client expects array directly
   } catch (err) {
     next(err);
   }

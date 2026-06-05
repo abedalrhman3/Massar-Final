@@ -16,13 +16,58 @@ exports.getByLocation = async (req, res, next) => {
 // POST /api/locations/:locationId/posts  — private
 exports.create = async (req, res, next) => {
   try {
+    const { uploadPhoto } = require('../services/uploadService');
+    const { calculateLevel } = require('../services/gameService');
+    const { sendNotification } = require('../services/notificationService');
+    const User = require('../models/User');
+
+    let imageUrl = req.body.image_url;
+    if (req.file) {
+      imageUrl = await uploadPhoto(req.file.buffer);
+    }
+
     const post = await Post.create({
-      ...req.body,
+      content: req.body.content,
+      rating: req.body.rating ? Number(req.body.rating) : undefined,
+      image_url: imageUrl,
       user_id: req.user.userId,
       location_id: req.params.locationId,
     });
-    const populated = await post.populate('user_id', 'name username');
-    res.status(201).json({ success: true, data: populated });
+
+    const populated = await post.populate('user_id', 'name username active_frame_slug');
+
+    // Gamification Engine: Award 50 XP for writing a review/comment
+    const xpReward = 50;
+    const user = await User.findById(req.user.userId);
+    let xpGained = 0;
+    let newXp = 0;
+    let newLevel = '';
+
+    if (user) {
+      user.total_xp = (user.total_xp || 0) + xpReward;
+      user.current_level = calculateLevel(user.total_xp);
+      await user.save();
+
+      xpGained = xpReward;
+      newXp = user.total_xp;
+      newLevel = user.current_level;
+
+      await sendNotification(
+        req.user.userId,
+        'system',
+        '💬 تعليق وتقييم المعالم',
+        `أحسنت! ربحت +${xpReward} XP لكتابة تعليق وتقييم الموقع!`
+      );
+    }
+
+    res.status(201).json({
+      success: true,
+      data: populated,
+      xpGained,
+      xp: newXp,
+      level: newLevel,
+      message: `ربحت ${xpReward} XP لمشاركتك!`,
+    });
   } catch (err) {
     next(err);
   }

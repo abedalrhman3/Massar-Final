@@ -140,6 +140,9 @@ const mapHtml = `
 
     var userMarker = null;
     var markers = {};
+    var routeLine = null;
+    var userLat = 31.9547;
+    var userLng = 35.9344;
 
     // Premium custom landmark marker icon with arrow pointing directly down
     var destIcon = L.divIcon({
@@ -147,6 +150,49 @@ const mapHtml = `
       className: 'custom-dest-icon',
       iconSize: [36, 42],
       iconAnchor: [18, 42]
+    });
+
+    window.drawRouteTo = function(destLat, destLng) {
+      var url = 'https://router.project-osrm.org/route/v1/driving/' + userLng + ',' + userLat + ';' + destLng + ',' + destLat + '?overview=full&geometries=geojson';
+      fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.routes && data.routes.length > 0) {
+            if (routeLine) {
+              map.removeLayer(routeLine);
+            }
+            var geojson = data.routes[0].geometry;
+            routeLine = L.geoJSON(geojson, {
+              style: {
+                color: '#1B56FD',
+                weight: 5,
+                opacity: 0.8,
+                dashArray: '5, 10'
+              }
+            }).addTo(map);
+            map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+          }
+        })
+        .catch(function(err) {
+          console.log('Error drawing route:', err);
+          if (routeLine) {
+            map.removeLayer(routeLine);
+          }
+          routeLine = L.polyline([[userLat, userLng], [destLat, destLng]], {
+            color: '#1B56FD',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '8, 8'
+          }).addTo(map);
+          map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+        });
+    };
+
+    map.on('click', function() {
+      if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+      }
     });
 
     function handleReactNativeMessage(event) {
@@ -164,10 +210,37 @@ const mapHtml = `
             if (markers[loc._id]) {
               markers[loc._id].remove();
             }
+            var popupContent = "<b>📍 " + loc.name + "</b><br>" + 
+              (loc.description || "معلم سياحي أردني") + 
+              "<br><button onclick='window.drawRouteTo(" + loc.coordinates.lat + "," + loc.coordinates.lng + ")' style='background-color:#1B56FD;color:white;border:none;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:inherit;font-weight:bold;cursor:pointer;width:100%;'>🗺️ ارسم المسار (Draw Route)</button>";
             var marker = L.marker([loc.coordinates.lat, loc.coordinates.lng], { icon: destIcon })
               .addTo(map)
-              .bindPopup("<b>📍 " + loc.name + "</b><br>" + (loc.description || "معلم سياحي أردني"));
+              .bindPopup(popupContent);
             markers[loc._id] = marker;
+          }
+        });
+      }
+
+      if (data.type === "setQuests") {
+        data.quests.forEach(function(quest) {
+          if (quest.start_coordinates && quest.start_coordinates.lat) {
+            if (markers['quest_' + quest._id]) {
+              markers['quest_' + quest._id].remove();
+            }
+            var questIcon = L.divIcon({
+              html: '<div class="custom-pin-container" style="filter: hue-rotate(45deg);"><div class="custom-pin-emblem" style="background-color:#D97706;">🏆</div><div class="custom-pin-arrow" style="border-top-color:#D97706;"></div></div>',
+              className: 'custom-quest-icon',
+              iconSize: [36, 42],
+              iconAnchor: [18, 42]
+            });
+            var popupContent = "<b>✨ " + (quest.title_en || quest.title) + "</b><br>" + 
+              (quest.description || "مسار سياحي خاص") + 
+              "<br>🏆 المكافأة: " + quest.bonus_xp + " XP" +
+              "<br><button onclick='window.drawRouteTo(" + quest.start_coordinates.lat + "," + quest.start_coordinates.lng + ")' style='background-color:#D97706;color:white;border:none;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:inherit;font-weight:bold;cursor:pointer;width:100%;'>🗺️ ارسم المسار (Draw Route)</button>";
+            var marker = L.marker([quest.start_coordinates.lat, quest.start_coordinates.lng], { icon: questIcon })
+              .addTo(map)
+              .bindPopup(popupContent);
+            markers['quest_' + quest._id] = marker;
           }
         });
       }
@@ -175,6 +248,8 @@ const mapHtml = `
       if (data.type === "setUserLocation") {
         var lat = data.lat;
         var lng = data.lng;
+        userLat = lat;
+        userLng = lng;
         
         if (userMarker) {
           userMarker.setLatLng([lat, lng]);
@@ -216,6 +291,7 @@ export default function MapScreen() {
     if (mapReady) {
       const timer = setTimeout(() => {
         loadLocations();
+        loadQuests();
         startLocationTracking();
       }, 800);
       return () => clearTimeout(timer);
@@ -231,6 +307,18 @@ export default function MapScreen() {
       });
     } catch (err) {
       console.log('Error loading locations for map:', err);
+    }
+  };
+
+  const loadQuests = async () => {
+    try {
+      const res = await api.get('/api/quests');
+      sendMessageToMap({
+        type: 'setQuests',
+        quests: res.data?.data || []
+      });
+    } catch (err) {
+      console.log('Error loading quests for map:', err);
     }
   };
 

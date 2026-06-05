@@ -82,6 +82,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Location',
       },
     ],
+    joined_quests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Quest',
+      },
+    ],
   },
   { timestamps: true }
 );

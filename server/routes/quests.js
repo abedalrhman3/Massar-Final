@@ -1,9 +1,10 @@
 const router = require('express').Router();
-const { getAll, getOne, create, update, remove } = require('../controllers/questController');
+const { getAll, getOne, create, update, remove, joinQuest } = require('../controllers/questController');
 const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/',      getAll);
 router.get('/:id',   getOne);
+router.post('/:id/join', protect, joinQuest);
 
 router.post('/',     protect, adminOnly, create);
 router.put('/:id',   protect, adminOnly, update);

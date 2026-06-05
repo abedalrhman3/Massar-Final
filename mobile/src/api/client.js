@@ -17,6 +17,9 @@ api.interceptors.request.use(async (config) => {
     if (user) {
       const parsed = JSON.parse(user);
       config.headers['x-user-id'] = parsed._id;
+      if (parsed.token) {
+        config.headers['Authorization'] = `Bearer ${parsed.token}`;
+      }
     }
   } catch (_) {}
   return config;

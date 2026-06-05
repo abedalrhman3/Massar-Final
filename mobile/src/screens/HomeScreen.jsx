@@ -42,6 +42,21 @@ export default function HomeScreen() {
   const [celebratedXp, setCelebratedXp] = useState('');
   const [celebratedBadge, setCelebratedBadge] = useState(null);
 
+  // Quest states
+  const [activeTab, setActiveTab] = useState('locations'); // 'locations' or 'quests'
+  const [quests, setQuests] = useState([]);
+  const [questsLoading, setQuestsLoading] = useState(false);
+  const [joiningQuest, setJoiningQuest] = useState(false);
+
+  // Review states
+  const [reviewsTab, setReviewsTab] = useState('details'); // 'details' or 'reviews'
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentRating, setCommentRating] = useState(5);
+  const [reviewPhoto, setReviewPhoto] = useState(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const budgets = ['All', 'Low', 'Medium', 'High'];
   const budgetAr = { All: 'الكل', Low: 'منخفضة', Medium: 'متوسطة', High: 'عالية' };
 
@@ -55,10 +70,25 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const fetchQuests = async () => {
+    setQuestsLoading(true);
+    try {
+      const res = await api.get('/api/quests');
+      setQuests(res.data?.data || []);
+    } catch (_) {}
+    setQuestsLoading(false);
+  };
+
   useEffect(() => {
     setLoading(true);
     fetchLocations();
   }, [budget]);
+
+  useEffect(() => {
+    if (activeTab === 'quests') {
+      fetchQuests();
+    }
+  }, [activeTab]);
 
   // Request GPS and calculate distance when active location changes
   useEffect(() => {
@@ -164,7 +194,7 @@ export default function HomeScreen() {
         return;
       }
 
-      const res = await api.post('/api/user/complete-task', formData, {
+      const res = await api.post(`/api/locations/${selectedLocation._id}/complete-task`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -196,6 +226,134 @@ export default function HomeScreen() {
     }
   };
 
+  const handleJoinQuest = async (questId) => {
+    setJoiningQuest(true);
+    try {
+      const res = await api.post(`/api/quests/${questId}/join`);
+      if (res.data.success) {
+        await updateUser({
+          joined_quests: res.data.user.joined_quests
+        });
+        Alert.alert('🎉 تم الانضمام للمسار', 'لقد انضممت إلى هذا المسار بنجاح! تم فتح المواقع الجغرافية التابعة له على الخريطة وقائمة الاستكشاف.');
+        fetchLocations();
+        fetchQuests();
+      }
+    } catch (err) {
+      console.log('Error joining quest:', err);
+      Alert.alert('خطأ', 'فشل الانضمام للمسار، يرجى المحاولة لاحقاً.');
+    } finally {
+      setJoiningQuest(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    if (!selectedLocation) return;
+    setReviewsLoading(true);
+    try {
+      const res = await api.get(`/api/locations/${selectedLocation._id}/posts`);
+      setReviews(res.data?.data || res.data || []);
+    } catch (_) {}
+    setReviewsLoading(false);
+  };
+
+  useEffect(() => {
+    if (selectedLocation && reviewsTab === 'reviews') {
+      fetchReviews();
+    }
+  }, [selectedLocation, reviewsTab]);
+
+  const handleSelectReviewPhoto = async () => {
+    Alert.alert(
+      '📷 إرفاق صورة مع التقييم',
+      'اختر طريقة إرفاق الصورة:',
+      [
+        { text: '📸 التقاط صورة بالكاميرا', onPress: () => captureReviewPhoto() },
+        { text: '🖼️ اختيار من الاستوديو', onPress: () => selectReviewPhotoFromGallery() },
+        { text: 'إلغاء', style: 'cancel' }
+      ]
+    );
+  };
+
+  const captureReviewPhoto = async () => {
+    let { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('صلاحية مطلوبة', 'يرجى السماح بالوصول للكاميرا لالتقاط صورة.');
+      return;
+    }
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.2
+    });
+    if (!result.canceled && result.assets?.length > 0) {
+      setReviewPhoto(result.assets[0].uri);
+    }
+  };
+
+  const selectReviewPhotoFromGallery = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.2
+    });
+    if (!result.canceled && result.assets?.length > 0) {
+      setReviewPhoto(result.assets[0].uri);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!commentText.trim()) {
+      Alert.alert('تنبيه', 'يرجى كتابة تعليق أولاً.');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const formData = new FormData();
+      formData.append('content', commentText);
+      formData.append('rating', commentRating);
+      
+      if (reviewPhoto) {
+        const filename = reviewPhoto.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append('photo', { uri: reviewPhoto, name: filename, type });
+      }
+
+      const res = await api.post(`/api/locations/${selectedLocation._id}/posts`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data.success) {
+        setCommentText('');
+        setCommentRating(5);
+        setReviewPhoto(null);
+        
+        if (res.data.xp) {
+          await updateUser({
+            total_xp: res.data.xp,
+            current_level: res.data.level
+          });
+
+          setCelebratedXp(`ربحت +${res.data.xpGained} XP لكتابة تعليق وتقييم المعلم!`);
+          setCelebratedBadge(null);
+          setCelebrationVisible(true);
+          
+          setTimeout(() => {
+            setCelebrationVisible(false);
+          }, 4500);
+        }
+        
+        fetchReviews();
+      }
+    } catch (err) {
+      console.log('Submit Review Error:', err);
+      Alert.alert('فشل إضافة التقييم', err.response?.data?.error || 'حدث خطأ أثناء إرسال تقييمك.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const renderLocation = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -218,6 +376,44 @@ export default function HomeScreen() {
     </View>
   );
 
+  const renderQuest = ({ item }) => {
+    const isJoined = user?.joined_quests?.map(String).includes(String(item._id));
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>🏆 {item.title_en || item.title}</Text>
+          <View style={[styles.budgetBadge, { backgroundColor: isJoined ? '#4CAF50' : Colors.mainBlue }]}>
+            <Text style={styles.budgetText}>{isJoined ? 'مشارك فيه ✅' : 'مسار مقفل 🔒'}</Text>
+          </View>
+        </View>
+        <Text style={styles.cardDesc}>{item.description || item.description_en || 'مسار سياحي خاص لتجميع النقاط والشارات.'}</Text>
+        
+        {item.locations && item.locations.length > 0 ? (
+          <Text style={styles.taskCount}>📍 يحتوي على {item.locations.length} مواقع سياحية</Text>
+        ) : null}
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.xp}>🏆 +{item.bonus_xp || 200} XP Bonus</Text>
+          {item.title_reward ? <Text style={styles.cost}>🎖️ لقب: {item.title_reward}</Text> : null}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.checkBtn, isJoined ? { backgroundColor: '#4CAF50' } : null]}
+          onPress={() => !isJoined && handleJoinQuest(item._id)}
+          disabled={isJoined || joiningQuest}
+        >
+          {joiningQuest ? (
+            <ActivityIndicator color={Colors.white} />
+          ) : (
+            <Text style={styles.checkBtnText}>
+              {isJoined ? 'أنت تشارك في هذا المسار ✅' : '⚡ انضمام وتفعيل المسار'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       {/* Top bar */}
@@ -232,23 +428,42 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Budget Filter */}
-      <View style={styles.filterRow}>
-        {budgets.map(b => (
-          <TouchableOpacity
-            key={b}
-            style={[styles.filterBtn, budget === b ? styles.filterBtnActive : null]}
-            onPress={() => setBudget(b)}
-          >
-            <Text style={[styles.filterTxt, budget === b ? styles.filterTxtActive : null]}>{budgetAr[b]}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* Tabs Control */}
+      <View style={styles.tabHeaderRow}>
+        <TouchableOpacity
+          style={[styles.tabHeadBtn, activeTab === 'locations' ? styles.tabHeadBtnActive : null]}
+          onPress={() => setActiveTab('locations')}
+        >
+          <Text style={[styles.tabHeadTxt, activeTab === 'locations' ? styles.tabHeadTxtActive : null]}>📍 المعالم والمواقع</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabHeadBtn, activeTab === 'quests' ? styles.tabHeadBtnActive : null]}
+          onPress={() => setActiveTab('quests')}
+        >
+          <Text style={[styles.tabHeadTxt, activeTab === 'quests' ? styles.tabHeadTxtActive : null]}>🏆 المسارات والمهام</Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Budget Filter */}
+      {activeTab === 'locations' && (
+        <View style={styles.filterRow}>
+          {budgets.map(b => (
+            <TouchableOpacity
+              key={b}
+              style={[styles.filterBtn, budget === b ? styles.filterBtnActive : null]}
+              onPress={() => setBudget(b)}
+            >
+              <Text style={[styles.filterTxt, budget === b ? styles.filterTxtActive : null]}>{budgetAr[b]}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       {/* List */}
-      {loading
-        ? <ActivityIndicator size="large" color={Colors.mainBlue} style={{ marginTop: 40 }} />
-        : (
+      {activeTab === 'locations' ? (
+        loading ? (
+          <ActivityIndicator size="large" color={Colors.mainBlue} style={{ marginTop: 40 }} />
+        ) : (
           <FlatList
             data={locations}
             keyExtractor={item => item._id}
@@ -258,7 +473,20 @@ export default function HomeScreen() {
             ListEmptyComponent={<Text style={styles.empty}>لا توجد مواقع في هذه الميزانية</Text>}
           />
         )
-      }
+      ) : (
+        questsLoading ? (
+          <ActivityIndicator size="large" color={Colors.mainBlue} style={{ marginTop: 40 }} />
+        ) : (
+          <FlatList
+            data={quests}
+            keyExtractor={item => item._id}
+            renderItem={renderQuest}
+            contentContainerStyle={styles.list}
+            refreshControl={<RefreshControl refreshing={questsLoading} onRefresh={fetchQuests} colors={[Colors.mainBlue]} />}
+            ListEmptyComponent={<Text style={styles.empty}>لا توجد مسارات سياحية متاحة حالياً</Text>}
+          />
+        )
+      )}
 
       {/* Explore & Check-in Modal */}
       {selectedLocation ? (
@@ -266,87 +494,180 @@ export default function HomeScreen() {
           <View style={styles.modalBg}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>📍 {selectedLocation.name}</Text>
-                <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedLocation(null)}>
+                <Text style={styles.modalTitle} numberOfLines={1}>📍 {selectedLocation.name}</Text>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => { setSelectedLocation(null); setReviewsTab('details'); }}>
                   <Text style={styles.closeBtnTxt}>✕</Text>
                 </TouchableOpacity>
               </View>
 
-              <ScrollView contentContainerStyle={styles.modalScroll}>
-                <Text style={styles.modalDesc}>{selectedLocation.description || selectedLocation.description_en}</Text>
+              {/* Inner Tabs */}
+              <View style={styles.modalTabRow}>
+                <TouchableOpacity
+                  style={[styles.modalTabBtn, reviewsTab === 'details' ? styles.modalTabBtnActive : null]}
+                  onPress={() => setReviewsTab('details')}
+                >
+                  <Text style={[styles.modalTabTxt, reviewsTab === 'details' ? styles.modalTabTxtActive : null]}>📋 تفاصيل ومهمات</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalTabBtn, reviewsTab === 'reviews' ? styles.modalTabBtnActive : null]}
+                  onPress={() => setReviewsTab('reviews')}
+                >
+                  <Text style={[styles.modalTabTxt, reviewsTab === 'reviews' ? styles.modalTabTxtActive : null]}>💬 الآراء والتقييمات</Text>
+                </TouchableOpacity>
+              </View>
 
-                {/* Distance & GPS Stats */}
-                <View style={styles.statsCard}>
-                  <Text style={styles.statsLabel}>🗺️ التحقق الجغرافي (Spatial Verification):</Text>
-                  {distance !== null ? (
-                    <Text style={[styles.statsValue, { color: distance <= 500 ? '#4CAF50' : Colors.danger }]}>
-                      المسافة الحالية: {Math.round(distance)} متر 
-                      {distance <= 500 ? ' (أنت قريب بما فيه الكفاية! ✅)' : ' (أنت بعيد جداً! ❌ يجب أن تكون على بعد 500 متر)'}
-                    </Text>
-                  ) : (
-                    <Text style={styles.statsValue}>جاري تحديد إحداثيات موقعك الجغرافي... 🛰️</Text>
-                  )}
+              {reviewsTab === 'details' ? (
+                <ScrollView contentContainerStyle={styles.modalScroll}>
+                  <Text style={styles.modalDesc}>{selectedLocation.description || selectedLocation.description_en}</Text>
 
-                  {/* Simulator Testing Helper Switch */}
-                  <View style={styles.switchRow}>
-                    <Text style={styles.switchLabel}>🛠️ وضع التجربة الافتراضية (bypass GPS):</Text>
-                    <Switch
-                      value={mockLocation}
-                      onValueChange={setMockLocation}
-                      trackColor={{ false: '#767577', true: Colors.paleBlue }}
-                      thumbColor={mockLocation ? Colors.mainBlue : '#f4f3f4'}
-                    />
+                  {/* Distance & GPS Stats */}
+                  <View style={styles.statsCard}>
+                    <Text style={styles.statsLabel}>🗺️ التحقق الجغرافي (Spatial Verification):</Text>
+                    {distance !== null ? (
+                      <Text style={[styles.statsValue, { color: distance <= 500 ? '#4CAF50' : Colors.danger }]}>
+                        المسافة الحالية: {Math.round(distance)} متر 
+                        {distance <= 500 ? ' (أنت قريب بما فيه الكفاية! ✅)' : ' (أنت بعيد جداً! ❌ يجب أن تكون على بعد 500 متر)'}
+                      </Text>
+                    ) : (
+                      <Text style={styles.statsValue}>جاري تحديد إحداثيات موقعك الجغرافي... 🛰️</Text>
+                    )}
+
+                    {/* Simulator Testing Helper Switch */}
+                    <View style={styles.switchRow}>
+                      <Text style={styles.switchLabel}>🛠️ وضع التجربة الافتراضية (bypass GPS):</Text>
+                      <Switch
+                        value={mockLocation}
+                        onValueChange={setMockLocation}
+                        trackColor={{ false: '#767577', true: Colors.paleBlue }}
+                        thumbColor={mockLocation ? Colors.mainBlue : '#f4f3f4'}
+                      />
+                    </View>
+                    <Text style={styles.switchHint}>* تفعيل هذا الخيار يسمح لك بتوثيق المهام وتجربة التطبيق من أي مكان دون التحقق من الـ GPS الفعلي (مثالي للمحاكيات!).</Text>
                   </View>
-                  <Text style={styles.switchHint}>* تفعيل هذا الخيار يسمح لك بتوثيق المهام وتجربة التطبيق من أي مكان دون التحقق من الـ GPS الفعلي (مثالي للمحاكيات!).</Text>
-                </View>
 
-                {/* Tasks Section */}
-                <Text style={styles.tasksTitle}>📋 المهام المطلوبة في هذا المعلم السياحي:</Text>
-                {selectedLocation.tasks && selectedLocation.tasks.length > 0 ? (
-                  selectedLocation.tasks.map((task, idx) => (
-                    <View key={idx} style={styles.taskItem}>
-                      <View style={styles.taskItemHeader}>
-                        <Text style={styles.taskItemName}>📍 مهمة {idx + 1}: {task.name || task.name_en || 'التقاط صورة للتوثيق'}</Text>
-                        <Text style={styles.taskItemXp}>🏆 +{task.xp} XP</Text>
+                  {/* Tasks Section */}
+                  <Text style={styles.tasksTitle}>📋 المهام المطلوبة في هذا المعلم السياحي:</Text>
+                  {selectedLocation.tasks && selectedLocation.tasks.length > 0 ? (
+                    selectedLocation.tasks.map((task, idx) => (
+                      <View key={idx} style={styles.taskItem}>
+                        <View style={styles.taskItemHeader}>
+                          <Text style={styles.taskItemName}>📍 مهمة {idx + 1}: {task.name || task.name_en || 'التقاط صورة للتوثيق'}</Text>
+                          <Text style={styles.taskItemXp}>🏆 +{task.xp} XP</Text>
+                        </View>
+                        <Text style={styles.taskItemDesc}>{task.description || task.description_en || 'التقط صورة واضحة لهذا المعلم الأثري لربح الجائزة.'}</Text>
+                        
+                        <TouchableOpacity 
+                          style={styles.actionBtn}
+                          onPress={() => handleCompleteTask(idx)}
+                          disabled={submitting}
+                        >
+                          {submitting ? (
+                            <ActivityIndicator color={Colors.white} />
+                          ) : (
+                            <Text style={styles.actionBtnText}>📸 التقاط صورة وتوثيق المهمة</Text>
+                          )}
+                        </TouchableOpacity>
                       </View>
-                      <Text style={styles.taskItemDesc}>{task.description || task.description_en || 'التقط صورة واضحة لهذا المعلم الأثري لربح الجائزة.'}</Text>
+                    ))
+                  ) : (
+                    // Simple location check-in (no specific tasks)
+                    <View style={styles.taskItem}>
+                      <View style={styles.taskItemHeader}>
+                        <Text style={styles.taskItemName}>📍 توثيق زيارة المعلم السياحي</Text>
+                        <Text style={styles.taskItemXp}>🏆 +{selectedLocation.xp_reward || 100} XP</Text>
+                      </View>
+                      <Text style={styles.taskItemDesc}>التقط صورة تذكارية في هذا الموقع لتوثيق زيارتك وتأكيدها!</Text>
                       
                       <TouchableOpacity 
                         style={styles.actionBtn}
-                        onPress={() => handleCompleteTask(idx)}
+                        onPress={() => handleCompleteTask(0)}
                         disabled={submitting}
                       >
                         {submitting ? (
                           <ActivityIndicator color={Colors.white} />
                         ) : (
-                          <Text style={styles.actionBtnText}>📸 التقاط صورة وتوثيق المهمة</Text>
+                          <Text style={styles.actionBtnText}>📸 التقاط صورة وتأكيد الوصول</Text>
                         )}
                       </TouchableOpacity>
                     </View>
-                  ))
-                ) : (
-                  // Simple location check-in (no specific tasks)
-                  <View style={styles.taskItem}>
-                    <View style={styles.taskItemHeader}>
-                      <Text style={styles.taskItemName}>📍 توثيق زيارة المعلم السياحي</Text>
-                      <Text style={styles.taskItemXp}>🏆 +{selectedLocation.xp_reward || 100} XP</Text>
-                    </View>
-                    <Text style={styles.taskItemDesc}>التقط صورة تذكارية في هذا الموقع لتوثيق زيارتك وتأكيدها!</Text>
+                  )}
+                </ScrollView>
+              ) : (
+                <View style={{ flex: 1 }}>
+                  {/* Write Review Form */}
+                  <View style={styles.reviewFormContainer}>
+                    <Text style={styles.reviewFormTitle}>✍️ أضف رأيك وتقييمك لمسار:</Text>
+                    <TextInput
+                      style={styles.reviewTextInput}
+                      placeholder="اكتب تعليقك وتجربتك هنا..."
+                      placeholderTextColor="#888"
+                      value={commentText}
+                      onChangeText={setCommentText}
+                      multiline
+                    />
                     
-                    <TouchableOpacity 
-                      style={styles.actionBtn}
-                      onPress={() => handleCompleteTask(0)}
-                      disabled={submitting}
+                    <View style={styles.reviewFormRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.black }}>التقييم:</Text>
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <TouchableOpacity key={star} onPress={() => setCommentRating(star)}>
+                              <Text style={{ fontSize: 20 }}>{star <= commentRating ? '⭐' : '☆'}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                      
+                      <TouchableOpacity style={styles.attachPhotoBtn} onPress={handleSelectReviewPhoto}>
+                        <Text style={styles.attachPhotoBtnText}>
+                          {reviewPhoto ? '📸 تم الإرفاق ✓' : '🖼️ إرفاق صورة'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.submitReviewBtn}
+                      onPress={handleSubmitReview}
+                      disabled={submittingReview}
                     >
-                      {submitting ? (
+                      {submittingReview ? (
                         <ActivityIndicator color={Colors.white} />
                       ) : (
-                        <Text style={styles.actionBtnText}>📸 التقاط صورة وتأكيد الوصول</Text>
+                        <Text style={styles.submitReviewBtnText}>💬 نشر التقييم والتعليق (+50 XP)</Text>
                       )}
                     </TouchableOpacity>
                   </View>
-                )}
-              </ScrollView>
+
+                  {/* Reviews List */}
+                  <Text style={styles.tasksTitle}>💬 آراء الزوار:</Text>
+                  {reviewsLoading ? (
+                    <ActivityIndicator color={Colors.mainBlue} style={{ marginTop: 20 }} />
+                  ) : (
+                    <FlatList
+                      data={reviews}
+                      keyExtractor={item => item._id}
+                      contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
+                      renderItem={({ item }) => (
+                        <View style={styles.reviewCard}>
+                          <View style={styles.reviewHeader}>
+                            <Text style={styles.reviewUser}>👤 {item.user_id?.username || 'مغامر مسار'}</Text>
+                            <Text style={styles.reviewRating}>{'⭐'.repeat(item.rating || 5)}</Text>
+                          </View>
+                          <Text style={styles.reviewText}>{item.content}</Text>
+                          {item.image_url ? (
+                            <Image
+                              source={{ uri: item.image_url.startsWith('http') ? item.image_url : `${api.defaults.baseURL.replace('/api', '')}${item.image_url}` }}
+                              style={styles.reviewImage}
+                            />
+                          ) : null}
+                          <Text style={styles.reviewDate}>{new Date(item.createdAt || item.created_at).toLocaleDateString('ar-JO')}</Text>
+                        </View>
+                      )}
+                      ListEmptyComponent={<Text style={styles.empty}>لا يوجد آراء بعد، كن أول من يعلق! 🌟</Text>}
+                    />
+                  )}
+                </View>
+              )}
             </View>
           </View>
         </Modal>
@@ -388,24 +709,44 @@ const styles = StyleSheet.create({
   filterTxtActive:  { color: Colors.white },
   list:             { padding: 16, gap: 16 },
   card:             { backgroundColor: Colors.white, borderRadius: 18, padding: 16, shadowColor: Colors.mainBlue, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
-  cardHeader:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
-  cardTitle:       { fontSize: 17, fontWeight: '800', color: Colors.black, flex: 1, marginRight: 8 },
-  budgetBadge:      { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  budgetText:       { color: Colors.white, fontSize: 11, fontWeight: '700' },
-  cardDesc:         { color: Colors.darkBlue, fontSize: 13, lineHeight: 20, marginBottom: 10 },
-  taskCount:        { color: Colors.mainBlue, fontWeight: '600', fontSize: 13, marginBottom: 8 },
-  cardFooter:       { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  xp:               { color: Colors.gold, fontWeight: '700' },
-  cost:             { color: Colors.darkBlue, fontWeight: '600' },
-  checkBtn:         { backgroundColor: Colors.mainBlue, borderRadius: 12, padding: 12, alignItems: 'center' },
-  checkBtnText:     { color: Colors.white, fontWeight: '700', fontSize: 15 },
-  empty:            { textAlign: 'center', color: Colors.darkBlue, marginTop: 40, fontSize: 15 },
+  cardHeader:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  empty:             { textAlign: 'center', color: Colors.darkBlue, marginTop: 40, fontSize: 15 },
+
+  // Tab control styles
+  tabHeaderRow: { flexDirection: 'row', backgroundColor: Colors.white, borderBottomWidth: 1, borderColor: Colors.secondary, paddingHorizontal: 12, paddingVertical: 8, gap: 10 },
+  tabHeadBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: Colors.secondary },
+  tabHeadBtnActive: { backgroundColor: Colors.mainBlue },
+  tabHeadTxt: { color: Colors.darkBlue, fontWeight: '700', fontSize: 14 },
+  tabHeadTxtActive: { color: Colors.white },
+  
+  modalTabRow: { flexDirection: 'row', backgroundColor: Colors.secondary, borderRadius: 12, padding: 4, marginBottom: 16 },
+  modalTabBtn: { flex: 1, padding: 8, alignItems: 'center', borderRadius: 10 },
+  modalTabBtnActive: { backgroundColor: Colors.mainBlue },
+  modalTabTxt: { color: Colors.darkBlue, fontWeight: '700', fontSize: 13 },
+  modalTabTxtActive: { color: Colors.white },
+
+  reviewFormContainer: { backgroundColor: Colors.white, borderRadius: 18, padding: 14, gap: 10, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: Colors.gold },
+  reviewFormTitle: { fontSize: 14, fontWeight: '800', color: Colors.black },
+  reviewTextInput: { borderWidth: 1, borderColor: Colors.secondary, borderRadius: 10, padding: 10, fontSize: 13, height: 60, textAlignVertical: 'top', color: Colors.black, backgroundColor: Colors.primary },
+  reviewFormRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  attachPhotoBtn: { backgroundColor: Colors.secondary, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
+  attachPhotoBtnText: { color: Colors.darkBlue, fontWeight: '700', fontSize: 12 },
+  submitReviewBtn: { backgroundColor: Colors.gold, borderRadius: 10, padding: 12, alignItems: 'center' },
+  submitReviewBtnText: { color: Colors.white, fontWeight: '800', fontSize: 13 },
+
+  reviewCard: { backgroundColor: Colors.white, borderRadius: 16, padding: 14, gap: 6, shadowColor: Colors.mainBlue, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1, marginBottom: 10 },
+  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  reviewUser: { fontWeight: '800', color: Colors.black, fontSize: 13 },
+  reviewRating: { fontSize: 12 },
+  reviewText: { fontSize: 13, color: Colors.darkBlue, lineHeight: 18 },
+  reviewImage: { width: '100%', height: 120, borderRadius: 10, marginTop: 4, resizeMode: 'cover' },
+  reviewDate: { fontSize: 10, color: '#888', alignSelf: 'flex-end' },
 
   // Modal Styles
   modalBg:          { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   modalContent:     { backgroundColor: Colors.primary, borderTopLeftRadius: 28, borderTopRightRadius: 28, height: '85%', padding: 24 },
   modalHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: Colors.secondary, paddingBottom: 12 },
-  modalTitle:       { fontSize: 20, fontWeight: '900', color: Colors.black },
+  modalTitle:       { fontSize: 20, fontWeight: '900', color: Colors.black, flex: 1, marginRight: 10 },
   closeBtn:         { backgroundColor: Colors.secondary, borderRadius: 20, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   closeBtnTxt:      { fontSize: 16, color: Colors.darkBlue, fontWeight: '800' },
   modalScroll:      { gap: 20, paddingBottom: 40 },
@@ -428,7 +769,7 @@ const styles = StyleSheet.create({
   taskItemDesc:     { fontSize: 13, color: Colors.darkBlue, lineHeight: 18 },
   actionBtn:        { backgroundColor: Colors.mainBlue, borderRadius: 12, padding: 12, alignItems: 'center', marginTop: 8 },
   actionBtnText:    { color: Colors.white, fontWeight: '800', fontSize: 14 },
-
+ 
   // Celebration Styles
   celebrationBg:             { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
   celebrationCard:           { backgroundColor: Colors.white, borderRadius: 24, padding: 32, alignItems: 'center', width: '80%', shadowColor: Colors.gold, shadowOpacity: 0.4, shadowRadius: 20, elevation: 12, borderWidth: 2, borderColor: Colors.gold },

@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import styles from "./Map.module.css";
-
-const SERVER = "http://localhost:5000";
+import api, { BASE_URL } from "@/api/client";
+import { useAuth } from "@/context/AuthContext";
 
 const LocationReviews = ({ location, onClose }) => {
   const { i18n } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState("");
   const [rating, setRating] = useState(5);
-
-  const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const [photo, setPhoto] = useState(null);
+  const { user, setUser } = useAuth();
 
   useEffect(() => {
     fetchPosts();
@@ -20,8 +19,8 @@ const LocationReviews = ({ location, onClose }) => {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get(`${SERVER}/api/locations/${location._id}/posts`);
-      setPosts(res.data);
+      const res = await api.get(`/locations/${location._id}/posts`);
+      setPosts(Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []));
     } catch (error) {
       console.error("Error fetching posts", error);
     }
@@ -30,23 +29,50 @@ const LocationReviews = ({ location, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userId = localUser._id || "60d5ecb8b392d70015340123";
-      await axios.post(`${SERVER}/api/locations/${location._id}/posts`, {
-        user_id: userId,
-        content: newPost,
-        rating: rating,
+      const formData = new FormData();
+      formData.append("content", newPost);
+      formData.append("rating", rating);
+      if (photo) {
+        formData.append("photo", photo);
+      }
+
+      const res = await api.post(`/locations/${location._id}/posts`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setNewPost("");
-      fetchPosts();
+
+      if (res.data.success) {
+        setNewPost("");
+        setPhoto(null);
+        
+        // Update user state if context exists
+        if (res.data.xp && setUser) {
+          const updatedUser = { ...user, total_xp: res.data.xp, current_level: res.data.level };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          alert(i18n.language === "ar" ? `أحسنت! ربحت +${res.data.xpGained} XP!` : `Great job! You earned +${res.data.xpGained} XP!`);
+        }
+
+        fetchPosts();
+      }
     } catch (error) {
       console.error("Error submitting post", error);
+      alert(i18n.language === "ar" ? "فشل إضافة التعليق والتقييم" : "Failed to submit review");
     }
   };
 
-  const recentPosts = posts.filter((p) => p.visit_status === "Recent");
-  const pastPosts = posts.filter(
-    (p) => p.visit_status === "Past" || p.visit_status === "Unverified"
-  );
+  const recentPosts = posts.filter((p) => {
+    const postDate = new Date(p.createdAt || p.created_at);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return postDate >= thirtyDaysAgo;
+  });
+
+  const pastPosts = posts.filter((p) => {
+    const postDate = new Date(p.createdAt || p.created_at);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return postDate < thirtyDaysAgo;
+  });
 
   return (
     <div className={styles.modalOverlay}>
@@ -68,7 +94,8 @@ const LocationReviews = ({ location, onClose }) => {
             className={styles.textarea}
             required
           />
-          <div className={styles.formControls}>
+          
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", marginBottom: "15px" }}>
             <div>
               <label style={{ marginRight: "10px", fontSize: "1.3rem", fontWeight: "600" }}>
                 {i18n.language === "ar" ? "التقييم:" : "Rating:"}
@@ -83,10 +110,23 @@ const LocationReviews = ({ location, onClose }) => {
               />{" "}
               ⭐
             </div>
-            <button type="submit" className={styles.btn} style={{ padding: "8px 18px" }}>
-              {i18n.language === "ar" ? "نشر" : "Post"}
-            </button>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <label style={{ fontSize: "1.3rem", fontWeight: "600" }}>
+                {i18n.language === "ar" ? "إضافة صورة:" : "Add Photo:"}
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPhoto(e.target.files[0])}
+                style={{ fontSize: "1.1rem" }}
+              />
+            </div>
           </div>
+
+          <button type="submit" className={styles.btn} style={{ padding: "8px 18px", width: "100%" }}>
+            {i18n.language === "ar" ? "نشر التقييم" : "Post Review"}
+          </button>
         </form>
 
         <div className={styles.reviewsGrid}>
@@ -108,8 +148,15 @@ const LocationReviews = ({ location, onClose }) => {
                   <span className={styles.postRating}>{post.rating} ⭐</span>
                 </div>
                 <p className={styles.postContent}>{post.content}</p>
+                {post.image_url && (
+                  <img
+                    src={post.image_url.startsWith("http") ? post.image_url : `${BASE_URL}${post.image_url}`}
+                    alt="Review attachment"
+                    style={{ width: "100%", maxHeight: "150px", borderRadius: "10px", marginTop: "8px", marginBottom: "8px", objectFit: "cover" }}
+                  />
+                )}
                 <span className={styles.postMeta}>
-                  {new Date(post.created_at).toLocaleDateString()} - Verified Recent
+                  {new Date(post.createdAt || post.created_at).toLocaleDateString()}
                 </span>
               </div>
             ))}
@@ -131,8 +178,15 @@ const LocationReviews = ({ location, onClose }) => {
                   <span className={styles.postRating}>{post.rating} ⭐</span>
                 </div>
                 <p className={styles.postContent}>{post.content}</p>
+                {post.image_url && (
+                  <img
+                    src={post.image_url.startsWith("http") ? post.image_url : `${BASE_URL}${post.image_url}`}
+                    alt="Review attachment"
+                    style={{ width: "100%", maxHeight: "150px", borderRadius: "10px", marginTop: "8px", marginBottom: "8px", objectFit: "cover" }}
+                  />
+                )}
                 <span className={styles.postMeta}>
-                  {new Date(post.created_at).toLocaleDateString()}
+                  {new Date(post.createdAt || post.created_at).toLocaleDateString()}
                 </span>
               </div>
             ))}

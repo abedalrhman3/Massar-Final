@@ -10,6 +10,11 @@ export const getQuests = () =>
 export const getQuest = (id) =>
     client.get(`/quests/${id}`);
 
+// POST /api/quests/:id/join  — private
+// returns: { success, user }
+export const joinQuest = (id) =>
+    client.post(`/quests/${id}/join`);
+
 // ── Admin ─────────────────────────────────────────────
 
 // POST /api/quests  — admin
