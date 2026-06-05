@@ -13,7 +13,7 @@ function toCard(item, section) {
             section,
             about: section === "events"
                 ? {
-                    address: item.location?.address ?? "",
+                    address: item.contact?.address ?? item.location?.address ?? "",
                     fees: item.startingFromPrice ? `${item.startingFromPrice} JOD` : "—",
                     startDate: item.startDate ? new Date(item.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
                     endDate: item.endDate ? new Date(item.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
@@ -21,7 +21,7 @@ function toCard(item, section) {
                     endTime: item.endTime?.formatted ?? "",
                 }
                 : {
-                    address: item.location?.address ?? "",
+                    address: item.contact?.address ?? item.location?.address ?? "",
                     workDays: [],           // not in API — leave empty or omit
                     cost: item.startingFromPrice ? `From ${item.startingFromPrice} JOD` : "—",
                     openTime: "",
@@ -49,6 +49,15 @@ export function buildComposed(destination, details, places, restaurants, hotels,
     const guide = details?.guideSections ?? []
 
     return {
+        // Nest destination info to match LeftPanel expectation (data.destination)
+        destination: {
+            _id: destination._id,
+            id: destination._id,
+            name: destination.name,
+            title: destination.subtitle ?? "",
+            image: destination.image,
+            location: ov.locationText ?? "",
+        },
         _id: destination._id,
         id: destination._id,
         name: destination.name,
@@ -59,21 +68,26 @@ export function buildComposed(destination, details, places, restaurants, hotels,
         sections: {
             overview: {
                 title: "Overview",
-                description: ov.description ?? "",
-                location: ov.location ?? "",
-                recommendedStay: ov.recommendedStay ?? "",
+                description: ov.text ?? "",
+                location: ov.locationText ?? "",
                 bestSeason: ov.bestSeason ?? "",
                 averageCost: ov.averageCost ?? "",
+                recommendedStay: ov.recommendedStay ?? "",
+                details: {
+                    bestSeason: ov.bestSeason ?? "",
+                    averageCost: ov.averageCost ?? "",
+                    recommendedStay: ov.recommendedStay ?? "",
+                }
             },
             activities: {
                 title: "Activities",
-                list: acts,
+                list: acts.map(a => typeof a === 'object' ? a.name : a),
             },
             travelGuide: {
                 subTitle: "Travel Guide",
                 list: guide.map(s => ({
                     subTitle: s.title,
-                    body: s.items?.length ? s.items : s.body ?? "",
+                    body: s.content ?? s.body ?? "",
                 })),
             },
             placesToVisit: {
