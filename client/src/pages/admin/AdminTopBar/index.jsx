@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import SearchBar from "@/components/SearchBar/SearchBar";
+import AdminGlobalSearch from "@/components/AdminGlobalSearch/AdminGlobalSearch";
 import NotificationDropdown from "@/components/NotificationDropdown/NotificationDropdown";
 import styles from "./AdminTopBar.module.css";
 
 const USER_PROFILE_KEY = "massar_user_profile";
 
 function AdminTopBar({ placeholder, user }) {
-  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationRead, setNotificationRead] = useState(() => {
     const stored = localStorage.getItem("massar_notifications_read");
@@ -54,11 +52,6 @@ function AdminTopBar({ placeholder, user }) {
     return () => window.removeEventListener("massar-notifications-read", handleNotificationStateChange);
   }, []);
 
-  const handleSearch = (query) => {
-    if (query.length > 2) {
-      navigate(`/admin/destinations?search=${encodeURIComponent(query)}`);
-    }
-  };
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
@@ -67,10 +60,7 @@ function AdminTopBar({ placeholder, user }) {
   return (
     <header className={styles.topbar}>
       <div className={styles.searchWrapper}>
-        <SearchBar
-          placeholder={placeholder || "Search archives, destinations..."}
-          onSearch={handleSearch}
-        />
+        <AdminGlobalSearch />
       </div>
 
       <div className={styles.actions}>
