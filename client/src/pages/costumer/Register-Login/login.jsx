@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import Input from "./input.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./registerLogin.module.css";
-import { login, loginWithGoogle } from "../../../api/auth";
-import { useAuth } from "../../../context/AuthContext";
-import { BASE_URL } from "../../../api/client";
+import { login, loginWithGoogle } from "@/api/auth";
+import { useAuth } from "@/context/AuthContext";
+import { BASE_URL } from "@/api/client";
 
 const Login = ({ fields, setFields }) => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const Login = ({ fields, setFields }) => {
         const userData = JSON.parse(decodeURIComponent(userParam));
         loginSuccess(userData);
         window.history.replaceState({}, "", window.location.pathname);
-        navigate("/map");
+        navigate("/");
       } catch (_) { }
     }
   }, [navigate, loginSuccess]);
@@ -44,7 +44,11 @@ const Login = ({ fields, setFields }) => {
       // The JWT is set as an HTTPOnly cookie by the server automatically.
       // We just need to store the user object in context.
       loginSuccess(res.data.user);
-      navigate("/map");
+      if (res.data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setServerError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {

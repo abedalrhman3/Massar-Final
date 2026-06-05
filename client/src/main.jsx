@@ -8,7 +8,10 @@ import "@fontsource/playfair-display/500.css";
 import "@fontsource/playfair-display/600.css";
 import "@fontsource/playfair-display/700.css";
 
+import '@fontsource/material-symbols-outlined';
+
 import "@fortawesome/fontawesome-free/css/all.min.css";
+
 
 import "./styles/variables.css";
 import "./styles/reset.css";

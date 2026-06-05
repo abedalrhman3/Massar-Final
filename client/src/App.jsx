@@ -24,6 +24,7 @@ import UserDashboard from "./pages/costumer/UserAccount/UserDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import DestinationsManagement from "./pages/admin/DestinationsManagement";
+import AdminDestinationDetail from "./pages/admin/DestinationDetail/DestinationDetail";
 import AccountManagement from "./pages/admin/AccountsManagement";
 import BanHistory from "./pages/admin/BanHistory";
 import Support from "./pages/admin/Support";
@@ -150,6 +151,7 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="destinations" element={<DestinationsManagement />} />
+          <Route path="destinations/:slug" element={<AdminDestinationDetail />} />
           <Route path="accounts" element={<AccountManagement />} />
           <Route path="ban-history" element={<BanHistory />} />
           <Route path="support" element={<Support />} />

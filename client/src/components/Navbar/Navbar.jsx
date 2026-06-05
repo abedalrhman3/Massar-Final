@@ -54,6 +54,7 @@ function Navbar() {
         <Link to="/about">About</Link>
         <Link to="/destinations">Destinations</Link>
         <Link to="/map">Map</Link>
+        {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
       </div>
 
       {user

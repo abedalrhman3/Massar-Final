@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import styles from "./AdminSidebar.module.css";
+import { useAuth } from '@/context/AuthContext';
 
 function AdminSidebar() {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { logout } = useAuth();
 
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
 
-  const confirmLogout = () => {
-    navigate("/");
+  const confirmLogout = async () => {
+    await logout();
+    navigate('/');
   };
 
   return (

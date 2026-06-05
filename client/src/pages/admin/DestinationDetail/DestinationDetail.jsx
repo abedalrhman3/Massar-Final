@@ -2,13 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import styles from "./DestinationDetail.module.css";
 
-// Modal components
-import PlacesModal from "../../components/AdminModal/PlacesModal";
-import EventsModal from "../../components/AdminModal/EventsModal";
-import HotelsModal from "../../components/AdminModal/HotelsModal";
-import RestaurantsModal from "../../components/AdminModal/RestaurantsModal";
+import PlacesModal from "@/components/AdminModal/PlacesModal";
+import EventsModal from "@/components/AdminModal/EventsModal";
+import HotelsModal from "@/components/AdminModal/HotelsModal";
+import RestaurantsModal from "@/components/AdminModal/RestaurantsModal";
 
-// Helper to format time from 24h to 12h AM/PM
+import { getDestination } from "@/api/destination";
+import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
+import { getEvents, createEvent, updateEvent, deleteEvent } from "@/api/events";
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
 const formatTime = (timeStr) => {
   if (!timeStr) return "";
   const [hours, minutes] = timeStr.split(":");
@@ -18,428 +22,361 @@ const formatTime = (timeStr) => {
   return `${hour12}:${minutes || "00"} ${ampm}`;
 };
 
-// Placeholder reviews data
+// Convert base64 string to File object for FormData upload
+const base64ToFile = (base64, filename = "image.jpg") => {
+  if (!base64 || typeof base64 !== "string" || !base64.startsWith("data:")) return null;
+  const [header, data] = base64.split(",");
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(data);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+  return new File([array], filename, { type: mime });
+};
+
+// Build FormData for listings (places, hotels, restaurants)
+const buildListingFormData = (formData, destinationId) => {
+  const fd = new FormData();
+  fd.append("name", formData.name);
+  fd.append("destinationId", destinationId);
+  fd.append("isPublished", true);
+
+  if (formData.description) fd.append("customOverview", formData.description);
+
+  // coordinates → location JSON
+  if (formData.coordinates) {
+    const [lat, lng] = formData.coordinates.split(",").map(Number);
+    fd.append("location", JSON.stringify({ type: "Point", coordinates: [lng, lat] }));
+  }
+
+  // cover image — handle both File and base64
+  if (formData.image) {
+    if (formData.image instanceof File) {
+      fd.append("coverImage", formData.image);
+    } else {
+      const file = base64ToFile(formData.image, `${formData.name}-cover.jpg`);
+      if (file) fd.append("coverImage", file);
+    }
+  }
+
+  // additional photos
+  if (formData.photos?.length) {
+    formData.photos.forEach((photo, i) => {
+      if (photo instanceof File) {
+        fd.append("images", photo);
+      } else {
+        const file = base64ToFile(photo, `photo-${i}.jpg`);
+        if (file) fd.append("images", file);
+      }
+    });
+  }
+
+  return fd;
+};
+
+// Build FormData for events
+const buildEventFormData = (formData, destinationId) => {
+  const fd = new FormData();
+  fd.append("name", formData.name);
+  fd.append("destinationId", destinationId);
+  fd.append("isPublished", true);
+
+  if (formData.description) fd.append("customOverview", formData.description);
+  if (formData.startDate) fd.append("startDate", formData.startDate);
+  if (formData.endDate) fd.append("endDate", formData.endDate);
+  if (formData.bookingUrl) fd.append("bookingUrl", formData.bookingUrl);
+
+  // startTime / endTime — model requires { from: Date, to: Date }
+  // EventsModal should supply these; fall back to midnight–midnight on the date
+  const startFrom = formData.startTimeFrom || formData.startDate;
+  const startTo = formData.startTimeTo || formData.startDate;
+  const endFrom = formData.endTimeFrom || formData.endDate;
+  const endTo = formData.endTimeTo || formData.endDate;
+  if (startFrom && startTo) fd.append("startTime", JSON.stringify({ from: startFrom, to: startTo }));
+  if (endFrom && endTo) fd.append("endTime", JSON.stringify({ from: endFrom, to: endTo }));
+
+  if (formData.coordinates) {
+    const [lat, lng] = formData.coordinates.split(",").map(Number);
+    fd.append("location", JSON.stringify({ type: "Point", coordinates: [lng, lat] }));
+  }
+
+  if (formData.image) {
+    if (formData.image instanceof File) {
+      fd.append("coverImage", formData.image);
+    } else {
+      const file = base64ToFile(formData.image, `${formData.name}-cover.jpg`);
+      if (file) fd.append("coverImage", file);
+    }
+  }
+
+  return fd;
+};
+
+// ── Placeholder data ───────────────────────────────────────────────────────
+
 const PLACEHOLDER_REVIEWS = [
-  {
-    id: 1,
-    name: "Sarah M.",
-    rating: 5,
-    text: "Amazing experience! The views were breathtaking and the staff was incredibly friendly. Would definitely come back.",
-    date: "2 weeks ago",
-  },
-  {
-    id: 2,
-    name: "John D.",
-    rating: 4,
-    text: "Great place to visit. A bit crowded on weekends but still worth it.",
-    date: "1 month ago",
-  },
-  {
-    id: 3,
-    name: "Emma W.",
-    rating: 5,
-    text: "Absolutely stunning! The photos don't do it justice. Must visit!",
-    date: "1 month ago",
-  },
+  { id: 1, name: "Sarah M.", rating: 5, text: "Amazing experience! The views were breathtaking.", date: "2 weeks ago" },
+  { id: 2, name: "John D.", rating: 4, text: "Great place to visit. A bit crowded on weekends.", date: "1 month ago" },
+  { id: 3, name: "Emma W.", rating: 5, text: "Absolutely stunning! Must visit!", date: "1 month ago" },
 ];
 
 const PLACEHOLDER_STATS = {
-  rating: 4.5,
-  label: "Wonderful",
-  totalReviews: 4439,
-  source: "Google",
-  distribution: { 5: 2800, 4: 1200, 3: 300, 2: 100, 1: 39 },
+  rating: 4.5, label: "Wonderful", totalReviews: 4439, source: "Google",
 };
 
-// Detect contact type from input
+// ── Contact helpers ────────────────────────────────────────────────────────
+
 const detectContactType = (value) => {
   const lower = value.toLowerCase().trim();
-  if (/^\+[\d\s\-()]+$/.test(lower) || /^[\d\s\-()]+$/.test(lower)) {
-    return { type: "phone", display: value };
-  }
-  if (lower.includes("wa.me") || lower.includes("whatsapp")) {
-    return { type: "whatsapp", display: value };
-  }
+  if (/^\+[\d\s\-()]+$/.test(lower) || /^[\d\s\-()]+$/.test(lower)) return { type: "phone", display: value };
+  if (lower.includes("wa.me") || lower.includes("whatsapp")) return { type: "whatsapp", display: value };
   if (lower.includes("facebook.com") || lower.includes("fb.com")) {
-    let username = value;
-    const fbMatch = value.match(/(?:facebook\.com|fb\.com)\/([^/?]+)/i);
-    if (fbMatch && fbMatch[1] && !fbMatch[1].includes("=")) {
-      username = fbMatch[1];
-    }
-    return { type: "facebook", display: username };
+    const m = value.match(/(?:facebook\.com|fb\.com)\/([^/?]+)/i);
+    return { type: "facebook", display: m?.[1] || value };
   }
   if (lower.includes("instagram.com")) {
-    const igMatch = value.match(/instagram\.com\/([^/?]+)/i);
-    const username = igMatch ? igMatch[1] : value;
-    return { type: "instagram", display: username };
+    const m = value.match(/instagram\.com\/([^/?]+)/i);
+    return { type: "instagram", display: m?.[1] || value };
   }
   if (lower.includes("x.com") || lower.includes("twitter.com")) {
-    const xMatch = value.match(/(?:x\.com|twitter\.com)\/([^/?]+)/i);
-    const username = xMatch ? xMatch[1] : value;
-    return { type: "x", display: username };
-  }
-  if (lower.includes("discord")) {
-    let username = value;
-    const discordMatch = value.match(
-      /discord(?:app\.com)?(?:[\/]=)?\/([^/?]+)/i,
-    );
-    if (discordMatch && discordMatch[1]) {
-      username = discordMatch[1];
-    }
-    return { type: "discord", display: username };
+    const m = value.match(/(?:x\.com|twitter\.com)\/([^/?]+)/i);
+    return { type: "x", display: m?.[1] || value };
   }
   return { type: "url", display: value };
 };
 
 const getContactIcon = (type) => {
-  switch (type) {
-    case "phone":
-      return "phone";
-    case "whatsapp":
-      return "chat";
-    case "facebook":
-      return "facebook";
-    case "instagram":
-      return "photo_camera";
-    case "x":
-      return "tag";
-    case "discord":
-      return "forum";
-    default:
-      return "language";
-  }
+  const map = { phone: "phone", whatsapp: "chat", facebook: "facebook", instagram: "photo_camera", x: "tag", discord: "forum" };
+  return map[type] || "language";
 };
+
+// ── Main Component ─────────────────────────────────────────────────────────
 
 function DestinationDetail() {
   const { slug } = useParams();
 
-  // Modal states
+  const [destination, setDestination] = useState(null);
+  const [places, setPlaces] = useState([]);
+  const [hotels, setHotels] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [showPlacesModal, setShowPlacesModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
   const [showHotelsModal, setShowHotelsModal] = useState(false);
   const [showRestaurantsModal, setShowRestaurantsModal] = useState(false);
 
-  // Editing state
   const [editingItem, setEditingItem] = useState(null);
   const [editingType, setEditingType] = useState(null);
-
-  // Remove confirmation state
   const [removingItem, setRemovingItem] = useState(null);
   const [removingType, setRemovingType] = useState(null);
-
-  // Lightbox state
   const [lightboxImage, setLightboxImage] = useState(null);
-
-  // Card tab states - keyed by item id
   const [cardTabs, setCardTabs] = useState({});
   const [cardMenus, setCardMenus] = useState({});
 
-  // Click outside ref for menus
   const menuRefs = useRef({});
 
-  // Prevent body scroll when modal is open
+  // ── Fetch destination + all listings ──────────────────────────────────────
   useEffect(() => {
-    const anyModalOpen =
-      showPlacesModal ||
-      showEventsModal ||
-      showHotelsModal ||
-      showRestaurantsModal ||
-      editingItem ||
-      removingItem ||
-      lightboxImage;
-    if (anyModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [
-    showPlacesModal,
-    showEventsModal,
-    showHotelsModal,
-    showRestaurantsModal,
-    editingItem,
-    removingItem,
-    lightboxImage,
-  ]);
+    if (!slug) return;
+    const fetchAll = async () => {
+      try {
+        const destRes = await getDestination(slug);
+        const dest = destRes.data.data;
+        setDestination(dest);
+        const id = dest._id;
 
-  // Click outside handler for dropdowns
+        const [placesRes, hotelsRes, restaurantsRes, eventsRes] = await Promise.all([
+          placesApi.getAll({ destinationId: id }),
+          hotelsApi.getAll({ destinationId: id }),
+          restaurantsApi.getAll({ destinationId: id }),
+          getEvents({ destinationId: id }),
+        ]);
+
+        setPlaces(placesRes.data?.data ?? []);
+        setHotels(hotelsRes.data?.data ?? []);
+        setRestaurants(restaurantsRes.data?.data ?? []);
+        setEvents(eventsRes.data?.data ?? []);
+      } catch (err) {
+        setError("Failed to load destination data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, [slug]);
+
+  // ── Scroll lock ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const open = showPlacesModal || showEventsModal || showHotelsModal ||
+      showRestaurantsModal || editingItem || removingItem || lightboxImage;
+    document.body.style.overflow = open ? "hidden" : "unset";
+    return () => { document.body.style.overflow = "unset"; };
+  }, [showPlacesModal, showEventsModal, showHotelsModal, showRestaurantsModal, editingItem, removingItem, lightboxImage]);
+
+  // ── Click outside menus ────────────────────────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (e) => {
-      const openMenuId = Object.keys(cardMenus).find((id) => cardMenus[id]);
-      if (openMenuId && menuRefs.current[openMenuId]) {
-        if (!menuRefs.current[openMenuId].contains(e.target)) {
-          setCardMenus({});
-        }
+      const openId = Object.keys(cardMenus).find((id) => cardMenus[id]);
+      if (openId && menuRefs.current[openId] && !menuRefs.current[openId].contains(e.target)) {
+        setCardMenus({});
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [cardMenus]);
 
-  // Data states - local only, no fetching
-  const [places, setPlaces] = useState([]);
-  const [hotels, setHotels] = useState([]);
-  const [restaurants, setRestaurants] = useState([]);
-  const [events, setEvents] = useState([]);
+  const destId = destination?._id;
+  const displayName = destination?.name || slug?.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") || "Destination";
 
-  const stats = [
-    { label: "Places", count: places.length },
-    { label: "Hotels", count: hotels.length },
-    { label: "Restaurants", count: restaurants.length },
-    { label: "Events", count: events.length },
-  ];
-
-  // Format slug back to display name
-  const displayName = slug
-    ? slug
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    : "Destination";
-
-  // Get tabs for a given type
-  const getTabs = (type) => {
-    return type === "hotel"
-      ? ["overview", "about", "reviews", "contact", "photos", "book"]
-      : ["overview", "about", "reviews", "contact", "photos"];
+  // ── Save handlers ──────────────────────────────────────────────────────────
+  const handleSavePlace = async (formData) => {
+    try {
+      const fd = buildListingFormData(formData, destId);
+      if (editingItem) {
+        const res = await placesApi.update(editingItem._id, fd);
+        setPlaces(places.map((p) => p._id === editingItem._id ? res.data.data : p));
+      } else {
+        const res = await placesApi.create(fd);
+        setPlaces([...places, res.data.data]);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save place.");
+    }
+    setEditingItem(null); setEditingType(null);
   };
 
-  // Handle tab change for a specific card
-  const handleTabChange = (itemId, tab) => {
-    setCardTabs((prev) => ({ ...prev, [itemId]: tab }));
+  const handleSaveHotel = async (formData) => {
+    try {
+      const fd = buildListingFormData(formData, destId);
+      if (editingItem) {
+        const res = await hotelsApi.update(editingItem._id, fd);
+        setHotels(hotels.map((h) => h._id === editingItem._id ? res.data.data : h));
+      } else {
+        const res = await hotelsApi.create(fd);
+        setHotels([...hotels, res.data.data]);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save hotel.");
+    }
+    setEditingItem(null); setEditingType(null);
   };
 
-  // Handle menu toggle for a specific card
-  const handleMenuToggle = (e, itemId) => {
-    e.stopPropagation();
-    setCardMenus((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  const handleSaveRestaurant = async (formData) => {
+    try {
+      const fd = buildListingFormData(formData, destId);
+      if (editingItem) {
+        const res = await restaurantsApi.update(editingItem._id, fd);
+        setRestaurants(restaurants.map((r) => r._id === editingItem._id ? res.data.data : r));
+      } else {
+        const res = await restaurantsApi.create(fd);
+        setRestaurants([...restaurants, res.data.data]);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save restaurant.");
+    }
+    setEditingItem(null); setEditingType(null);
   };
 
-  // Handle edit
-  const handleEdit = (item, type) => {
-    setEditingItem(item);
-    setEditingType(type);
-    setCardMenus({});
+  const handleSaveEvent = async (formData) => {
+    try {
+      const fd = buildEventFormData(formData, destId);
+      if (editingItem) {
+        const res = await updateEvent(editingItem._id, fd);
+        setEvents(events.map((e) => e._id === editingItem._id ? res.data.data : e));
+      } else {
+        const res = await createEvent(fd);
+        setEvents([...events, res.data.data]);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save event.");
+    }
+    setEditingItem(null); setEditingType(null);
   };
 
-  // Handle remove - open confirmation
-  const handleRemoveClick = (item, type) => {
-    setRemovingItem(item);
-    setRemovingType(type);
-    setCardMenus({});
-  };
-
-  // Confirm remove
-  const confirmRemove = () => {
+  // ── Delete handlers ────────────────────────────────────────────────────────
+  const confirmRemove = async () => {
     if (!removingItem || !removingType) return;
-
-    switch (removingType) {
-      case "place":
-        setPlaces(places.filter((p) => p.id !== removingItem.id));
-        break;
-      case "hotel":
-        setHotels(hotels.filter((h) => h.id !== removingItem.id));
-        break;
-      case "restaurant":
-        setRestaurants(restaurants.filter((r) => r.id !== removingItem.id));
-        break;
-      case "event":
-        setEvents(events.filter((e) => e.id !== removingItem.id));
-        break;
-      default:
-        break;
+    try {
+      switch (removingType) {
+        case "place":
+          await placesApi.remove(removingItem._id);
+          setPlaces(places.filter((p) => p._id !== removingItem._id));
+          break;
+        case "hotel":
+          await hotelsApi.remove(removingItem._id);
+          setHotels(hotels.filter((h) => h._id !== removingItem._id));
+          break;
+        case "restaurant":
+          await restaurantsApi.remove(removingItem._id);
+          setRestaurants(restaurants.filter((r) => r._id !== removingItem._id));
+          break;
+        case "event":
+          await deleteEvent(removingItem._id);
+          setEvents(events.filter((e) => e._id !== removingItem._id));
+          break;
+      }
+    } catch (err) {
+      alert("Failed to delete item.");
     }
-    setRemovingItem(null);
-    setRemovingType(null);
+    setRemovingItem(null); setRemovingType(null);
   };
 
-  // Cancel remove
-  const cancelRemove = () => {
-    setRemovingItem(null);
-    setRemovingType(null);
-  };
+  // ── UI helpers ─────────────────────────────────────────────────────────────
+  const handleTabChange = (itemId, tab) => setCardTabs((prev) => ({ ...prev, [itemId]: tab }));
+  const handleMenuToggle = (e, itemId) => { e.stopPropagation(); setCardMenus((prev) => ({ ...prev, [itemId]: !prev[itemId] })); };
+  const handleEdit = (item, type) => { setEditingItem(item); setEditingType(type); setCardMenus({}); };
+  const handleRemoveClick = (item, type) => { setRemovingItem(item); setRemovingType(type); setCardMenus({}); };
+  const closeEditModal = () => { setEditingItem(null); setEditingType(null); };
+  const getEntityName = (type) => ({ place: "Place", hotel: "Hotel", restaurant: "Restaurant", event: "Event" }[type] || "Item");
+  const getTabs = (type) => type === "hotel"
+    ? ["overview", "about", "reviews", "contact", "photos", "book"]
+    : ["overview", "about", "reviews", "contact", "photos"];
 
-  // Save handlers (local state only)
-  const handleSavePlace = (data) => {
-    if (editingItem) {
-      // Update existing
-      setPlaces(
-        places.map((p) =>
-          p.id === editingItem.id ? { ...data, id: editingItem.id } : p,
-        ),
-      );
-    } else {
-      setPlaces([...places, { ...data, id: Date.now() }]);
-    }
-    setEditingItem(null);
-    setEditingType(null);
-  };
-
-  const handleSaveEvent = (data) => {
-    if (editingItem) {
-      setEvents(
-        events.map((e) =>
-          e.id === editingItem.id ? { ...data, id: editingItem.id } : e,
-        ),
-      );
-    } else {
-      setEvents([...events, { ...data, id: Date.now() }]);
-    }
-    setEditingItem(null);
-    setEditingType(null);
-  };
-
-  const handleSaveHotel = (data) => {
-    if (editingItem) {
-      setHotels(
-        hotels.map((h) =>
-          h.id === editingItem.id ? { ...data, id: editingItem.id } : h,
-        ),
-      );
-    } else {
-      setHotels([...hotels, { ...data, id: Date.now() }]);
-    }
-    setEditingItem(null);
-    setEditingType(null);
-  };
-
-  const handleSaveRestaurant = (data) => {
-    if (editingItem) {
-      setRestaurants(
-        restaurants.map((r) =>
-          r.id === editingItem.id ? { ...data, id: editingItem.id } : r,
-        ),
-      );
-    } else {
-      setRestaurants([...restaurants, { ...data, id: Date.now() }]);
-    }
-    setEditingItem(null);
-    setEditingType(null);
-  };
-
-  // Close edit modal
-  const closeEditModal = () => {
-    setEditingItem(null);
-    setEditingType(null);
-  };
-
-  // Get entity name for display
-  const getEntityName = (type) => {
-    switch (type) {
-      case "place":
-        return "Place";
-      case "hotel":
-        return "Hotel";
-      case "restaurant":
-        return "Restaurant";
-      case "event":
-        return "Event";
-      default:
-        return "Item";
-    }
-  };
-
-  // Render card content based on active tab
+  // ── Card content renderer ──────────────────────────────────────────────────
   const renderCardContent = (item, type, activeTab) => {
-    const formatOperatingHours = () => {
-      if (!item.operatingHours) return "Not specified";
-      const { start, end } = item.operatingHours;
-      if (!start && !end) return "Not specified";
-      return `${formatTime(start)} — ${formatTime(end)}`;
-    };
-
     switch (activeTab) {
       case "overview":
         return (
           <div className={styles.overviewTab}>
-            <div
-              className={styles.overviewImageWrapper}
-              onClick={() => item.image && setLightboxImage(item.image)}
-            >
-              <img
-                src={item.image || "/assets/images/placeholder.jpg"}
-                alt={item.name}
-                className={styles.overviewImage}
-              />
+            <div className={styles.overviewImageWrapper} onClick={() => item.image && setLightboxImage(item.image)}>
+              <img src={item.image || item.coverImage || "/assets/images/placeholder.jpg"} alt={item.name} className={styles.overviewImage} />
             </div>
-            <p className={styles.overviewDescription}>
-              {item.description ||
-                item.briefDescription ||
-                "No description available"}
-            </p>
+            <p className={styles.overviewDescription}>{item.description || item.customOverview || item.briefDescription || "No description available"}</p>
           </div>
         );
 
       case "about":
         return (
           <div className={styles.aboutTabContent}>
-            <div className={styles.aboutItem}>
-              <span
-                className="material-symbols-outlined"
-                style={{ color: "#6b7280" }}
-              >
-                location_on
-              </span>
-              <div>
-                <span className={styles.aboutLabel}>Location</span>
-                <p className={styles.aboutValue}>
-                  {item.location || "Not specified"}
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.aboutItem}>
-              <span
-                className="material-symbols-outlined"
-                style={{ color: "#6b7280" }}
-              >
-                attach_money
-              </span>
-              <div>
-                <span className={styles.aboutLabel}>Budget</span>
-                <p className={styles.aboutValue}>
-                  {item.budget || "Not specified"}
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.aboutItem}>
-              <span
-                className="material-symbols-outlined"
-                style={{ color: "#6b7280" }}
-              >
-                schedule
-              </span>
-              <div>
-                <span className={styles.aboutLabel}>Operating Hours</span>
-                <p className={styles.aboutValue}>{formatOperatingHours()}</p>
-              </div>
-            </div>
-
-            <div className={styles.aboutItem}>
-              <span
-                className="material-symbols-outlined"
-                style={{ color: "#6b7280" }}
-              >
-                calendar_today
-              </span>
-              <div>
-                <span className={styles.aboutLabel}>Working Days</span>
-                <div className={styles.dayPills}>
-                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                    <span
-                      key={day}
-                      className={`${styles.dayPill} ${(item.workingDays || []).includes(day) ? styles.dayPillActive : ""}`}
-                    >
-                      {day}
-                    </span>
-                  ))}
+            {[
+              {
+                icon: "location_on",
+                label: "Coordinates",
+                value: item.location?.coordinates
+                  ? `${item.location.coordinates[1]}, ${item.location.coordinates[0]}`
+                  : "Not specified",
+              },
+              {
+                icon: "attach_money",
+                label: "Starting From",
+                value: item.startingFromPrice != null ? `$${item.startingFromPrice}` : "Not specified",
+              },
+              {
+                icon: "schedule",
+                label: "Duration",
+                value: item.durationText || "Not specified",
+              },
+            ].map(({ icon, label, value }) => (
+              <div className={styles.aboutItem} key={label}>
+                <span className="material-symbols-outlined" style={{ color: "#6b7280" }}>{icon}</span>
+                <div>
+                  <span className={styles.aboutLabel}>{label}</span>
+                  <p className={styles.aboutValue}>{value}</p>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         );
 
@@ -448,15 +385,9 @@ function DestinationDetail() {
           <div className={styles.reviewsTabContent}>
             <div className={styles.reviewsSummary}>
               <div className={styles.scoreBox}>
-                <span className={styles.scoreValue}>
-                  {PLACEHOLDER_STATS.rating}
-                </span>
-                <span className={styles.scoreLabel}>
-                  {PLACEHOLDER_STATS.label}
-                </span>
-                <span className={styles.scoreReviews}>
-                  {PLACEHOLDER_STATS.totalReviews} reviews
-                </span>
+                <span className={styles.scoreValue}>{PLACEHOLDER_STATS.rating}</span>
+                <span className={styles.scoreLabel}>{PLACEHOLDER_STATS.label}</span>
+                <span className={styles.scoreReviews}>{PLACEHOLDER_STATS.totalReviews} reviews</span>
               </div>
             </div>
             <div className={styles.reviewsList}>
@@ -464,28 +395,15 @@ function DestinationDetail() {
                 <div key={review.id} className={styles.reviewItem}>
                   <div className={styles.reviewHeader}>
                     <div className={styles.reviewerInfo}>
-                      <div className={styles.reviewerAvatar}>
-                        {review.name.charAt(0)}
-                      </div>
+                      <div className={styles.reviewerAvatar}>{review.name.charAt(0)}</div>
                       <div>
-                        <span className={styles.reviewerName}>
-                          {review.name}
-                        </span>
+                        <span className={styles.reviewerName}>{review.name}</span>
                         <span className={styles.reviewDate}>{review.date}</span>
                       </div>
                     </div>
                     <div className={styles.reviewRating}>
                       {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className="material-symbols-outlined"
-                          style={{
-                            color: i < review.rating ? "#f59e0b" : "#e5e7eb",
-                            fontSize: "1rem",
-                          }}
-                        >
-                          star
-                        </span>
+                        <span key={i} className="material-symbols-outlined" style={{ color: i < review.rating ? "#f59e0b" : "#e5e7eb", fontSize: "1rem" }}>star</span>
                       ))}
                     </div>
                   </div>
@@ -496,434 +414,238 @@ function DestinationDetail() {
           </div>
         );
 
-      case "contact":
-        const contacts = item.contacts || [];
-        if (contacts.length === 0) {
-          return (
-            <div className={styles.emptyContent}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.5rem", color: "#9ca3af" }}
-              >
-                contact_phone
-              </span>
-              <p>No contact information available</p>
-            </div>
-          );
-        }
-        return (
-          <div className={styles.contactListContent}>
-            {contacts.map((contact, index) => {
-              const { type, display } = detectContactType(contact);
-              return (
-                <div key={index} className={styles.contactItemContent}>
-                  <div className={styles.contactIconContent} data-type={type}>
-                    <span className="material-symbols-outlined">
-                      {getContactIcon(type)}
-                    </span>
-                  </div>
-                  <span className={styles.contactValueContent}>{display}</span>
-                </div>
-              );
-            })}
+      case "contact": {
+        // API returns item.contact as an object: { phone, whatsapp, email, address, instagramUrl, twitterUrl }
+        const contactObj = item.contact || {};
+        const contactEntries = [
+          { key: "phone", value: contactObj.phone, type: "phone" },
+          { key: "whatsapp", value: contactObj.whatsapp, type: "whatsapp" },
+          { key: "email", value: contactObj.email, type: "url" },
+          { key: "address", value: contactObj.address, type: "url" },
+          { key: "instagramUrl", value: contactObj.instagramUrl, type: "instagram" },
+          { key: "twitterUrl", value: contactObj.twitterUrl, type: "x" },
+        ].filter((c) => c.value);
+
+        if (!contactEntries.length) return (
+          <div className={styles.emptyContent}>
+            <span className="material-symbols-outlined" style={{ fontSize: "2.5rem", color: "#9ca3af" }}>contact_phone</span>
+            <p>No contact information available</p>
           </div>
         );
+        return (
+          <div className={styles.contactListContent}>
+            {contactEntries.map(({ key, value, type }) => (
+              <div key={key} className={styles.contactItemContent}>
+                <div className={styles.contactIconContent} data-type={type}>
+                  <span className="material-symbols-outlined">{getContactIcon(type)}</span>
+                </div>
+                <span className={styles.contactValueContent}>{value}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
 
       case "photos":
-        const photos = item.photos || [];
-        if (photos.length === 0) {
-          return (
-            <div className={styles.emptyContent}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.5rem", color: "#9ca3af" }}
-              >
-                photo_library
-              </span>
-              <p>There are no photos at the moment</p>
-            </div>
-          );
-        }
+        const photos = item.photos || item.images || [];
+        if (!photos.length) return (
+          <div className={styles.emptyContent}>
+            <span className="material-symbols-outlined" style={{ fontSize: "2.5rem", color: "#9ca3af" }}>photo_library</span>
+            <p>No photos yet</p>
+          </div>
+        );
         return (
           <div className={styles.photoGridContent}>
-            {photos.map((photo, index) => (
-              <img
-                key={index}
-                src={photo}
-                alt={`Photo ${index + 1}`}
-                className={styles.photoItemContent}
-              />
+            {photos.map((photo, i) => (
+              <img key={i} src={photo} alt={`Photo ${i + 1}`} className={styles.photoItemContent} onClick={() => setLightboxImage(photo)} />
             ))}
           </div>
         );
 
       case "book":
-        const bookingLink = item.bookingLink;
-        if (!bookingLink) {
-          return (
-            <div className={styles.emptyContent}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.5rem", color: "#9ca3af" }}
-              >
-                hotel
-              </span>
-              <p>There is no booking option currently</p>
-            </div>
-          );
-        }
+        if (!item.bookingLink && !item.bookingUrl) return (
+          <div className={styles.emptyContent}>
+            <span className="material-symbols-outlined" style={{ fontSize: "2.5rem", color: "#9ca3af" }}>hotel</span>
+            <p>No booking option currently</p>
+          </div>
+        );
+        const bookUrl = item.bookingLink || item.bookingUrl;
         return (
           <div className={styles.bookTabContent}>
-            <p className={styles.bookPrompt}>
-              Ready to book your stay at {item.name}?
-            </p>
-            <a
-              href={
-                bookingLink.startsWith("http")
-                  ? bookingLink
-                  : `https://${bookingLink}`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.bookButton}
-            >
-              Book Now
-            </a>
+            <p className={styles.bookPrompt}>Ready to book your stay at {item.name}?</p>
+            <a href={bookUrl.startsWith("http") ? bookUrl : `https://${bookUrl}`} target="_blank" rel="noopener noreferrer" className={styles.bookButton}>Book Now</a>
           </div>
         );
 
-      default:
-        return null;
+      default: return null;
     }
   };
 
-  // Render a card with tabs
+  // ── Card renderer ──────────────────────────────────────────────────────────
   const renderCard = (item, type) => {
     const tabs = getTabs(type);
-    const activeTab = cardTabs[item.id] || "overview";
-    const isMenuOpen = cardMenus[item.id] || false;
+    const activeTab = cardTabs[item._id] || "overview";
+    const isMenuOpen = cardMenus[item._id] || false;
 
     return (
-      <div key={item.id} className={styles.entityCard}>
+      <div key={item._id} className={styles.entityCard}>
         <div className={styles.cardHeader}>
           <h3 className={styles.cardName}>{item.name}</h3>
-          <div
-            className={styles.menuWrapper}
-            ref={(el) => (menuRefs.current[item.id] = el)}
-          >
-            <button
-              className={styles.menuBtn}
-              onClick={(e) => handleMenuToggle(e, item.id)}
-            >
+          <div className={styles.menuWrapper} ref={(el) => (menuRefs.current[item._id] = el)}>
+            <button className={styles.menuBtn} onClick={(e) => handleMenuToggle(e, item._id)}>
               <span className="material-symbols-outlined">more_vert</span>
             </button>
             {isMenuOpen && (
               <div className={styles.dropdown}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(item, type);
-                  }}
-                >
-                  <span className="material-symbols-outlined">edit</span>
-                  Edit
+                <button onClick={(e) => { e.stopPropagation(); handleEdit(item, type); }}>
+                  <span className="material-symbols-outlined">edit</span> Edit
                 </button>
-                <button
-                  className={styles.dropdownDanger}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveClick(item, type);
-                  }}
-                >
-                  <span className="material-symbols-outlined">delete</span>
-                  Remove
+                <button className={styles.dropdownDanger} onClick={(e) => { e.stopPropagation(); handleRemoveClick(item, type); }}>
+                  <span className="material-symbols-outlined">delete</span> Remove
                 </button>
               </div>
             )}
           </div>
         </div>
-
         <div className={styles.cardTabs}>
           {tabs.map((tab) => (
-            <button
-              key={tab}
-              className={`${styles.tabBtn} ${activeTab === tab ? styles.tabBtnActive : ""}`}
-              onClick={() => handleTabChange(item.id, tab)}
-            >
+            <button key={tab} className={`${styles.tabBtn} ${activeTab === tab ? styles.tabBtnActive : ""}`} onClick={() => handleTabChange(item._id, tab)}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
-
-        <div className={styles.cardContent}>
-          {renderCardContent(item, type, activeTab)}
-        </div>
+        <div className={styles.cardContent}>{renderCardContent(item, type, activeTab)}</div>
       </div>
     );
   };
 
-  // Card rendering helper
   const renderCards = (items, type) => {
-    if (!items || items.length === 0) return null;
-    return (
-      <div className={styles.cardGrid}>
-        {items.map((item) => renderCard(item, type))}
-      </div>
-    );
+    if (!items?.length) return null;
+    return <div className={styles.cardGrid}>{items.map((item) => renderCard(item, type))}</div>;
   };
 
+  // ── Loading / error states ─────────────────────────────────────────────────
+  if (loading) return <div className={styles.page}><div className={styles.loading}>Loading...</div></div>;
+  if (error) return <div className={styles.page}><div className={styles.loading} style={{ color: "#dc2626" }}>{error}</div></div>;
+
+  const stats = [
+    { label: "Places", count: places.length },
+    { label: "Hotels", count: hotels.length },
+    { label: "Restaurants", count: restaurants.length },
+    { label: "Events", count: events.length },
+  ];
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{displayName}</h1>
-          <p className={styles.subtitle}>
-            Manage places, hotels, restaurants, and events for this destination.
-          </p>
+          <p className={styles.subtitle}>Manage places, hotels, restaurants, and events for this destination.</p>
         </div>
       </div>
 
-      {/* Stats row */}
       <div className={styles.statsRow}>
-        {stats.map((stat, index) => (
-          <div key={index} className={styles.statItem}>
+        {stats.map((stat) => (
+          <div key={stat.label} className={styles.statItem}>
             <p className={styles.statLabel}>{stat.label}</p>
             <p className={styles.statVal}>{stat.count}</p>
           </div>
         ))}
       </div>
 
-      {/* Content Sections */}
       <div className={styles.contentArea}>
-        {/* Places Section */}
+        {/* Places */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Places</h2>
-            <button
-              className={styles.addSectionBtn}
-              onClick={() => setShowPlacesModal(true)}
-            >
-              <span className="material-symbols-outlined">add</span>
-              Add Place
+            <button className={styles.addSectionBtn} onClick={() => setShowPlacesModal(true)}>
+              <span className="material-symbols-outlined">add</span> Add Place
             </button>
           </div>
-          {places.length === 0 ? (
+          {!places.length ? (
             <div className={styles.emptyState}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "3rem", color: "#9ca3af" }}
-              >
-                place
-              </span>
+              <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#9ca3af" }}>place</span>
               <p>No places added yet</p>
-              <button
-                className={styles.addBtnSmall}
-                onClick={() => setShowPlacesModal(true)}
-              >
-                Add First Place
-              </button>
+              <button className={styles.addBtnSmall} onClick={() => setShowPlacesModal(true)}>Add First Place</button>
             </div>
-          ) : (
-            renderCards(places, "place")
-          )}
+          ) : renderCards(places, "place")}
         </section>
 
-        {/* Hotels Section */}
+        {/* Hotels */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Hotels</h2>
-            <button
-              className={styles.addSectionBtn}
-              onClick={() => setShowHotelsModal(true)}
-            >
-              <span className="material-symbols-outlined">add</span>
-              Add Hotel
+            <button className={styles.addSectionBtn} onClick={() => setShowHotelsModal(true)}>
+              <span className="material-symbols-outlined">add</span> Add Hotel
             </button>
           </div>
-          {hotels.length === 0 ? (
+          {!hotels.length ? (
             <div className={styles.emptyState}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "3rem", color: "#9ca3af" }}
-              >
-                hotel
-              </span>
+              <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#9ca3af" }}>hotel</span>
               <p>No hotels added yet</p>
-              <button
-                className={styles.addBtnSmall}
-                onClick={() => setShowHotelsModal(true)}
-              >
-                Add First Hotel
-              </button>
+              <button className={styles.addBtnSmall} onClick={() => setShowHotelsModal(true)}>Add First Hotel</button>
             </div>
-          ) : (
-            renderCards(hotels, "hotel")
-          )}
+          ) : renderCards(hotels, "hotel")}
         </section>
 
-        {/* Restaurants Section */}
+        {/* Restaurants */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Restaurants</h2>
-            <button
-              className={styles.addSectionBtn}
-              onClick={() => setShowRestaurantsModal(true)}
-            >
-              <span className="material-symbols-outlined">add</span>
-              Add Restaurant
+            <button className={styles.addSectionBtn} onClick={() => setShowRestaurantsModal(true)}>
+              <span className="material-symbols-outlined">add</span> Add Restaurant
             </button>
           </div>
-          {restaurants.length === 0 ? (
+          {!restaurants.length ? (
             <div className={styles.emptyState}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "3rem", color: "#9ca3af" }}
-              >
-                restaurant
-              </span>
+              <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#9ca3af" }}>restaurant</span>
               <p>No restaurants added yet</p>
-              <button
-                className={styles.addBtnSmall}
-                onClick={() => setShowRestaurantsModal(true)}
-              >
-                Add First Restaurant
-              </button>
+              <button className={styles.addBtnSmall} onClick={() => setShowRestaurantsModal(true)}>Add First Restaurant</button>
             </div>
-          ) : (
-            renderCards(restaurants, "restaurant")
-          )}
+          ) : renderCards(restaurants, "restaurant")}
         </section>
 
-        {/* Events Section */}
+        {/* Events */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Events</h2>
-            <button
-              className={styles.addSectionBtn}
-              onClick={() => setShowEventsModal(true)}
-            >
-              <span className="material-symbols-outlined">add</span>
-              Add Event
+            <button className={styles.addSectionBtn} onClick={() => setShowEventsModal(true)}>
+              <span className="material-symbols-outlined">add</span> Add Event
             </button>
           </div>
-          {events.length === 0 ? (
+          {!events.length ? (
             <div className={styles.emptyState}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "3rem", color: "#9ca3af" }}
-              >
-                event
-              </span>
+              <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#9ca3af" }}>event</span>
               <p>No events added yet</p>
-              <button
-                className={styles.addBtnSmall}
-                onClick={() => setShowEventsModal(true)}
-              >
-                Add First Event
-              </button>
+              <button className={styles.addBtnSmall} onClick={() => setShowEventsModal(true)}>Add First Event</button>
             </div>
-          ) : (
-            renderCards(events, "event")
-          )}
+          ) : renderCards(events, "event")}
         </section>
       </div>
 
-      {/* Add Modals - with state reset on open */}
-      <PlacesModal
-        isOpen={showPlacesModal}
-        onClose={() => setShowPlacesModal(false)}
-        onSave={handleSavePlace}
-        destinationName={displayName}
-      />
+      {/* Add Modals */}
+      <PlacesModal isOpen={showPlacesModal} onClose={() => setShowPlacesModal(false)} onSave={handleSavePlace} destinationName={displayName} />
+      <HotelsModal isOpen={showHotelsModal} onClose={() => setShowHotelsModal(false)} onSave={handleSaveHotel} destinationName={displayName} />
+      <RestaurantsModal isOpen={showRestaurantsModal} onClose={() => setShowRestaurantsModal(false)} onSave={handleSaveRestaurant} destinationName={displayName} />
+      <EventsModal isOpen={showEventsModal} onClose={() => setShowEventsModal(false)} onSave={handleSaveEvent} destinationName={displayName} />
 
-      <HotelsModal
-        isOpen={showHotelsModal}
-        onClose={() => setShowHotelsModal(false)}
-        onSave={handleSaveHotel}
-        destinationName={displayName}
-      />
+      {/* Edit Modals */}
+      {editingItem && editingType === "place" && <PlacesModal isOpen onClose={closeEditModal} onSave={handleSavePlace} destinationName={displayName} editData={editingItem} />}
+      {editingItem && editingType === "hotel" && <HotelsModal isOpen onClose={closeEditModal} onSave={handleSaveHotel} destinationName={displayName} editData={editingItem} />}
+      {editingItem && editingType === "restaurant" && <RestaurantsModal isOpen onClose={closeEditModal} onSave={handleSaveRestaurant} destinationName={displayName} editData={editingItem} />}
+      {editingItem && editingType === "event" && <EventsModal isOpen onClose={closeEditModal} onSave={handleSaveEvent} destinationName={displayName} editData={editingItem} />}
 
-      <RestaurantsModal
-        isOpen={showRestaurantsModal}
-        onClose={() => setShowRestaurantsModal(false)}
-        onSave={handleSaveRestaurant}
-        destinationName={displayName}
-      />
-
-      <EventsModal
-        isOpen={showEventsModal}
-        onClose={() => setShowEventsModal(false)}
-        onSave={handleSaveEvent}
-        destinationName={displayName}
-      />
-
-      {/* Edit Modals - pre-filled with existing data */}
-      {editingItem && editingType === "place" && (
-        <PlacesModal
-          isOpen={true}
-          onClose={closeEditModal}
-          onSave={handleSavePlace}
-          destinationName={displayName}
-          editData={editingItem}
-        />
-      )}
-
-      {editingItem && editingType === "hotel" && (
-        <HotelsModal
-          isOpen={true}
-          onClose={closeEditModal}
-          onSave={handleSaveHotel}
-          destinationName={displayName}
-          editData={editingItem}
-        />
-      )}
-
-      {editingItem && editingType === "restaurant" && (
-        <RestaurantsModal
-          isOpen={true}
-          onClose={closeEditModal}
-          onSave={handleSaveRestaurant}
-          destinationName={displayName}
-          editData={editingItem}
-        />
-      )}
-
-      {editingItem && editingType === "event" && (
-        <EventsModal
-          isOpen={true}
-          onClose={closeEditModal}
-          onSave={handleSaveEvent}
-          destinationName={displayName}
-          editData={editingItem}
-        />
-      )}
-
-      {/* Remove Confirmation Modal */}
+      {/* Remove Confirmation */}
       {removingItem && (
-        <div className={styles.confirmOverlay} onClick={cancelRemove}>
-          <div
-            className={styles.confirmModal}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "3rem", color: "#dc2626" }}
-            >
-              delete
-            </span>
+        <div className={styles.confirmOverlay} onClick={() => { setRemovingItem(null); setRemovingType(null); }}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#dc2626" }}>delete</span>
             <h3 className={styles.confirmTitle}>Remove {removingItem.name}?</h3>
-            <p className={styles.confirmBody}>
-              This action cannot be undone. The{" "}
-              {getEntityName(removingType).toLowerCase()} will be permanently
-              removed.
-            </p>
+            <p className={styles.confirmBody}>This action cannot be undone. The {getEntityName(removingType).toLowerCase()} will be permanently removed.</p>
             <div className={styles.confirmActions}>
-              <button className={styles.cancelBtn} onClick={cancelRemove}>
-                Cancel
-              </button>
-              <button className={styles.removeBtn} onClick={confirmRemove}>
-                Remove
-              </button>
+              <button className={styles.cancelBtn} onClick={() => { setRemovingItem(null); setRemovingType(null); }}>Cancel</button>
+              <button className={styles.removeBtn} onClick={confirmRemove}>Remove</button>
             </div>
           </div>
         </div>
@@ -932,17 +654,10 @@ function DestinationDetail() {
       {/* Lightbox */}
       {lightboxImage && (
         <div className={styles.lightbox} onClick={() => setLightboxImage(null)}>
-          <button
-            className={styles.lightboxClose}
-            onClick={() => setLightboxImage(null)}
-          >
+          <button className={styles.lightboxClose} onClick={() => setLightboxImage(null)}>
             <span className="material-symbols-outlined">close</span>
           </button>
-          <img
-            src={lightboxImage}
-            alt="Full screen"
-            className={styles.lightboxImage}
-          />
+          <img src={lightboxImage} alt="Full screen" className={styles.lightboxImage} />
         </div>
       )}
     </div>
