@@ -105,8 +105,8 @@
     color 250ms ease;
 }
 
-.inputField:focus ~ .inputLabel,
-.inputField:not(:placeholder-shown) ~ .inputLabel {
+.inputField:focus~.inputLabel,
+.inputField:not(:placeholder-shown)~.inputLabel {
   top: 0;
   font-size: 10px;
   color: var(--color-accent);
@@ -157,8 +157,8 @@
     color 250ms ease;
 }
 
-.textareaField:focus ~ .textareaLabel,
-.textareaField:not(:placeholder-shown) ~ .textareaLabel {
+.textareaField:focus~.textareaLabel,
+.textareaField:not(:placeholder-shown)~.textareaLabel {
   top: 0;
   font-size: 10px;
   color: var(--color-accent);

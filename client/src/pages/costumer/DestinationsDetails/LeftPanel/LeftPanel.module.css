@@ -432,7 +432,7 @@
 
 /* ── COMMENTS ── */
 .count-badge {
-    background: var(--color-accent);
+  background: var(--color-accent);
     color: var(--color-white);
     font-family: var(--font-ui);
     font-size: 1rem;

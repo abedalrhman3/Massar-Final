@@ -351,5 +351,5 @@
 }
 
 .unbanConfirmBtn:hover {
-  background: #1749d6;
+  background: var(--color-accent);
 }

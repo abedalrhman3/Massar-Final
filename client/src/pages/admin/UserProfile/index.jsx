@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { destinations } from "@/data/destinations";
 import styles from "./UserProfile.module.css";
-import { logout } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 
 // ─── SWAP AXIOS FOR YOUR CUSTOM INSTANCE ─────────────────────────────────────
@@ -101,7 +100,7 @@ function SlideModal({ open, onClose, title, children }) {
 
 function UserProfile() {
   const navigate = useNavigate();
-  const { user, updateUserContext } = useAuth();
+  const { user, setUser, logout } = useAuth();
 
   const currentProfileData = {
     name: user?.name || "User",
@@ -111,8 +110,8 @@ function UserProfile() {
     avatar: user?.avatar_url || null,
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 
@@ -143,8 +142,8 @@ function UserProfile() {
   const handleSaveName = async () => {
     if (!draftName.trim()) return;
     try {
-      await api.put("/auth/update-profile", { name: draftName.trim() });
-      if (updateUserContext) await updateUserContext();
+      const res = await api.put("/auth/update-profile", { name: draftName.trim() });
+      setUser(res.data.user);
       closeModal();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update profile name.");
@@ -186,10 +185,10 @@ function UserProfile() {
       formData.append("avatar", file);
 
       try {
-        await api.post("/auth/upload-avatar", formData, {
+        const res = await api.post("/auth/upload-avatar", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        if (updateUserContext) await updateUserContext();
+        setUser(res.data.user);
       } catch (err) {
         alert(err.response?.data?.message || "Failed to upload avatar image.");
       }

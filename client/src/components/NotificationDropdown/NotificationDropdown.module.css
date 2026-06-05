@@ -64,7 +64,7 @@
   border: none;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-accent);
+  color: #1B56FD;
   cursor: pointer;
   padding: 0;
 }
@@ -146,7 +146,7 @@
 
 .iconWrap.info {
   background: rgba(27, 86, 253, 0.1);
-  color: var(--color-accent);
+  color: #1B56FD;
 }
 
 .content {
@@ -184,7 +184,7 @@
   transform: translateY(-50%);
   width: 8px;
   height: 8px;
-  background: var(--color-accent);
+  background: #1B56FD;
   border-radius: 50%;
 }
 

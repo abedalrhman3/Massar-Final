@@ -1,14 +1,17 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import styles from "./UserDashboard.module.css";
+import { useAuth } from "@/context/AuthContext";
 
 function UserDashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    await logout();
     navigate("/login");
   };
 

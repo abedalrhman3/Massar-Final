@@ -28,7 +28,7 @@
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--color-accent);
+  border: 3px solid var(--color-accent, #1B56FD);
   box-shadow: 0 4px 15px rgba(27, 86, 253, 0.15);
   margin-bottom: 20px;
 }
@@ -43,7 +43,7 @@
 .rank {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--color-accent);
+  color: var(--color-accent, #1B56FD);
   background-color: rgba(27, 86, 253, 0.08);
   padding: 6px 16px;
   border-radius: 50px;
@@ -75,19 +75,19 @@
 .menuBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--color-accent, #1B56FD);
+  color: var(--color-accent, #1B56FD);
 }
 
 .primaryBtn {
-  background-color: var(--color-accent);
+  background-color: var(--color-accent, #1B56FD);
   color: var(--color-white, #FFFFFF);
   border: none;
   box-shadow: 0 4px 12px rgba(27, 86, 253, 0.2);
 }
 
 .primaryBtn:hover {
-  background-color: var(--color-accent);
+  background-color: var(--color-accent, #1B56FD);
   color: var(--color-white, #FFFFFF);
   box-shadow: 0 6px 18px rgba(27, 86, 253, 0.3);
   filter: brightness(1.1);

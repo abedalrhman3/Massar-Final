@@ -1,3 +1,42 @@
+/* ── Hero ── */
+.heroWrapper {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #0a3bcc 100%);
+}
+
+.toursHero {
+  text-align: center;
+  padding: 120px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.heroEyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.heroTitle {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(26px, 4vw, 42px);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 8px;
+}
+
 .toursPage {
   box-sizing: border-box;
   padding: 4rem 9rem;
@@ -6,23 +45,25 @@
   margin: 0 auto;
 }
 
-.toursHero {
-  text-align: center;
-  padding-top: 120px;
-  padding-bottom: 60px;
-  min-height: 250px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
 .toursHero h2 {
   font-family: "Playfair Display", serif;
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 20px;
   color: #fff;
+}
+
+.searchWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.resultsCounter {
+  font-size: 14px;
+  color: #374151;
+  margin-left: auto;
+  font-weight: 500;
 }
 
 /* ── Sections ── */
@@ -99,8 +140,8 @@
   margin: 40px 573px;
   padding: 12px 40px;
   background: white;
-  border: 2px solid #2d6bff;
-  color: #2d6bff;
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
   border-radius: 30px;
   font-size: 16px;
   cursor: pointer;
@@ -114,7 +155,7 @@
 }
 
 .toursMore:hover {
-  background: #2d6bff;
+  background: var(--color-accent);
   color: white;
 }
 
@@ -184,4 +225,67 @@
 .tooltipWrapper:hover .tooltipBox {
   visibility: visible;
   opacity: 1;
+}
+
+/* ── Skeleton loader ── */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(4, calc(25% - 18px));
+  gap: 24px;
+}
+
+.skeletonCard {
+  height: 280px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .filterBar {
+    padding: 16px 4rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .skeletonGrid {
+    grid-template-columns: repeat(2, calc(50% - 12px));
+  }
+
+  .filterBar {
+    padding: 14px 2rem;
+    top: 56px;
+  }
+}
+
+@media (max-width: 600px) {
+  .filterBar {
+    padding: 12px 1.5rem;
+    top: 56px;
+  }
+
+  .filterLabel {
+    display: none;
+  }
+
+  .resultCount {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .skeletonGrid {
+    grid-template-columns: 1fr;
+  }
 }

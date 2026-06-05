@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from "./Home.module.css";
 import Navbar from "../../../components/Navbar/Navbar";
+import { useNavigate } from "react-router-dom";
 
 // Heroes
 const deadSea = "images/homepage/dead-sea.jpeg";
@@ -25,6 +26,7 @@ const hobby = "/images/homepage/hobby.jpg";
 const culture = "/images/homepage/culture.jpg";
 
 function Home() {
+  const navigate = useNavigate();
   const images = [deadSea, petra, wadiRum];
   const [index, setIndex] = useState(0);
 
@@ -41,16 +43,17 @@ function Home() {
         className={`${styles.imageContainer} ${styles.bottomCornersRounded}`}
         style={{ backgroundImage: `url(${images[index]})` }}
       >
-        <Navbar />
-        <div className={styles.menuSelected}>
-          <span></span>
-        </div>
+
+
         <div className={styles.inImageText}>
           Hike Wadi Rum at sunrise, float in Dead Sea by afternoon, and dine in
           Aqaba as the stars come out.
           <p>
             We will guide you{" "}
-            <button className={styles.secondBtn}>Let's start</button>
+            <button
+              className={styles.secondBtn}
+              onClick={() => navigate("/login")}
+            >Let's start</button>
           </p>
         </div>
 

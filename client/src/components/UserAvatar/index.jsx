@@ -20,7 +20,13 @@ const UserAvatar = ({ onLogout }) => {
                     : <span>{initials}</span>
                 }
             </div>
-
+            <div className={styles.dropdown}>
+                <div className={styles.name}>{user.name || 'User'}</div>
+                <div className={styles.email}>{user.email || ''}</div>
+                <hr className={styles.divider} />
+                <button onClick={() => navigate('/profile')}>Profile</button>
+                <button className={styles.logout} onClick={onLogout}>Logout</button>
+            </div>
         </div>
     );
 };

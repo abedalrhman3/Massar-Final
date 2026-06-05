@@ -165,7 +165,7 @@
   margin-right: 12px;
   border-radius: var(--radius-hero, 50%);
   background: white;
-  color: #4a6cf7;
+  color: var(--color-accent);
   transition: 0.3s;
   text-decoration: none;
 }
@@ -184,7 +184,7 @@
 }
 
 :global(#face1):hover {
-  background-color: #3b5998;
+  background-color: var(--color-accent);
 }
 
 :global(#face1):hover i {
@@ -197,7 +197,7 @@
       #fdf497 5%,
       #fd5949 45%,
       #d6249f 60%,
-      #285aeb 90%);
+      var(--color-accent) 90%);
   color: #fff;
 }
 

@@ -884,7 +884,7 @@
 }
 
 .modalConfirmBtn:hover:not(:disabled) {
-  background: #1444d4;
+  background: var(--color-accent);
 }
 
 .modalConfirmBtn:disabled {

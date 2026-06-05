@@ -226,6 +226,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -538,7 +539,7 @@
 
 .contactIconContent[data-type="phone"] {
   background: #e0e7ff;
-  color: #4f46e5;
+  color: var(--color-accent);
 }
 
 .contactIconContent[data-type="whatsapp"] {
@@ -548,7 +549,7 @@
 
 .contactIconContent[data-type="facebook"] {
   background: #dbeafe;
-  color: #2563eb;
+  color: var(--color-accent);
 }
 
 .contactIconContent[data-type="instagram"] {
@@ -563,7 +564,7 @@
 
 .contactIconContent[data-type="discord"] {
   background: #e0e7ff;
-  color: #5865f2;
+  color: var(--color-accent);
 }
 
 .contactIconContent[data-type="url"] {
@@ -672,6 +673,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -692,6 +694,7 @@
     opacity: 0;
     transform: scale(0.95) translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -768,6 +771,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -811,6 +815,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

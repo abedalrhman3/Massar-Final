@@ -3,13 +3,14 @@
 .container {
   position: relative;
   width: 1000px;
-  height: 900px;
+  height: 730px;
   background: #fff;
   margin: 20px;
   border-radius: 30px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   font-family: "Poppins", sans-serif;
+
 }
 
 .container h1 {
@@ -54,6 +55,7 @@
 .formBox.register {
   visibility: hidden;
 }
+
 .container.active .formBox.register {
   visibility: visible;
 }
@@ -120,9 +122,10 @@
 .forgotLink {
   margin: 15px 0 15px;
 }
+
 .forgotLink a {
   font-size: 14.5px;
-  color: #7494ec;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -152,7 +155,7 @@
   inset: 0;
   width: 300%;
   left: -100%;
-  background: #7494ec;
+  background: var(--color-accent);
   transition:
     left 0.3s ease,
     background 0.3s ease;
@@ -191,7 +194,7 @@
   left: -250%;
   width: 300%;
   height: 100%;
-  background: #7494ec;
+  background: var(--color-accent);
   border-radius: 150px;
   z-index: 2;
   transition: 1.8s ease-in-out;
@@ -219,6 +222,7 @@
   left: 0;
   transition-delay: 1.2s;
 }
+
 .container.active .togglePanel.toggleLeft {
   left: -50%;
   transition-delay: 0.6s;
@@ -228,6 +232,7 @@
   right: -50%;
   transition-delay: 0.6s;
 }
+
 .container.active .togglePanel.toggleRight {
   right: 0;
   transition-delay: 1.2s;
@@ -314,26 +319,24 @@
 }
 
 .socialBtn.discord {
-  background: #5865f2;
+  background: var(--color-accent);
 }
 
 .socialBtn.instagram {
-  background: linear-gradient(
-    45deg,
-    #f09433,
-    #e6683c,
-    #dc2743,
-    #cc2366,
-    #bc1888
-  );
+  background: linear-gradient(45deg,
+      #f09433,
+      #e6683c,
+      #dc2743,
+      #cc2366,
+      #bc1888);
 }
 
 .pageWrapper {
-  min-height: 150vh;
+  /* min-height: 150vh; */
   display: flex;
   justify-content: center;
-  align-items: center;
   background: linear-gradient(90deg, #e2e2e2, #c9d6ff);
+  overflow-y: hidden;
 }
 
 @media screen and (max-width: 650px) {
@@ -374,9 +377,11 @@
     width: 100%;
     height: 30%;
   }
+
   .togglePanel.toggleLeft {
     top: 0;
   }
+
   .togglePanel.toggleRight {
     right: 0;
     bottom: -30%;
@@ -460,15 +465,19 @@
   0% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-5px);
   }
+
   50% {
     transform: translateX(5px);
   }
+
   75% {
     transform: translateX(-5px);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -501,7 +510,7 @@
   top: -5px;
   right: 0;
   transform: translateY(-100%);
-  background: #7494ec;
+  background: var(--color-accent);
   color: #fff;
   font-size: 11px;
   padding: 5px 8px;
@@ -523,6 +532,7 @@
     opacity: 0;
     transform: translateY(-120%);
   }
+
   to {
     opacity: 1;
     transform: translateY(-100%);
@@ -606,7 +616,7 @@
 }
 
 .dropdownList li:hover {
-  background: #7494ec;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -616,7 +626,7 @@
 }
 
 .checkBox a {
-  color: #7494ec;
+  color: var(--color-accent);
   text-decoration: none;
   font-weight: 500;
 }
@@ -648,7 +658,7 @@
 }
 
 .checkBox input.customCheckbox:checked {
-  border-color: hsl(224, 76%, 69%);
+  border-color: var(--color-accent);
 }
 
 .checkBox input.customCheckbox:checked::after {
@@ -658,7 +668,7 @@
   left: 5px;
   width: 4px;
   height: 9px;
-  border: solid #7494ec;
+  border: solid var(--color-accent);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }

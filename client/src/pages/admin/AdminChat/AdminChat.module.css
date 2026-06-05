@@ -117,7 +117,7 @@
 }
 
 .filterActive {
-  background: var(--color-accent);
+  background: #1b56fd;
   color: #fff;
 }
 
@@ -142,7 +142,7 @@
 
 .conversationActive {
   background: rgba(27, 86, 253, 0.08);
-  border-left: 3px solid var(--color-accent);
+  border-left: 3px solid #1b56fd;
 }
 
 .convAvatar {
@@ -180,7 +180,7 @@
   right: -2px;
   min-width: 18px;
   height: 18px;
-  background: var(--color-accent);
+  background: #1b56fd;
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -281,7 +281,7 @@
 
 /* Chat Header Icon Hover */
 .iconHover .material-symbols-outlined {
-  color: var(--color-accent) !important;
+  color: var(--color-accent, #1B56FD) !important;
 }
 
 .detailsToggle {
@@ -362,7 +362,7 @@
 }
 
 .messageOwn .messageBubble {
-  background: var(--color-accent);
+  background: #1b56fd;
   color: #fff;
   border-radius: 16px;
   border-top-right-radius: 4px;
@@ -470,7 +470,7 @@
 }
 
 .messageInput:focus {
-  border-color: var(--color-accent);
+  border-color: #1b56fd;
 }
 
 .sendBtn {
@@ -479,7 +479,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-accent);
+  background: #1b56fd;
   border: none;
   border-radius: 50%;
   color: #fff;

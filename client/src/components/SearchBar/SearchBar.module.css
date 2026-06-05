@@ -3,43 +3,66 @@
   align-items: center;
   gap: 10px;
   background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 30px;
-  padding: 10px 20px;
-  width: 500px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  padding: 13px 22px;
+  width: min(560px, 90vw);
   margin: 0 auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
   transition: all 0.2s ease-in-out;
   cursor: text;
 }
 
 .searchBar:hover {
-  border-color: #ccc;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.18);
   transform: translateY(-1px);
 }
 
 .searchBar:focus-within {
-  border-color: #2d6bff;
-  box-shadow: 0 4px 16px rgba(45, 107, 255, 0.15);
+  border-color: var(--color-accent, #1b56fd);
+  box-shadow: 0 6px 32px rgba(27, 86, 253, 0.22);
   transform: translateY(-2px);
 }
 
 .searchBar i {
-  color: #777;
-  font-size: 18px;
+  color: #aaa;
+  font-size: 16px;
   transition: color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .searchBar:focus-within i {
-  color: #2d6bff;
+  color: var(--color-accent, #1b56fd);
 }
 
 .searchBar input {
   border: none;
   outline: none;
-  font-size: 16px;
+  font-size: 15px;
   width: 100%;
   background: transparent;
+  color: #1a1a2e;
+}
+
+.searchBar input::placeholder {
+  color: #aaa;
+}
+
+/* ── Clear button ── */
+.clearBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.clearBtn:hover {
+  color: #555;
 }

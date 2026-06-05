@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import styles from "./Destinations.module.css";
 import DestinationCard from "@/components/DestinationCard/DestinationCard";
 import SearchBar from "@/components/SearchBar/SearchBar";
 import { getDestinations } from "@/api/destination";
 import { useApi } from "@/hooks/useApi";
 
+// ── Tooltip helper ────────────────────────────────────────────────
 function Tooltip({ text }) {
     return (
         <span className={styles.tooltipWrapper}>
@@ -14,6 +15,7 @@ function Tooltip({ text }) {
     );
 }
 
+// ── Destination grid section ──────────────────────────────────────
 const PAGE_SIZE = 8;
 
 function Section({ title, destinations, showTooltip, tooltipText, loading }) {
@@ -23,15 +25,22 @@ function Section({ title, destinations, showTooltip, tooltipText, loading }) {
         return (
             <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>{title}</h2>
-                <p style={{ color: '#888', padding: '20px 0' }}>Loading...</p>
+                <div className={styles.skeletonGrid}>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className={styles.skeletonCard} />
+                    ))}
+                </div>
             </section>
         );
     }
+
+    if (!destinations.length) return null;
 
     return (
         <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
                 {title}
+                {showTooltip && tooltipText && <Tooltip text={tooltipText} />}
             </h2>
             <div className={styles.toursGrid}>
                 {destinations.slice(0, visible).map((dest) => (
@@ -58,20 +67,31 @@ function Section({ title, destinations, showTooltip, tooltipText, loading }) {
     );
 }
 
+// ── Main page ─────────────────────────────────────────────────────
 function Tours() {
     const { data, loading, error } = useApi(getDestinations);
 
-    // data = { success, data: Destination[] }
+    const [query, setQuery] = useState("");
+
     const all = data?.data ?? [];
 
-    // Sort variants — all derived from the same fetched list
-    const byRating = [...all].sort((a, b) => b.rating - a.rating);
-    const byLikes = [...all].sort((a, b) => b.likes - a.likes);
-    const hidden = [...all].sort((a, b) => a.likes - b.likes).slice(0, 10);
+    // ── Client-side search ────────────────────────────────────────
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return all;
+        return all.filter((d) =>
+            d.name?.toLowerCase().includes(q) ||
+            d.overview?.summary?.toLowerCase().includes(q) ||
+            d.overview?.locationText?.toLowerCase().includes(q)
+        );
+    }, [all, query]);
 
-    const topDestinations = byRating.slice(0, 10);
-    const trending = byLikes.slice(0, 10);
-    const hiddenDestinations = hidden;
+    // ── Pre-sorted section lists (unchanged when no search) ───────
+    const byRating = useMemo(() => [...all].sort((a, b) => b.rating - a.rating), [all]);
+    const byLikes = useMemo(() => [...all].sort((a, b) => b.likes - a.likes), [all]);
+    const hidden = useMemo(() => [...all].sort((a, b) => a.likes - b.likes).slice(0, 10), [all]);
+
+    const isSearching = query.trim().length > 0;
 
     if (error) {
         return (
@@ -83,36 +103,47 @@ function Tours() {
 
     return (
         <>
-            <div style={{ backgroundColor: "#2D6BFF" }}>
+            {/* ── Hero / Search Banner ── */}
+            <div className={styles.heroWrapper}>
                 <div className={styles.toursHero}>
-                    <h2>Explore travel guides and itineraries</h2>
-                    <SearchBar />
+                    <span className={styles.heroEyebrow}>Discover Jordan</span>
+                    <h1 className={styles.heroTitle}>Explore travel guides &amp; itineraries</h1>
+                    <p className={styles.heroSubtitle}>Search from {all.length || '—'} curated destinations</p>
+                    <SearchBar
+                        placeholder="Search destinations, regions, seasons…"
+                        onSearch={setQuery}
+                    />
                 </div>
             </div>
 
             <div className={styles.toursPage}>
-                <Section
-                    title="Top Destinations"
-                    destinations={topDestinations}
-                    loading={loading}
-                />
-                <Section
-                    title="Trending"
-                    destinations={trending}
-                    loading={loading}
-                />
-                <Section
-                    title="Hidden Destinations"
-                    destinations={hiddenDestinations}
-                    loading={loading}
-                    showTooltip
-
-                />
-                <Section
-                    title="All Destinations"
-                    destinations={byLikes}
-                    loading={loading}
-                />
+                {isSearching ? (
+                    /* Search results — single flat list */
+                    <div className={styles.searchWrapper}>
+                        <Section
+                            title={`Search results for "${query}"`}
+                            destinations={filtered}
+                            loading={loading}
+                        />
+                        <div className={styles.resultsCounter}>
+                            results  : {filtered.length}
+                        </div>
+                    </div>
+                ) : (
+                    /* Default categorised sections */
+                    <>
+                        <Section title="Top Destinations" destinations={byRating.slice(0, 10)} loading={loading} />
+                        <Section title="Trending" destinations={byLikes.slice(0, 10)} loading={loading} />
+                        <Section
+                            title="Hidden Gems"
+                            destinations={hidden}
+                            loading={loading}
+                            showTooltip
+                            tooltipText="Lesser-known destinations with fewer visitors — explore before everyone else does."
+                        />
+                        <Section title="All Destinations" destinations={byLikes} loading={loading} />
+                    </>
+                )}
             </div>
         </>
     );
