@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
 function Navbar() {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
@@ -57,7 +58,9 @@ function Navbar() {
       </div>
 
       {/* Desktop button */}
-      <button className={styles.getStartedBtn}>Get started</button>
+      <button className={styles.getStartedBtn}
+        onClick={() => navigate("/login")}
+      >Get started</button>
 
       {/* Hamburger icon (mobile only) */}
       <button

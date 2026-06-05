@@ -141,7 +141,7 @@
 }
 
 .taskCard {
-  background-color: var(--color-primary, #FFF8F8);
+  background-color: var(--color-primary, #FFFFFF);
   border: 1px solid var(--color-secondary, #E9DFC3);
   padding: 20px;
   border-radius: 20px;
@@ -174,7 +174,7 @@
 
 /* Reviews and posts styling */
 .reviewForm {
-  background-color: var(--color-primary, #FFF8F8);
+  background-color: var(--color-primary, #FFFFFF);
   border: 1px solid var(--color-secondary, #E9DFC3);
   padding: 20px;
   border-radius: 20px;
