@@ -12,6 +12,10 @@ export const getDestination = (slug) =>
 export const getDestinationDetails = (id) =>
     client.get(`/destinations/details/${id}`); // Swapped structure
 
+// POST /api/destinations/:id/like — authenticated
+export const toggleLikeDestination = (id) =>
+    client.post(`/destinations/${id}/like`);
+
 // ── Admin ─────────────────────────────────────────────
 
 // POST /api/destinations — admin, multipart/form-data

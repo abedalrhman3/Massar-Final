@@ -1,20 +1,43 @@
 import { useState } from "react";
 import styles from "./DestinationCard.module.css";
 import { Link } from "react-router-dom";
+import { Heart } from "lucide-react";
+import { toggleLikeDestination } from "@/api/destination";
 
-// FIX: Destructure the flat props passed by Destinations.jsx (including slug)
-function DestinationCard({ slug, image, name, description, rating, likes }) {
-  const [liked, setLiked] = useState(false);
+function DestinationCard({ id, slug, image, name, description, rating, likes, isLiked = false }) {
+  const [liked, setLiked] = useState(isLiked);
+  const [likeCount, setLikeCount] = useState(likes ?? 0);
 
-  const handleLike = (e) => {
+  const handleLike = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setLiked(!liked);
+
+    // Optimistic update
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikeCount((c) => c + (newLiked ? 1 : -1));
+
+    try {
+      const response = await toggleLikeDestination(id);
+      // Reconcile with server truth if it returns the new state
+      if (response.data && typeof response.data.isLiked === "boolean") {
+        setLiked(response.data.isLiked);
+      }
+      if (response.data && typeof response.data.likes === "number") {
+        setLikeCount(response.data.likes);
+      }
+    } catch (err) {
+      // Rollback on failure
+      setLiked(liked);
+      setLikeCount((c) => c + (newLiked ? -1 : 1));
+      if (err.response?.status === 401) {
+        alert("Please log in to like this destination.");
+      }
+    }
   };
 
   return (
     <Link
-      /* FIX: Route cleanly using the explicit slug string */
       to={`/destinations/${slug}`}
       style={{ textDecoration: "none", color: "inherit" }}
     >
@@ -29,13 +52,20 @@ function DestinationCard({ slug, image, name, description, rating, likes }) {
               {"★".repeat(Math.floor(rating || 0))}
               {"☆".repeat(5 - Math.floor(rating || 0))}
             </span>
-            <span className={styles.destCardLikes}>
-              <i
-                className={liked ? "fas fa-heart" : "far fa-heart"}
-                onClick={handleLike}
-                style={{ color: liked ? "red" : "inherit", cursor: "pointer" }}
-              ></i>{" "}
-              {likes}
+            <span
+              className={`${styles.destCardLikes} ${liked ? styles.liked : ""}`}
+              onClick={handleLike}
+              role="button"
+              aria-label={liked ? "Unlike destination" : "Like destination"}
+              title={liked ? "Unlike" : "Like"}
+            >
+              <Heart
+                size={15}
+                fill={liked ? "#FF4D4D" : "none"}
+                stroke={liked ? "#FF4D4D" : "currentColor"}
+                style={{ transition: "all 0.2s ease" }}
+              />
+              {likeCount}
             </span>
           </div>
         </div>

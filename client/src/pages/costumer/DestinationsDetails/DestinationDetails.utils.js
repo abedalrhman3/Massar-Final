@@ -65,6 +65,7 @@ export function buildComposed(destination, details, places, restaurants, hotels,
         lat: destination.location?.coordinates?.[1],
         lng: destination.location?.coordinates?.[0],
         imageURL: destination.image,
+        isLiked: destination.isLiked ?? false,
         sections: {
             overview: {
                 title: "Overview",

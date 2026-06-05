@@ -125,7 +125,7 @@
 }
 
 .tabActive {
-  background: #1B56FD;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -320,7 +320,7 @@
   gap: 0.1rem;
   background: transparent;
   border: none;
-  color: #1B56FD;
+  color: var(--color-accent);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -329,7 +329,7 @@
 
 /* Pro tip */
 .proTip {
-  background: #1B56FD;
+  background: var(--color-accent);
   border-radius: 14px;
   padding: 1.5rem 2rem;
   display: flex;
@@ -354,7 +354,7 @@
 
 .syncBtn {
   background: #fff;
-  color: #1B56FD;
+  color: var(--color-accent);
   border: none;
   border-radius: 8px;
   padding: 0.75rem 1.4rem;

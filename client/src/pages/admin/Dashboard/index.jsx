@@ -72,7 +72,7 @@ function StatCard({ label, value, icon, badge, badgeColor, loading }) {
         </span>
         <span
           className={`material-symbols-outlined ${styles.statIcon}`}
-          style={{ color: "#1B56FD" }}
+          style={{ color: "var(--color-accent)" }}
         >
           {icon}
         </span>
@@ -197,11 +197,11 @@ function Dashboard() {
             <svg viewBox="0 0 600 160" className={styles.chart}>
               <defs>
                 <linearGradient id={`chartGrad-${chartPeriod}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1B56FD" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#1B56FD" stopOpacity="0" />
+                  <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d={chartData[chartPeriod].path} fill="none" stroke="#1B56FD" strokeWidth="2.5" />
+              <path d={chartData[chartPeriod].path} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" />
               <path d={chartData[chartPeriod].fillPath} fill={`url(#chartGrad-${chartPeriod})`} />
             </svg>
             <div className={styles.chartDays}>

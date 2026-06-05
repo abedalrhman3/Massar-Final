@@ -147,4 +147,4 @@
     color: var(--color-black);
     border-color: var(--color-black);
  }
-.copy-btn.copied { background: var(--color-main-blue); }
+.copy-btn.copied { background: var(--color-accent); }

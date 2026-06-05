@@ -1,55 +1,19 @@
-import { useState, useEffect, useRef, useCallback, forwardRef  } from "react"
+import { useState, useEffect, useRef, useCallback, forwardRef } from "react"
 import styles from "./Comment.module.css"
 import {
   ThumbsUp, ThumbsDown, MessageSquare, MoreHorizontal,
   Bold, Italic, Underline, Paperclip, Image, Smile,
   AtSign, ArrowUpDown, BadgeCheck, Flag, Trash2, Pencil
 } from "lucide-react"
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CURRENT USER — replace with real auth context when backend is connected
-// e.g. const currentUser = useAuth().user
-// ─────────────────────────────────────────────────────────────────────────────
-const CURRENT_USER = {
-  id: "me",
-  name: "You",
-  initials: "YO",
-  avatarColor: "#1B56FD",
-  verified: false,
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SEED DATA — remove this array when fetching from GET /api/comments?placeId=…
-// ─────────────────────────────────────────────────────────────────────────────
-const SEED_COMMENTS = [
-  {
-    id: 1, authorId: "u1", author: "Noah Pierre", initials: "NP", avatarColor: "#c4a882", verified: false,
-    createdAt: Date.now() - 58 * 60 * 1000, updatedAt: null,
-    text: "I'm a bit unclear about how condensation forms in the water cycle. Can someone break it down?",
-    likes: 25, dislikes: 3, liked: false, disliked: false,
-    replies: [
-      {
-        id: 11, authorId: "u2", author: "Skill Sprout", initials: "SS", avatarColor: "#1B56FD", verified: true,
-        createdAt: Date.now() - 8 * 60 * 1000, updatedAt: null,
-        text: "Condensation happens when water vapor cools down and changes back into liquid droplets. It's the step before precipitation. The example with the glass of ice water in the video was a great visual!",
-        likes: 2, dislikes: 0, liked: false, disliked: false,
-      }
-    ]
-  },
-  {
-    id: 2, authorId: "u3", author: "Mollie Hall", initials: "MH", avatarColor: "#9b7fa8", verified: false,
-    createdAt: Date.now() - 5 * 3600 * 1000, updatedAt: null,
-    text: "I really enjoyed today's lesson on the water cycle! The animations made the processes so much easier to grasp.",
-    likes: 14, dislikes: 1, liked: false, disliked: false, replies: []
-  },
-]
+import {
+  getComments, createComment, likeComment, dislikeComment,
+  updateComment, deleteComment,
+} from "@/api/comments"
+import { useAuth } from "@/context/AuthContext"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-let _nextId = 9000
-
-function genId() { return ++_nextId }
 
 function timeAgo(ts) {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -59,24 +23,8 @@ function timeAgo(ts) {
   return `${Math.floor(s / 86400)} days ago`
 }
 
-function makeComment(text) {
-  return {
-    id: genId(),
-    authorId: CURRENT_USER.id,
-    author: CURRENT_USER.name,
-    initials: CURRENT_USER.initials,
-    avatarColor: CURRENT_USER.avatarColor,
-    verified: CURRENT_USER.verified,
-    createdAt: Date.now(),
-    updatedAt: null,
-    text,
-    likes: 0, dislikes: 0, liked: false, disliked: false,
-    replies: [],
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENTS
+// SUB-COMPONENTS (unchanged structure, keep all classes intact)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function Avatar({ initials, color, size = 36 }) {
@@ -168,11 +116,11 @@ function ReplyComposer({ onSubmit, onCancel }) {
   )
 }
 
-function CommentItem({ comment, isReply = false, onLike, onDislike, onReply, onEdit, onDelete, onReport }) {
+function CommentItem({ comment, currentUserId, isReply = false, onLike, onDislike, onReply, onEdit, onDelete }) {
   const [editing, setEditing] = useState(false)
   const [editDraft, setEditDraft] = useState(comment.text)
   const [showReplyBox, setShowReplyBox] = useState(false)
-  const isOwn = comment.authorId === CURRENT_USER.id
+  const isOwn = comment.authorId === currentUserId
 
   function saveEdit() {
     const trimmed = editDraft.trim()
@@ -181,9 +129,7 @@ function CommentItem({ comment, isReply = false, onLike, onDislike, onReply, onE
   }
 
   function handleReport() {
-    // TODO: POST /api/comments/:id/report  →  { reason: "inappropriate" }
     alert("Report submitted. Our team will review it.")
-    onReport?.(comment.id)
   }
 
   if (comment.deleted) {
@@ -266,12 +212,12 @@ function CommentItem({ comment, isReply = false, onLike, onDislike, onReply, onE
               <CommentItem
                 key={reply.id}
                 comment={reply}
+                currentUserId={currentUserId}
                 isReply
                 onLike={onLike}
                 onDislike={onDislike}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                onReport={onReport}
               />
             ))}
           </div>
@@ -285,26 +231,31 @@ function CommentItem({ comment, isReply = false, onLike, onDislike, onReply, onE
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Props:
-//   placeId  — required when connected to backend (used in API calls)
-//   initialComments — optional; defaults to SEED_COMMENTS (remove seed when using API)
-
-const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS }, ref) => {
-  const [comments, setComments] = useState(initialComments)
+const CommentSection = forwardRef(({ placeId }, ref) => {
+  const [comments, setComments] = useState([])
   const [input, setInput] = useState("")
   const [sortNewest, setSortNewest] = useState(true)
-  // TODO: replace with loading state from API: const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
-  // ── FETCH on mount ──────────────────────────────────────────────────────────
+  // Get the logged-in user from the app's auth context
+  const { user } = useAuth()
+  const currentUserId = user?._id ?? null
+
+  // ── FETCH on mount / placeId change ─────────────────────────────────────────
   useEffect(() => {
-    // TODO: fetch from GET /api/comments?placeId=${placeId}
-    // Example:
-    // setLoading(true)
-    // fetch(`/api/comments?placeId=${placeId}`)
-    //   .then(r => r.json())
-    //   .then(data => setComments(data))
-    //   .catch(console.error)
-    //   .finally(() => setLoading(false))
+    if (!placeId) return
+
+    setLoading(true)
+
+    getComments(placeId)
+      .then(res => {
+        setComments(res.data?.data || [])
+      })
+      .catch(err => {
+        console.error("Failed to load comments:", err)
+        setComments([])
+      })
+      .finally(() => setLoading(false))
   }, [placeId])
 
   const totalCount = useCallback(() => {
@@ -316,60 +267,9 @@ const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS },
     return [...comments].sort((a, b) => sortNewest ? b.createdAt - a.createdAt : a.createdAt - b.createdAt)
   }, [comments, sortNewest])
 
-  // ── MUTATIONS ───────────────────────────────────────────────────────────────
-
-  function submitComment() {
-    const text = input.trim()
-    if (!text) return
-    const newComment = makeComment(text)
-
-    setComments(prev => [newComment, ...prev])
-    setInput("")
-
-    // TODO: POST /api/comments  →  { placeId, text }
-    // On success, replace optimistic comment with server-returned id:
-    // fetch("/api/comments", { method: "POST", body: JSON.stringify({ placeId, text }) })
-    //   .then(r => r.json())
-    //   .then(saved => setComments(prev => prev.map(c => c.id === newComment.id ? saved : c)))
-    //   .catch(() => setComments(prev => prev.filter(c => c.id !== newComment.id))) // rollback
-  }
-
-  function handleLike(id) {
-    setComments(prev => mutateLike(prev, id, "like"))
-    // TODO: POST /api/comments/:id/like  →  toggle
-  }
-
-  function handleDislike(id) {
-    setComments(prev => mutateLike(prev, id, "dislike"))
-    // TODO: POST /api/comments/:id/dislike  →  toggle
-  }
-
-  function handleReply(parentId, text) {
-    const reply = makeComment(text)
-    setComments(prev => prev.map(c =>
-      c.id === parentId ? { ...c, replies: [...(c.replies ?? []), reply] } : c
-    ))
-    // TODO: POST /api/comments  →  { placeId, parentId, text }
-    // Same optimistic pattern as submitComment above
-  }
-
-  function handleEdit(id, newText) {
-    setComments(prev => mutateText(prev, id, newText))
-    // TODO: PATCH /api/comments/:id  →  { text: newText }
-  }
-
-  function handleDelete(id) {
-    setComments(prev => mutateDeleted(prev, id))
-    // TODO: DELETE /api/comments/:id
-  }
-
-  // ── KEY HANDLER ─────────────────────────────────────────────────────────────
-  function handleKey(e) {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && input.trim()) submitComment()
-  }
-
-  // ── TOOLBAR: wrap selected text ─────────────────────────────────────────────
+  // ── TOOLBAR ─────────────────────────────────────────────────────────────────
   const textareaRef = useRef()
+
   function wrapSelection(before, after) {
     const el = textareaRef.current
     if (!el) return
@@ -378,6 +278,139 @@ const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS },
     const next = input.substring(0, s) + before + selected + after + input.substring(e)
     setInput(next)
     setTimeout(() => { el.focus(); el.setSelectionRange(s + before.length, s + before.length + selected.length) }, 0)
+  }
+
+  // ── MUTATIONS ───────────────────────────────────────────────────────────────
+
+  async function submitComment() {
+    const text = input.trim()
+    if (!text) return
+
+    if (!currentUserId) {
+      alert("Please log in to comment.")
+      return
+    }
+
+    // Optimistic placeholder
+    const tempId = `temp-${Date.now()}`
+    const userName = user?.name || user?.username || "You"
+    const initials = userName.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() || "YO"
+    const optimistic = {
+      id: tempId,
+      authorId: currentUserId,
+      author: userName,
+      initials,
+      avatarColor: "var(--color-accent)",
+      verified: !!user?.isVerified,
+      createdAt: Date.now(),
+      updatedAt: null,
+      text,
+      likes: 0, dislikes: 0, liked: false, disliked: false,
+      replies: [],
+    }
+    setComments(prev => [optimistic, ...prev])
+    setInput("")
+
+    try {
+      const res = await createComment(placeId, text)
+      const saved = res.data?.data
+      setComments(prev => prev.map(c => c.id === tempId ? saved : c))
+    } catch (err) {
+      console.error("Failed to submit comment:", err)
+      setComments(prev => prev.filter(c => c.id !== tempId))
+      if (err.response?.status === 401) alert("Please log in to comment.")
+    }
+  }
+
+  async function handleLike(id) {
+    if (!currentUserId) { alert("Please log in to vote."); return }
+
+    // Optimistic toggle
+    setComments(prev => mutateLike(prev, id, "like"))
+
+    try {
+      const res = await likeComment(id)
+      const { likes, dislikes, liked, disliked } = res.data
+      setComments(prev => mutateVoteFromServer(prev, id, { likes, dislikes, liked, disliked }))
+    } catch (err) {
+      console.error("Failed to like comment:", err)
+      setComments(prev => mutateLike(prev, id, "like")) // rollback
+    }
+  }
+
+  async function handleDislike(id) {
+    if (!currentUserId) { alert("Please log in to vote."); return }
+
+    setComments(prev => mutateLike(prev, id, "dislike"))
+
+    try {
+      const res = await dislikeComment(id)
+      const { likes, dislikes, liked, disliked } = res.data
+      setComments(prev => mutateVoteFromServer(prev, id, { likes, dislikes, liked, disliked }))
+    } catch (err) {
+      console.error("Failed to dislike comment:", err)
+      setComments(prev => mutateLike(prev, id, "dislike"))
+    }
+  }
+
+  async function handleReply(parentId, text) {
+    if (!currentUserId) { alert("Please log in to reply."); return }
+
+    const tempId = `temp-${Date.now()}`
+    const reply = {
+      id: tempId,
+      authorId: currentUserId,
+      author: "You",
+      initials: "YO",
+      avatarColor: "var(--color-accent)",
+      verified: false,
+      createdAt: Date.now(),
+      updatedAt: null,
+      text,
+      likes: 0, dislikes: 0, liked: false, disliked: false,
+    }
+    setComments(prev => prev.map(c =>
+      c.id === parentId ? { ...c, replies: [...(c.replies ?? []), reply] } : c
+    ))
+
+    try {
+      const res = await createComment(placeId, text, parentId)
+      const saved = res.data?.data
+      setComments(prev => prev.map(c =>
+        c.id === parentId
+          ? { ...c, replies: (c.replies ?? []).map(r => r.id === tempId ? saved : r) }
+          : c
+      ))
+    } catch (err) {
+      console.error("Failed to submit reply:", err)
+      setComments(prev => prev.map(c =>
+        c.id === parentId ? { ...c, replies: (c.replies ?? []).filter(r => r.id !== tempId) } : c
+      ))
+    }
+  }
+
+  async function handleEdit(id, newText) {
+    setComments(prev => mutateText(prev, id, newText))
+
+    try {
+      await updateComment(id, newText)
+    } catch (err) {
+      console.error("Failed to edit comment:", err)
+    }
+  }
+
+  async function handleDelete(id) {
+    setComments(prev => mutateDeleted(prev, id))
+
+    try {
+      await deleteComment(id)
+    } catch (err) {
+      console.error("Failed to delete comment:", err)
+    }
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && input.trim()) submitComment()
   }
 
   return (
@@ -397,11 +430,12 @@ const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS },
         <textarea
           ref={textareaRef}
           className={styles["composer-input"]}
-          placeholder="Add comment… (Ctrl+Enter to submit)"
+          placeholder={currentUserId ? "Add comment… (Ctrl+Enter to submit)" : "Log in to leave a comment…"}
           rows={2}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKey}
+          disabled={!currentUserId}
         />
         <div className={styles["composer-toolbar"]}>
           <div className={styles["composer-tools"]}>
@@ -409,18 +443,14 @@ const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS },
             <button className={styles["tool-btn"]} title="Italic" onClick={() => wrapSelection("_", "_")}><Italic size={13} /></button>
             <button className={styles["tool-btn"]} title="Underline" onClick={() => wrapSelection("<u>", "</u>")}><Underline size={13} /></button>
             <div className={styles["tool-sep"]} />
-            {/* TODO: wire Paperclip to a file-upload handler → POST /api/media */}
             <button className={styles["tool-btn"]} title="Attach file"><Paperclip size={14} /></button>
-            {/* TODO: wire Image to an image-picker → POST /api/media */}
             <button className={styles["tool-btn"]} title="Image"><Image size={14} /></button>
-            {/* TODO: wire Smile to an emoji picker library */}
             <button className={styles["tool-btn"]} title="Emoji"><Smile size={14} /></button>
-            {/* TODO: wire AtSign to a @mention autocomplete */}
             <button className={styles["tool-btn"]} title="Mention"><AtSign size={14} /></button>
           </div>
           <button
             className={styles["submit-btn"]}
-            disabled={!input.trim()}
+            disabled={!input.trim() || !currentUserId}
             onClick={submitComment}
           >
             Submit
@@ -428,15 +458,18 @@ const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS },
         </div>
       </div>
 
-      {/* ── COMMENTS ── */}
+      {/* ── COMMENTS LIST ── */}
       <div className={styles["comments-list"]}>
-        {sorted().filter(c => !c.deleted).length === 0 ? (
+        {loading ? (
+          <p className={styles["empty-state"]}>Loading comments…</p>
+        ) : sorted().filter(c => !c.deleted).length === 0 ? (
           <p className={styles["empty-state"]}>No comments yet. Be the first!</p>
         ) : (
           sorted().filter(c => !c.deleted).map(comment => (
             <CommentItem
               key={comment.id}
               comment={comment}
+              currentUserId={currentUserId}
               onLike={handleLike}
               onDislike={handleDislike}
               onReply={handleReply}
@@ -450,12 +483,11 @@ const CommentSection = forwardRef(({ placeId, initialComments = SEED_COMMENTS },
   )
 })
 
-//debugging label for React DevTools, When you wrap a component with forwardRef, React loses the function name internally
 CommentSection.displayName = "CommentSection"
 export default CommentSection
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PURE IMMUTABLE HELPERS — used by state mutators above
+// PURE IMMUTABLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function mutateLike(comments, id, kind) {
@@ -484,6 +516,13 @@ function applyVote(c, kind) {
     liked: wasDisliked ? c.liked : false,
     likes: (!wasDisliked && c.liked) ? c.likes - 1 : c.likes,
   }
+}
+
+function mutateVoteFromServer(comments, id, { likes, dislikes, liked, disliked }) {
+  return comments.map(c => {
+    if (c.id === id) return { ...c, likes, dislikes, liked, disliked }
+    return { ...c, replies: (c.replies ?? []).map(r => r.id === id ? { ...r, likes, dislikes, liked, disliked } : r) }
+  })
 }
 
 function mutateText(comments, id, text) {

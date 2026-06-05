@@ -88,6 +88,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Quest',
       },
     ],
+    likedDestinations: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Destination',
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -60,7 +60,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -108,7 +108,7 @@
 }
 
 .statBlue {
-  color: #1b56fd;
+  color: var(--color-accent);
 }
 
 .statRed {
@@ -318,7 +318,7 @@
 }
 
 .pageBtnActive:hover {
-  background: var(--color-main-blue);
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -439,7 +439,7 @@
 }
 
 .uploadLabel:hover {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   background: #f0f5ff;
 }
 
@@ -511,7 +511,7 @@
 .input:focus,
 .textarea:focus {
   outline: none;
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(27, 86, 253, 0.1);
 }
 
@@ -580,7 +580,7 @@
 
 .activityInput:focus {
   outline: none;
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(27, 86, 253, 0.1);
 }
 
@@ -608,11 +608,11 @@
   gap: 0.5rem;
   padding: 0.625rem 1rem;
   background: #f0f5ff;
-  border: 1px dashed #1b56fd;
+  border: 1px dashed var(--color-accent);
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1b56fd;
+  color: var(--color-accent);
   cursor: pointer;
   transition: all 0.15s;
   margin-top: 0.5rem;
@@ -664,7 +664,7 @@
 
 .saveBtn {
   padding: 0.75rem 1.5rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   border: none;
   border-radius: 12px;
   font-size: 0.875rem;

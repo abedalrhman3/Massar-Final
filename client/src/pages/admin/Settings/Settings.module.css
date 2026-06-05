@@ -77,7 +77,7 @@
 }
 
 .tabActive {
-  background: #1B56FD;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -149,7 +149,7 @@
 
 .input:focus,
 .select:focus {
-  border-color: #1B56FD;
+  border-color: var(--color-accent);
   background: #fff;
 }
 
@@ -192,7 +192,7 @@
 }
 
 .toggleOn {
-  background: #1B56FD;
+  background: var(--color-accent);
 }
 
 .toggleKnob {
@@ -218,7 +218,7 @@
   gap: 0.5rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #1B56FD;
+  color: var(--color-accent);
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
@@ -339,7 +339,7 @@
 }
 
 .saveBtn {
-  background: #1B56FD;
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   padding: 0.65rem 1.5rem;
@@ -397,7 +397,7 @@
 }
 
 .planCardCurrent {
-  border-color: #1B56FD;
+  border-color: var(--color-accent);
   background: #eff6ff;
 }
 
@@ -406,7 +406,7 @@
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: #1B56FD;
+  background: var(--color-accent);
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -466,7 +466,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #1B56FD;
+  background: var(--color-accent);
   color: #fff;
 }
 

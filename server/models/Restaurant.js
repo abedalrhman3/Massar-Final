@@ -16,6 +16,15 @@ const restaurantSchema = new mongoose.Schema(
     googlePlaceId: { type: String },
     customOverview: { type: String },
     bookingUrl: { type: String },
+    budget: { type: String },
+    operatingHours: {
+      start: { type: String },
+      end: { type: String },
+    },
+    workingDays: {
+      type: [String],
+      default: [],
+    },
     contact: { type: contactSchema, default: () => ({}) },
     isPublished: { type: Boolean, default: false },
     location: {

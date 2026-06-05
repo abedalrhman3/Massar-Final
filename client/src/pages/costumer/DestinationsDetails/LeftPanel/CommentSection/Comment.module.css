@@ -17,7 +17,7 @@
 }
 
 .count-badge {
-    background: var(--color-main-blue);
+    background: var(--color-accent);
     color: var(--color-white);
     font-family: var(--font-ui);
     font-size: var(--font-size-sm);
@@ -45,7 +45,7 @@
     
 }
 
-.sort-btn:hover { background-color: var(--color-main-blue); }
+.sort-btn:hover { background-color: var(--color-accent); }
 
 .composer {
     background: #f3f3f3;
@@ -110,7 +110,7 @@
 }
 
 .submit-btn {
-    background: var(--color-main-blue);
+    background: var(--color-accent);
     color: var(--color-white);
     border: none;
     border-radius: var(--radius-md);
@@ -125,7 +125,7 @@
 
 .submit-btn:hover { 
     opacity: 0.85; 
-    background: var(--color-main-blue);
+    background: var(--color-accent);
 }
 .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -170,7 +170,7 @@
 }
 
 .verified {
-    color: var(--color-main-blue);
+    color: var(--color-accent);
     display: flex;
     align-items: center;
 }
@@ -240,7 +240,7 @@
      display: flex;
     justify-content: center;
     align-items: center;
-    background: var(--color-main-blue);
+    background: var(--color-accent);
     color: var(--color-white);
 }
 
@@ -259,7 +259,7 @@
     opacity: 0.8;
 }
 .btn-save:hover {
-    background-color: var(--color-main-blue);
+    background-color: var(--color-accent);
 }
 .btn-cancel:hover {
     background-color: red;
@@ -290,9 +290,9 @@
 }
 
 .action-btn:hover { background-color: hsl(0, 0%, 50%, 0.5); }
-.action-btn.liked { color: var(--color-main-blue); }
+.action-btn.liked { color: var(--color-accent); }
 .action-btn.disliked { color: #e53e3e; }
-.action-btn.reply-active { color: var(--color-main-blue); }
+.action-btn.reply-active { color: var(--color-accent); }
 
 .more-wrap { position: relative; display: inline-flex; }
 

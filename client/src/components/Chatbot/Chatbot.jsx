@@ -5,7 +5,7 @@ import ChatForm from "./ChatForm";
 import { useEffect, useRef, useState } from "react";
 import ChatMessage from "./ChatMessage";
 import { companyInfo } from "./ChatbotData";
-const chatbot = "images/homepage/chatbot.png";
+const chatbot = "/images/homepage/chatbot.png";
 
 function Chatbot() {
   // Chat history state — initialized with a hidden system prompt (companyInfo)

@@ -96,7 +96,7 @@
 }
 
 .searchInput:focus {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
 }
 
 /* Table */
@@ -345,7 +345,7 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: white;
   transition: all 0.15s ease;
 }

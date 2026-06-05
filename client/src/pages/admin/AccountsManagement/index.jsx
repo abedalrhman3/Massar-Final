@@ -441,7 +441,7 @@ function AccountsManagement() {
         <div className={styles.statCard}>
           <span
             className="material-symbols-outlined"
-            style={{ color: "#1B56FD", fontSize: "2rem" }}
+            style={{ color: "var(--color-accent)", fontSize: "2rem" }}
           >
             group
           </span>

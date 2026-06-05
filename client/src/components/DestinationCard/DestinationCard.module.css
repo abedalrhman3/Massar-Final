@@ -44,11 +44,21 @@
 .destCardLikes {
   color: #555;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
-.destCardLikes i {
-  cursor: pointer;
+.destCardLikes:hover {
+  color: #FF4D4D;
 }
+
+.destCardLikes.liked {
+  color: #FF4D4D;
+}
+
 
 .destCardFooter {
   display: flex;

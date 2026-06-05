@@ -23,7 +23,7 @@
 .hBtn {
 
   z-index: 10000;
-  background-color: var(--color-main-blue, #1B56FD);
+  background-color: var(--color-accent);
   color: var(--color-white, #FFFFFF);
   font-weight: 600;
   font-size: 1.3rem;
@@ -61,11 +61,11 @@
 }
 
 .selectField:hover {
-  border-color: var(--color-main-blue, #1B56FD);
+  border-color: var(--color-accent);
 }
 
 .btn {
-  background-color: var(--color-main-blue, #1B56FD);
+  background-color: var(--color-accent);
   color: var(--color-white, #FFFFFF);
   font-weight: 600;
   font-size: 1.3rem;
@@ -151,7 +151,7 @@
 .subtitle {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-main-blue, #1B56FD);
+  color: var(--color-accent);
   margin-bottom: 20px;
 }
 
@@ -230,7 +230,7 @@
 }
 
 .textarea:focus {
-  border-color: var(--color-main-blue, #1B56FD);
+  border-color: var(--color-accent);
 }
 
 .formControls {
@@ -269,7 +269,7 @@
 }
 
 .pastTitle {
-  color: var(--color-main-blue, #1B56FD);
+  color: var(--color-accent);
   border-bottom: 2px solid var(--color-pale-blue, #9CD5FF);
 }
 

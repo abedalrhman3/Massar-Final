@@ -92,7 +92,7 @@
   align-items: center;
   gap: 0.4rem;
   background: #f0f5ff;
-  color: #1b56fd;
+  color: var(--color-accent);
   border: none;
   border-radius: 8px;
   padding: 0.5rem 1rem;
@@ -130,7 +130,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -295,12 +295,12 @@
 }
 
 .tabBtnActive {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
 .tabBtnActive:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -477,7 +477,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   display: flex;
   align-items: center;
@@ -622,7 +622,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 10px;

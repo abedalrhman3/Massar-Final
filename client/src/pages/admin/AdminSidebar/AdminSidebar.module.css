@@ -70,7 +70,7 @@
 
 .navItem.active {
   background: #ffffff;
-  color: #1B56FD;
+  color: var(--color-accent);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }

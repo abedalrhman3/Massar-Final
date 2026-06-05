@@ -14,7 +14,23 @@ exports.getAll = async (req, res, next) => {
       filter.isPublished = true;
     }
     const destinations = await Destination.find(filter);
-    res.json({ success: true, data: destinations });
+
+    // Enrich with isLiked when a user is logged in
+    let likedSet = new Set();
+    if (req.user) {
+      const User = require('../models/User');
+      const user = await User.findById(req.user.userId).select('likedDestinations');
+      if (user && user.likedDestinations) {
+        likedSet = new Set(user.likedDestinations.map(String));
+      }
+    }
+
+    const data = destinations.map((dest) => ({
+      ...dest.toObject(),
+      isLiked: likedSet.has(String(dest._id)),
+    }));
+
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
@@ -32,7 +48,22 @@ exports.getOne = async (req, res, next) => {
 
     const destination = await Destination.findOne(filter);
     if (!destination) return next(new AppError('Destination not found', 404));
-    res.json({ success: true, data: destination });
+
+    let isLiked = false;
+    if (req.user) {
+      const User = require('../models/User');
+      const user = await User.findById(req.user.userId);
+      if (user && user.likedDestinations) {
+        isLiked = user.likedDestinations.includes(destination._id);
+      }
+    }
+
+    const data = {
+      ...destination.toObject(),
+      isLiked
+    };
+
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
@@ -138,6 +169,48 @@ exports.remove = async (req, res, next) => {
 
     await DestinationDetail.findOneAndDelete({ destinationId: req.params.id });
     res.json({ success: true, message: 'Destination deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// -------------------------------------------------------
+// POST /api/destinations/:id/like  — private
+// -------------------------------------------------------
+exports.toggleLike = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const destination = await Destination.findById(req.params.id);
+    if (!destination) return next(new AppError('Destination not found', 404));
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return next(new AppError('User not found', 404));
+
+    if (!user.likedDestinations) {
+      user.likedDestinations = [];
+    }
+
+    const index = user.likedDestinations.indexOf(destination._id);
+    let isLiked = false;
+
+    if (index === -1) {
+      user.likedDestinations.push(destination._id);
+      destination.likes = (destination.likes || 0) + 1;
+      isLiked = true;
+    } else {
+      user.likedDestinations.splice(index, 1);
+      destination.likes = Math.max(0, (destination.likes || 0) - 1);
+      isLiked = false;
+    }
+
+    await user.save();
+    await destination.save();
+
+    res.json({
+      success: true,
+      likes: destination.likes,
+      isLiked
+    });
   } catch (err) {
     next(err);
   }

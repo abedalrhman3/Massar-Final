@@ -100,7 +100,7 @@
 }
 
 .filterBadge {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -137,12 +137,12 @@
 }
 
 .filterBtnActive {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
 .filterBtnActive:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
 }
 
 .filterBtn .material-symbols-outlined {
@@ -196,8 +196,8 @@
 }
 
 .filterOptionActive {
-  background: #1b56fd;
-  border-color: #1b56fd;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
@@ -219,7 +219,7 @@
 }
 
 .searchInput:focus {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
 }
 
 .searchBox {
@@ -351,7 +351,7 @@
 
 .elite {
   background: #eff6ff;
-  color: #1b56fd;
+  color: var(--color-accent);
   border: 1px solid #bfdbfe;
 }
 
@@ -554,7 +554,7 @@
 }
 
 .reasonInput input:focus {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
 }
 
 .reasonInput input:disabled {
@@ -639,7 +639,7 @@
 
 .quickBtn .material-symbols-outlined {
   font-size: 2.2rem;
-  color: #1b56fd;
+  color: var(--color-accent);
   flex-shrink: 0;
   transition: color 0.15s ease-out;
 }
@@ -769,8 +769,8 @@
 }
 
 .quickBtn:hover {
-  background: #1b56fd;
-  border-color: #1b56fd;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   transform: translateY(-2px);
 }
 

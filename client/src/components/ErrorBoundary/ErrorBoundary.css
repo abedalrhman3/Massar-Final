@@ -19,7 +19,7 @@
 
 .eb-icon {
   font-size: 3rem;
-  color: var(--color-main-blue, #4a6cf7);
+  color: var(--color-accent);
   margin-bottom: 1.25rem;
 }
 
@@ -63,12 +63,12 @@
 }
 
 .eb-btn-primary {
-  background: var(--color-main-blue, #4a6cf7);
+  background: var(--color-accent);
   color: white;
 }
 
 .eb-btn-secondary {
   background: transparent;
-  color: var(--color-main-blue, #4a6cf7);
-  border: 2px solid var(--color-main-blue, #4a6cf7);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
 }

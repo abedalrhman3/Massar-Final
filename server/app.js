@@ -24,6 +24,7 @@ app.use('/api/restaurants', require('./routes/restaurants'));
 app.use('/api/hotels', require('./routes/hotels'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/saved', require('./routes/saved'));
+app.use('/api/comments', require('./routes/comments'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/achievements', require('./routes/achievements'));
 app.use('/api/locations', require('./routes/locations'));

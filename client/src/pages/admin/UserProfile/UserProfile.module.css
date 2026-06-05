@@ -20,7 +20,7 @@
 }
 
 .logoutBtn:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -72,7 +72,7 @@
   position: absolute;
   bottom: 0.5rem;
   right: 0.5rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: white;
   border: none;
   width: 2.5rem;
@@ -121,7 +121,7 @@
 .roleBadge {
   padding: 0.375rem 1rem;
   background: rgba(27, 86, 253, 0.1);
-  color: #1b56fd;
+  color: var(--color-accent);
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 9999px;
@@ -192,7 +192,7 @@
 }
 
 .achievementVerified {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: white;
 }
 
@@ -298,8 +298,8 @@
 .changeBtn {
   flex-shrink: 0;
   padding: 0.5rem 1.25rem;
-  border: 1.5px solid #1b56fd;
-  color: #1b56fd;
+  border: 1.5px solid var(--color-accent);
+  color: var(--color-accent);
   background: transparent;
   border-radius: 9999px;
   font-size: 0.8125rem;
@@ -312,7 +312,7 @@
 }
 
 .changeBtn:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -330,7 +330,7 @@
 }
 
 .statPrimary {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: white;
   box-shadow: 0 8px 24px rgba(27, 86, 253, 0.2);
 }
@@ -398,7 +398,7 @@
   height: 3rem;
   border-radius: 0.75rem;
   background: rgba(27, 86, 253, 0.1);
-  color: #1b56fd;
+  color: var(--color-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -518,7 +518,7 @@
 }
 
 .settingsCard:not(.settingsCardDisabled):hover .cardIcon {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: white;
 }
 
@@ -690,7 +690,7 @@
 }
 
 .popInput:focus {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
 }
 
 .popInputError {
@@ -824,7 +824,7 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: rgba(27, 86, 253, 0.12);
-  color: #1b56fd;
+  color: var(--color-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -842,7 +842,7 @@
 }
 
 .emailVerifyText strong {
-  color: #1b56fd;
+  color: var(--color-accent);
 }
 
 /* ── Modal action buttons ───────────────────────────────────────────────────── */
@@ -873,7 +873,7 @@
   padding: 0.7rem 1.5rem;
   border-radius: 0.75rem;
   border: none;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 700;

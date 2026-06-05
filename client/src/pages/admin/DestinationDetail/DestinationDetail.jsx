@@ -41,6 +41,28 @@ const buildListingFormData = (formData, destinationId) => {
   fd.append("isPublished", true);
 
   if (formData.description) fd.append("customOverview", formData.description);
+  if (formData.budget) fd.append("budget", formData.budget);
+  if (formData.operatingHours) fd.append("operatingHours", JSON.stringify(formData.operatingHours));
+  if (formData.workingDays) fd.append("workingDays", JSON.stringify(formData.workingDays));
+  if (formData.bookingLink) fd.append("bookingUrl", formData.bookingLink);
+
+  // Parse contact array to contact object
+  const contactObj = {};
+  if (formData.contacts && formData.contacts.length > 0) {
+    formData.contacts.forEach((val) => {
+      const { type, display } = detectContactType(val);
+      if (type === "phone") contactObj.phone = display;
+      else if (type === "whatsapp") contactObj.whatsapp = display;
+      else if (type === "facebook") contactObj.facebook = display;
+      else if (type === "instagram") contactObj.instagramUrl = display;
+      else if (type === "x") contactObj.twitterUrl = display;
+      else if (type === "url") {
+        if (display.includes("@")) contactObj.email = display;
+        else contactObj.address = display;
+      }
+    });
+  }
+  fd.append("contact", JSON.stringify(contactObj));
 
   // coordinates → location JSON
   if (formData.coordinates) {
@@ -84,6 +106,24 @@ const buildEventFormData = (formData, destinationId) => {
   if (formData.startDate) fd.append("startDate", formData.startDate);
   if (formData.endDate) fd.append("endDate", formData.endDate);
   if (formData.bookingUrl) fd.append("bookingUrl", formData.bookingUrl);
+
+  // Parse contact array to contact object
+  const contactObj = {};
+  if (formData.contacts && formData.contacts.length > 0) {
+    formData.contacts.forEach((val) => {
+      const { type, display } = detectContactType(val);
+      if (type === "phone") contactObj.phone = display;
+      else if (type === "whatsapp") contactObj.whatsapp = display;
+      else if (type === "facebook") contactObj.facebook = display;
+      else if (type === "instagram") contactObj.instagramUrl = display;
+      else if (type === "x") contactObj.twitterUrl = display;
+      else if (type === "url") {
+        if (display.includes("@")) contactObj.email = display;
+        else contactObj.address = display;
+      }
+    });
+  }
+  fd.append("contact", JSON.stringify(contactObj));
 
   // startTime / endTime — model requires { from: Date, to: Date }
   // EventsModal should supply these; fall back to midnight–midnight on the date
@@ -147,6 +187,56 @@ const detectContactType = (value) => {
 const getContactIcon = (type) => {
   const map = { phone: "phone", whatsapp: "chat", facebook: "facebook", instagram: "photo_camera", x: "tag", discord: "forum" };
   return map[type] || "language";
+};
+
+const mapItemToEditData = (item) => {
+  if (!item) return null;
+  
+  // map contact object to contacts array
+  const contacts = [];
+  if (item.contact) {
+    if (item.contact.phone) contacts.push(item.contact.phone);
+    if (item.contact.whatsapp) contacts.push(item.contact.whatsapp);
+    if (item.contact.email) contacts.push(item.contact.email);
+    if (item.contact.address) contacts.push(item.contact.address);
+    if (item.contact.instagramUrl) contacts.push(item.contact.instagramUrl);
+    if (item.contact.twitterUrl) contacts.push(item.contact.twitterUrl);
+  }
+
+  // map coordinates
+  let coordinates = "";
+  if (item.location?.coordinates) {
+    coordinates = `${item.location.coordinates[1]}, ${item.location.coordinates[0]}`;
+  }
+
+  // startTime / endTime for Event model format to form format
+  let startTimeFrom = "";
+  let startTimeTo = "";
+  if (item.startTime) {
+    if (item.startTime.from) startTimeFrom = new Date(item.startTime.from).toTimeString().slice(0, 5);
+    if (item.startTime.to) startTimeTo = new Date(item.startTime.to).toTimeString().slice(0, 5);
+  }
+  let endTimeFrom = "";
+  let endTimeTo = "";
+  if (item.endTime) {
+    if (item.endTime.from) endTimeFrom = new Date(item.endTime.from).toTimeString().slice(0, 5);
+    if (item.endTime.to) endTimeTo = new Date(item.endTime.to).toTimeString().slice(0, 5);
+  }
+
+  return {
+    ...item,
+    image: item.coverImage,
+    description: item.customOverview,
+    briefDescription: item.customOverview,
+    coordinates,
+    photos: item.images || [],
+    contacts,
+    bookingLink: item.bookingUrl || "",
+    startTimeFrom,
+    startTimeTo,
+    endTimeFrom,
+    endTimeTo,
+  };
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────
@@ -326,7 +416,7 @@ function DestinationDetail() {
   // ── UI helpers ─────────────────────────────────────────────────────────────
   const handleTabChange = (itemId, tab) => setCardTabs((prev) => ({ ...prev, [itemId]: tab }));
   const handleMenuToggle = (e, itemId) => { e.stopPropagation(); setCardMenus((prev) => ({ ...prev, [itemId]: !prev[itemId] })); };
-  const handleEdit = (item, type) => { setEditingItem(item); setEditingType(type); setCardMenus({}); };
+  const handleEdit = (item, type) => { setEditingItem(mapItemToEditData(item)); setEditingType(type); setCardMenus({}); };
   const handleRemoveClick = (item, type) => { setRemovingItem(item); setRemovingType(type); setCardMenus({}); };
   const closeEditModal = () => { setEditingItem(null); setEditingType(null); };
   const getEntityName = (type) => ({ place: "Place", hotel: "Hotel", restaurant: "Restaurant", event: "Event" }[type] || "Item");
@@ -347,38 +437,102 @@ function DestinationDetail() {
           </div>
         );
 
-      case "about":
+      case "about": {
+        const address = item.contact?.address || "Not specified";
+        const coords = item.location?.coordinates
+          ? `${item.location.coordinates[1]}, ${item.location.coordinates[0]}`
+          : "Not specified";
+
+        if (type === "event") {
+          const formattedStartTime = item.startTime
+            ? `${formatTime(item.startTime.from)} — ${formatTime(item.startTime.to)}`
+            : "Not specified";
+          const formattedEndTime = item.endTime
+            ? `${formatTime(item.endTime.from)} — ${formatTime(item.endTime.to)}`
+            : "Not specified";
+          const startDateStr = item.startDate
+            ? new Date(item.startDate).toLocaleDateString("en-US", { dateStyle: "medium" })
+            : "Not specified";
+          const endDateStr = item.endDate
+            ? new Date(item.endDate).toLocaleDateString("en-US", { dateStyle: "medium" })
+            : "Not specified";
+
+          return (
+            <div className={styles.aboutTabContent}>
+              {[
+                { icon: "location_on", label: "Coordinates", value: coords },
+                { icon: "pin_drop", label: "Address", value: address },
+                { icon: "attach_money", label: "Ticket Cost", value: item.startingFromPrice != null ? `$${item.startingFromPrice}` : "Not specified" },
+                { icon: "schedule", label: "Duration", value: item.durationText || "Not specified" },
+                { icon: "calendar_today", label: "Event Dates", value: `${startDateStr} — ${endDateStr}` },
+                { icon: "alarm", label: "Start / End Times", value: `Start: ${formattedStartTime} | End: ${formattedEndTime}` },
+              ].map(({ icon, label, value }) => (
+                <div className={styles.aboutItem} key={label}>
+                  <span className="material-symbols-outlined" style={{ color: "#6b7280" }}>{icon}</span>
+                  <div>
+                    <span className={styles.aboutLabel}>{label}</span>
+                    <p className={styles.aboutValue}>{value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        // place | restaurant | hotel
+        const formatOperatingHours = () => {
+          if (!item.operatingHours) return "Not specified";
+          const { start, end } = item.operatingHours;
+          if (!start && !end) return "Not specified";
+          return `${formatTime(start)} — ${formatTime(end)}`;
+        };
+
         return (
           <div className={styles.aboutTabContent}>
-            {[
-              {
-                icon: "location_on",
-                label: "Coordinates",
-                value: item.location?.coordinates
-                  ? `${item.location.coordinates[1]}, ${item.location.coordinates[0]}`
-                  : "Not specified",
-              },
-              {
-                icon: "attach_money",
-                label: "Starting From",
-                value: item.startingFromPrice != null ? `$${item.startingFromPrice}` : "Not specified",
-              },
-              {
-                icon: "schedule",
-                label: "Duration",
-                value: item.durationText || "Not specified",
-              },
-            ].map(({ icon, label, value }) => (
-              <div className={styles.aboutItem} key={label}>
-                <span className="material-symbols-outlined" style={{ color: "#6b7280" }}>{icon}</span>
+            <div className={styles.aboutDetailsList} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {[
+                { icon: "location_on", label: "Coordinates", value: coords },
+                { icon: "pin_drop", label: "Address", value: address },
+                { icon: "attach_money", label: "Budget", value: item.budget || (item.startingFromPrice != null ? `$${item.startingFromPrice}` : "Not specified") },
+                { icon: "schedule", label: "Operating Hours", value: formatOperatingHours() },
+              ].map(({ icon, label, value }) => (
+                <div className={styles.aboutItem} key={label}>
+                  <span className="material-symbols-outlined" style={{ color: "#6b7280" }}>{icon}</span>
+                  <div>
+                    <span className={styles.aboutLabel}>{label}</span>
+                    <p className={styles.aboutValue}>{value}</p>
+                  </div>
+                </div>
+              ))}
+
+              <div className={styles.aboutItem}>
+                <span className="material-symbols-outlined" style={{ color: "#6b7280" }}>calendar_today</span>
                 <div>
-                  <span className={styles.aboutLabel}>{label}</span>
-                  <p className={styles.aboutValue}>{value}</p>
+                  <span className={styles.aboutLabel}>Working Days</span>
+                  <div className={styles.dayPills} style={{ display: "flex", gap: "0.25rem", marginTop: "0.35rem" }}>
+                    {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                      <span
+                        key={day}
+                        className={`${styles.dayPill} ${(item.workingDays || []).includes(day) ? styles.dayPillActive : ""}`}
+                        style={{
+                          padding: "0.2rem 0.5rem",
+                          borderRadius: "4px",
+                          fontSize: "0.8rem",
+                          fontWeight: "bold",
+                          backgroundColor: (item.workingDays || []).includes(day) ? "var(--color-accent, var(--color-accent))" : "#f3f4f6",
+                          color: (item.workingDays || []).includes(day) ? "#fff" : "#9ca3af"
+                        }}
+                      >
+                        {day}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         );
+      }
 
       case "reviews":
         return (

@@ -72,6 +72,8 @@ const DestinationDetails = () => {
 
                 // 3. Compose using buildComposed
                 const composed = buildComposed(dest, details, places, restaurants, hotels, events);
+                console.log("Composed Destination Data:", composed);
+                console.log("Extracted coordinates:", { lat: composed.lat, lng: composed.lng });
                 setDestination(composed);
             } catch (err) {
                 console.error("Error loading destination details:", err);

@@ -135,7 +135,7 @@
 .input:focus,
 .textarea:focus {
   outline: none;
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(27, 86, 253, 0.1);
 }
 
@@ -187,7 +187,7 @@
 }
 
 .uploadLabel:hover {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   background: #f0f5ff;
 }
 
@@ -272,7 +272,7 @@
 }
 
 .uploadLabelSmall:hover {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   background: #f0f5ff;
 }
 
@@ -311,13 +311,13 @@
 }
 
 .dayToggleActive {
-  background: #1b56fd;
-  border-color: #1b56fd;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
 .dayToggleActive:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
 }
 
 /* Time Range Picker */
@@ -341,7 +341,7 @@
 
 .timeInput:focus {
   outline: none;
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(27, 86, 253, 0.1);
 }
 
@@ -404,11 +404,11 @@
   gap: 0.5rem;
   padding: 0.625rem 1rem;
   background: #f0f5ff;
-  border: 1px dashed #1b56fd;
+  border: 1px dashed var(--color-accent);
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1b56fd;
+  color: var(--color-accent);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -446,13 +446,13 @@
 }
 
 .scheduleOptionActive {
-  background: #1b56fd;
-  border-color: #1b56fd;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
 .scheduleOptionActive:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
 }
 
 /* Calendar Picker */
@@ -478,12 +478,12 @@
 }
 
 .calendarDay:hover {
-  border-color: #1b56fd;
+  border-color: var(--color-accent);
 }
 
 .calendarDayActive {
-  background: #1b56fd;
-  border-color: #1b56fd;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
@@ -506,7 +506,7 @@
 
 .saveBtn {
   padding: 0.75rem 1.5rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   border: none;
   border-radius: 12px;
   font-size: 0.875rem;

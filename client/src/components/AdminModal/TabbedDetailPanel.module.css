@@ -107,12 +107,12 @@
 }
 
 .tabBtnActive {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
 .tabBtnActive:hover {
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -323,7 +323,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   display: flex;
   align-items: center;
@@ -483,7 +483,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 2rem;
-  background: #1b56fd;
+  background: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 12px;

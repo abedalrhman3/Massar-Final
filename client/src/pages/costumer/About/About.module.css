@@ -154,7 +154,7 @@
   margin: 0 0 20px 0;
   font-style: italic;
   padding-left: 16px;
-  border-left: 3px #1b56fd solid;
+  border-left: 3px var(--color-accent) solid;
 }
 
 .aboutAuthor {
@@ -188,7 +188,7 @@
 .aboutFeatureIcon {
   width: 160px;
   height: 160px;
-  background: #1b56fd;
+  background: var(--color-accent);
   border-radius: 50%;
   display: flex;
   align-items: center;

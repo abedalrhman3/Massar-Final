@@ -1,5 +1,5 @@
 .footer {
-  background-color: var(--color-main-blue);
+  background-color: var(--color-accent);
   color: white;
   padding: 5rem 9rem;
   font-family: var(--font-ui);
@@ -65,7 +65,7 @@
   font-size: 12px;
   font-weight: normal;
   color: white;
-  background-color: var(--color-main-blue);
+  background-color: var(--color-accent);
   padding: 0 12px;
   border: 1px solid white;
   border-radius: 20px 0 0 20px;
@@ -88,7 +88,7 @@
   font-size: 12px;
   font-weight: normal;
   pointer-events: none;
-  background-color: var(--color-main-blue);
+  background-color: var(--color-accent);
   padding: 0 4px;
   transition:
     top 350ms ease-in,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, Polyline, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
@@ -10,7 +10,7 @@ import { getLocations } from "@/api/locations";
 import { getQuests, joinQuest } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
 import { BASE_URL } from "@/api/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,6 +37,17 @@ const MapClickHandler = ({ onMapClick }) => {
       onMapClick();
     },
   });
+  return null;
+};
+
+// A helper component to center the map when initial coordinates are passed
+const MapCenterSetter = ({ coords }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (coords && coords.lat && coords.lng) {
+      map.setView([coords.lat, coords.lng], 13);
+    }
+  }, [coords, map]);
   return null;
 };
 const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
@@ -67,7 +78,7 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
 
   const avatarIcon = new L.divIcon({
     html: `<img src="${avatarSrc}" class="user-avatar-marker ${isCelebrating ? "celebrate-animation" : ""
-      }" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1B56FD; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); object-fit: cover;" />`,
+      }" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--color-accent); background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); object-fit: cover;" />`,
     className: "custom-avatar-container",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -82,8 +93,8 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
         center={position}
         radius={500}
         pathOptions={{
-          color: "#1B56FD",
-          fillColor: "#1B56FD",
+          color: "var(--color-accent)",
+          fillColor: "var(--color-accent)",
           fillOpacity: 0.08,
           weight: 1,
           dashArray: "6",
@@ -96,6 +107,9 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
 // ... (Keep all your existing imports, icon fixes, and helper components exactly the same)
 
 const Map = () => {
+  const locationState = useLocation();
+  const initialCoords = locationState.state; // { lat, lng, name }
+
   const [locations, setLocations] = useState([]);
   const [quests, setQuests] = useState([]);
   const [budget, setBudget] = useState("");
@@ -185,7 +199,7 @@ const Map = () => {
     });
 
   const manualIcon = new L.divIcon({
-    html: `<div style="background:#1B56FD;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
+    html: `<div style="background:var(--color-accent);width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
     className: "",
     iconSize: [20, 20],
     iconAnchor: [10, 10],
@@ -261,6 +275,20 @@ const Map = () => {
             attribution="&copy; OpenStreetMap contributors"
           />
 
+          {initialCoords && <MapCenterSetter coords={initialCoords} />}
+
+          {initialCoords && (
+            <Marker position={[initialCoords.lat, initialCoords.lng]}>
+              <Popup>
+                <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
+                  <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "#000", margin: "0 0 5px 0" }}>
+                    📍 {initialCoords.name || "Destination"}
+                  </h3>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
           {!manualMode && (
             <AutoLocationTracker
               onFound={setAutoPos}
@@ -277,7 +305,7 @@ const Map = () => {
             <Polyline
               positions={routeCoords}
               pathOptions={{
-                color: "#1B56FD",
+                color: "var(--color-accent)",
                 weight: 5,
                 opacity: 0.8,
                 dashArray: "5, 10"
@@ -296,8 +324,8 @@ const Map = () => {
                 center={manualPos}
                 radius={500}
                 pathOptions={{
-                  color: "#1B56FD",
-                  fillFillColor: "#1B56FD",
+                  color: "var(--color-accent)",
+                  fillFillColor: "var(--color-accent)",
                   fillOpacity: 0.08,
                   weight: 1,
                   dashArray: "6",
@@ -320,7 +348,7 @@ const Map = () => {
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button
                         onClick={() => setActiveLocation(loc)}
-                        style={{ flex: 1, background: "#1B56FD", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
+                        style={{ flex: 1, background: "var(--color-accent)", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem" }}
                       >
                         {t("check_in")}
                       </button>
@@ -369,7 +397,7 @@ const Map = () => {
                         onClick={() => handleJoinQuest(quest._id)}
                         disabled={joiningQuestId === quest._id}
                         style={{
-                          background: user.joined_quests?.map(String).includes(String(quest._id)) ? "#2E7D32" : "#1B56FD",
+                          background: user.joined_quests?.map(String).includes(String(quest._id)) ? "#2E7D32" : "var(--color-accent)",
                           color: "white",
                           border: "none",
                           padding: "6px 12px",

@@ -54,7 +54,7 @@
 
 .iconBtnActive {
   background: rgba(27, 86, 253, 0.1);
-  color: #1b56fd;
+  color: var(--color-accent);
 }
 
 .notificationWrapper {
@@ -70,7 +70,7 @@
 }
 
 .notificationWrapper :hover {
-  color: #1b56fd;
+  color: var(--color-accent);
 }
 
 .badge {

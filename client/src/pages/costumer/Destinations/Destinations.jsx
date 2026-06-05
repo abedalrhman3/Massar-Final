@@ -37,12 +37,14 @@ function Section({ title, destinations, showTooltip, tooltipText, loading }) {
                 {destinations.slice(0, visible).map((dest) => (
                     <div key={dest._id} className={styles.cardWrapper}>
                         <DestinationCard
+                            id={dest._id}
                             image={dest.image}
                             name={dest.name}
                             description={dest.overview?.summary || ''}
                             rating={dest.rating}
                             likes={dest.likes}
                             slug={dest.slug}
+                            isLiked={dest.isLiked ?? false}
                         />
                     </div>
                 ))}

@@ -12,6 +12,7 @@ const MapView = ({ lat, lng, name }) => {
 
     return (
         <MapContainer
+            key={`${position[0]}-${position[1]}`}
             center={position}
             zoom={11}
             className={styles["map-view"]}

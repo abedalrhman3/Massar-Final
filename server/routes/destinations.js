@@ -2,6 +2,7 @@ const router = require('express').Router();
 const {
   getAll, getOne, getDetails,
   create, update, updateDetails, remove,
+  toggleLike
 } = require('../controllers/destinationController');
 const { protect, adminOnly, optionalAuth } = require('../middleware/auth');
 const { single } = require('../middleware/upload');
@@ -12,6 +13,9 @@ router.get('/', optionalAuth, getAll);
 // Crucial: The literal text '/details' MUST come before the dynamic parameter ':id'
 router.get('/details/:id', optionalAuth, getDetails);
 router.get('/:slug', optionalAuth, getOne);
+
+// Authenticated
+router.post('/:id/like', protect, toggleLike);
 
 // Admin
 router.post('/', protect, adminOnly, single('image'), create);

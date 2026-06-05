@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import styles from "./AdminModal.module.css";
 import ImageUpload from "./ImageUpload";
 import CoordinatesInput from "./CoordinatesInput";
-import TimeRangePicker from "./TimeRangePicker";
 import ContactList from "./ContactList";
 
 const getInitialFormData = (destinationName, editData = null) => ({
@@ -11,18 +10,20 @@ const getInitialFormData = (destinationName, editData = null) => ({
   description: editData?.description || "",
   coordinates: editData?.coordinates || "",
   location: destinationName || "",
-  budget: editData?.budget || "",
-  operatingHours: editData?.operatingHours || { start: "", end: "" },
-  scheduleType: editData?.scheduleType || "weekly",
-  scheduleDays: editData?.scheduleDays || [],
-  scheduleMonthlyDay: editData?.scheduleMonthlyDay || null,
-  scheduleYearly: editData?.scheduleYearly || "",
+  startingFromPrice: editData?.startingFromPrice || "",
+  durationText: editData?.durationText || "",
+  startDate: editData?.startDate ? new Date(editData.startDate).toISOString().split("T")[0] : "",
+  endDate: editData?.endDate ? new Date(editData.endDate).toISOString().split("T")[0] : "",
+  startTimeFrom: editData?.startTimeFrom || "",
+  startTimeTo: editData?.startTimeTo || "",
+  endTimeFrom: editData?.endTimeFrom || "",
+  endTimeTo: editData?.endTimeTo || "",
+  bookingUrl: editData?.bookingUrl || "",
   photos: editData?.photos || [],
   contacts: editData?.contacts || [],
 });
 
 function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null }) {
-  const [scheduleType, setScheduleType] = useState(editData?.scheduleType || "weekly");
   const [formData, setFormData] = useState(() => getInitialFormData(destinationName, editData));
   const [errors, setErrors] = useState({});
 
@@ -30,13 +31,9 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
   useEffect(() => {
     if (isOpen) {
       if (editData) {
-        // Editing - use editData
         setFormData(getInitialFormData(destinationName, editData));
-        setScheduleType(editData.scheduleType || "weekly");
       } else {
-        // Adding new - reset all fields
         setFormData(getInitialFormData(destinationName, null));
-        setScheduleType("weekly");
       }
       setErrors({});
     }
@@ -49,6 +46,10 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
     if (!formData.description.trim()) newErrors.description = "Description is required";
     if (!formData.coordinates.trim()) newErrors.coordinates = "Coordinates are required";
     if (!formData.location.trim()) newErrors.location = "Location is required";
+    if (!formData.startDate) newErrors.startDate = "Start date is required";
+    if (!formData.endDate) newErrors.endDate = "End date is required";
+    if (!formData.startTimeFrom) newErrors.startTimeFrom = "Start time is required";
+    if (!formData.startTimeTo) newErrors.startTimeTo = "End time for start day is required";
     if (formData.contacts.length === 0) newErrors.contacts = "At least one contact is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -59,13 +60,6 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
       onSave(formData);
       onClose();
     }
-  };
-
-  const toggleScheduleDay = (day) => {
-    const days = formData.scheduleDays.includes(day)
-      ? formData.scheduleDays.filter((d) => d !== day)
-      : [...formData.scheduleDays, day];
-    setFormData({ ...formData, scheduleDays: days });
   };
 
   if (!isOpen) return null;
@@ -138,97 +132,105 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
             />
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Budget</label>
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="e.g., Free or $50"
-              value={formData.budget}
-              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-            />
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>Start Date</label>
+              <input
+                type="date"
+                className={styles.input}
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              />
+              {errors.startDate && <span className={styles.errorText}>{errors.startDate}</span>}
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>End Date</label>
+              <input
+                type="date"
+                className={styles.input}
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+              />
+              {errors.endDate && <span className={styles.errorText}>{errors.endDate}</span>}
+            </div>
           </div>
 
-          <TimeRangePicker
-            value={formData.operatingHours}
-            onChange={(operatingHours) => setFormData({ ...formData, operatingHours })}
-          />
-
-          {/* Event Schedule */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Event Schedule</label>
-            <div className={styles.scheduleOptions}>
-              <button
-                type="button"
-                className={`${styles.scheduleOptionBtn} ${scheduleType === "weekly" ? styles.scheduleOptionActive : ""}`}
-                onClick={() => {
-                  setScheduleType("weekly");
-                  setFormData({ ...formData, scheduleType: "weekly" });
-                }}
-              >
-                Weekly
-              </button>
-              <button
-                type="button"
-                className={`${styles.scheduleOptionBtn} ${scheduleType === "monthly" ? styles.scheduleOptionActive : ""}`}
-                onClick={() => {
-                  setScheduleType("monthly");
-                  setFormData({ ...formData, scheduleType: "monthly" });
-                }}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                className={`${styles.scheduleOptionBtn} ${scheduleType === "yearly" ? styles.scheduleOptionActive : ""}`}
-                onClick={() => {
-                  setScheduleType("yearly");
-                  setFormData({ ...formData, scheduleType: "yearly" });
-                }}
-              >
-                Yearly
-              </button>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>Start Time (From)</label>
+              <input
+                type="time"
+                className={styles.input}
+                value={formData.startTimeFrom}
+                onChange={(e) => setFormData({ ...formData, startTimeFrom: e.target.value })}
+              />
+              {errors.startTimeFrom && <span className={styles.errorText}>{errors.startTimeFrom}</span>}
             </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>Start Time (To)</label>
+              <input
+                type="time"
+                className={styles.input}
+                value={formData.startTimeTo}
+                onChange={(e) => setFormData({ ...formData, startTimeTo: e.target.value })}
+              />
+              {errors.startTimeTo && <span className={styles.errorText}>{errors.startTimeTo}</span>}
+            </div>
+          </div>
 
-            {scheduleType === "weekly" && (
-              <div className={styles.workingDaysRow}>
-                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                  <button
-                    key={day}
-                    type="button"
-                    className={`${styles.dayToggle} ${formData.scheduleDays.includes(day) ? styles.dayToggleActive : ""}`}
-                    onClick={() => toggleScheduleDay(day)}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>End Time (From)</label>
+              <input
+                type="time"
+                className={styles.input}
+                value={formData.endTimeFrom}
+                onChange={(e) => setFormData({ ...formData, endTimeFrom: e.target.value })}
+              />
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>End Time (To)</label>
+              <input
+                type="time"
+                className={styles.input}
+                value={formData.endTimeTo}
+                onChange={(e) => setFormData({ ...formData, endTimeTo: e.target.value })}
+              />
+            </div>
+          </div>
 
-            {scheduleType === "monthly" && (
-              <div className={styles.calendarPicker}>
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                  <button
-                    key={day}
-                    type="button"
-                    className={`${styles.calendarDay} ${formData.scheduleMonthlyDay === day ? styles.calendarDayActive : ""}`}
-                    onClick={() => setFormData({ ...formData, scheduleMonthlyDay: day })}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {scheduleType === "yearly" && (
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>Starting Ticket Price ($)</label>
+              <input
+                type="number"
+                className={styles.input}
+                placeholder="e.g., 45"
+                value={formData.startingFromPrice}
+                onChange={(e) => setFormData({ ...formData, startingFromPrice: e.target.value })}
+              />
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.label}>Duration Text</label>
               <input
                 type="text"
                 className={styles.input}
-                placeholder="e.g., Every spring or January 15"
-                value={formData.scheduleYearly}
-                onChange={(e) => setFormData({ ...formData, scheduleYearly: e.target.value })}
+                placeholder="e.g., 3 Days"
+                value={formData.durationText}
+                onChange={(e) => setFormData({ ...formData, durationText: e.target.value })}
               />
-            )}
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Booking Link / URL</label>
+            <input
+              type="text"
+              className={styles.input}
+              placeholder="https://..."
+              value={formData.bookingUrl}
+              onChange={(e) => setFormData({ ...formData, bookingUrl: e.target.value })}
+            />
           </div>
 
           {/* Photos - Optional */}

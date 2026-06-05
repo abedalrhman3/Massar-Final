@@ -644,7 +644,7 @@
 }
 
 .checkBox input.customCheckbox:hover {
-  border-color: var(--color-main-blue);
+  border-color: var(--color-accent);
 }
 
 .checkBox input.customCheckbox:checked {
