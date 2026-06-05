@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { destinations } from "@/data/destinations";
 import styles from "./UserProfile.module.css";
+import { logout } from "@/api/auth";
 
 // ─── Password strength validator (reused from signup flow) ───────────────────
 function PasswordStrengthInput({ value, onChange, placeholder }) {
@@ -20,6 +21,8 @@ function PasswordStrengthInput({ value, onChange, placeholder }) {
   const colors = ["", "#ff4d4d", "#ff9900", "#f0c800", "#7bc67e", "#18e605"];
   const barWidth =
     value.length === 0 ? "0%" : `${(strength / rules.length) * 100}%`;
+
+
 
   return (
     <div className={styles.pwFieldWrap}>
@@ -101,6 +104,12 @@ const USER_PROFILE_KEY = "massar_user_profile";
 
 function UserProfile() {
   const navigate = useNavigate();
+
+  //Handlers
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  }
 
   const [userProfile, setUserProfile] = useState(() => {
     const stored = localStorage.getItem(USER_PROFILE_KEY);
@@ -329,6 +338,11 @@ function UserProfile() {
             </div>
           </div>
         </div>
+        <button className={styles.logoutBtn}
+          onClick={() => handleLogout()}
+        >
+          Logout
+        </button>
       </section>
 
       {/* ── Bento Grid ───────────────────────────────────────────────────── */}

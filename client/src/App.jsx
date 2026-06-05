@@ -13,8 +13,12 @@ import RegisterLogin, {
   ResetPassword,
   VerifyEmail,
 } from "./pages/costumer/Register-Login/Register-Login";
+
+// User Profile
+import UserProfile from "./pages/admin/UserProfile"
+import UserSettings from "./pages/admin/Settings/index"
 import UserDashboard from "./pages/costumer/UserAccount/UserDashboard";
-import UserProfile from "./pages/costumer/UserProfile/UserProfile";
+//import UserProfile from "./pages/costumer/UserProfile/UserProfile";
 
 // Admin Panel Layout & Pages
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -23,7 +27,7 @@ import DestinationsManagement from "./pages/admin/DestinationsManagement";
 import AccountManagement from "./pages/admin/AccountsManagement";
 import BanHistory from "./pages/admin/BanHistory";
 import Support from "./pages/admin/Support";
-import Settings from "./pages/admin/Settings";
+import AdminSettings from "./pages/admin/Settings";
 import AdminUserProfile from "./pages/admin/UserProfile";
 import AdminChat from "./pages/admin/AdminChat";
 
@@ -40,8 +44,6 @@ const PrivateRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" replace />;
 };
 
-const testEnv = import.meta.env.VITE_API_URL;
-console.log(testEnv);
 
 // ── Admin Route Guard — requires admin role ───────────────────────
 const AdminGuard = () => {
@@ -120,10 +122,10 @@ function App() {
 
         {/* ── User Account Pages ────────────────────────────────── */}
         <Route
-          path="/dashboard"
+          path="/settings"
           element={
             <PrivateRoute>
-              <UserDashboard />
+              <UserSettings />
             </PrivateRoute>
           }
         />
@@ -151,7 +153,7 @@ function App() {
           <Route path="accounts" element={<AccountManagement />} />
           <Route path="ban-history" element={<BanHistory />} />
           <Route path="support" element={<Support />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<AdminSettings />} />
           <Route path="profile" element={<AdminUserProfile />} />
           <Route path="chat" element={<AdminChat />} />
         </Route>

@@ -7,7 +7,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount — verify cookie session with the server
   useEffect(() => {
     getMe()
       .then((res) => setUser(res.data.user))
@@ -19,12 +18,12 @@ export function AuthProvider({ children }) {
     try {
       await apiLogout();
     } catch (_) {
-      // proceed even if the server call fails
+      // ignore server errors
+    } finally {
+      setUser(null); // ← always runs, instantly updates Navbar
     }
-    setUser(null);
   };
 
-  // Call this after a successful login or register response
   const loginSuccess = (userData) => {
     setUser(userData);
   };

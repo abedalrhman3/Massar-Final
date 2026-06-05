@@ -4,6 +4,26 @@
   margin: 0 auto;
 }
 
+.logoutBtn {
+  position: absolute;
+  bottom: 5rem;
+  left: 5rem;
+  margin: 0;
+  padding: 0.5rem 1.25rem;
+  border: 1.5px solid red;
+  color: red;
+  background: transparent;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.logoutBtn:hover {
+  background: #1b56fd;
+  color: #fff;
+}
+
 /* ── Hero Profile Section ──────────────────────────────────────────────────── */
 .heroSection {
   display: flex;
