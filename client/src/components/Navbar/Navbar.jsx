@@ -3,10 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import { useAuth } from '@/context/AuthContext';
 import UserAvatar from '@/components/UserAvatar';
-import Support from "@/pages/costumer/Support";
 
 function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -15,13 +14,12 @@ function Navbar() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
   };
 
   useEffect(() => {
     if (!user) return;
     console.log(user);
-  }, [user])
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,9 +57,11 @@ function Navbar() {
         {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
       </div>
 
-      {user
-        ? <UserAvatar onLogout={handleLogout} />
-        : <button className={styles.getStartedBtn} onClick={() => navigate("/login")}>Get Started</button>
+      {loading
+        ? null
+        : user
+          ? <UserAvatar onLogout={handleLogout} />
+          : <button className={styles.getStartedBtn} onClick={() => navigate("/login")}>Get Started</button>
       }
 
       <button className={styles.hamburger} onClick={() => setMenuOpen(true)} aria-label="Open menu">
@@ -79,7 +79,7 @@ function Navbar() {
           <nav className={styles.overlayLinks}>
             <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
             <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
-            <Link to="/tours" onClick={() => setMenuOpen(false)}>Tours</Link>
+            <Link to="/destinations" onClick={() => setMenuOpen(false)}>Destinations</Link>
             <Link to="/map" onClick={() => setMenuOpen(false)}>Map</Link>
           </nav>
           <button className={styles.overlayGetStarted}>Let's start</button>

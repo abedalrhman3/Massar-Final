@@ -12,7 +12,7 @@ function UserDashboard() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     await logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";

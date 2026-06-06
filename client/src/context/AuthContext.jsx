@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
       // ignore server errors
     } finally {
       setUser(null);
-      window.location.href = '/'; // force full reload to clear all states
+      //window.location.href = '/'; // force full reload to clear all states
     }
   };
 
