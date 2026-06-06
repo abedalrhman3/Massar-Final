@@ -48,6 +48,18 @@ exports.create = async (req, res, next) => {
   let coverImage = null;
   let images = [];
   try {
+    // Parse all JSON-stringified fields from FormData
+    const jsonFields = ['contact', 'location', 'operatingHours', 'workingDays'];
+    for (const field of jsonFields) {
+      if (req.body[field] && typeof req.body[field] === 'string') {
+        try {
+          req.body[field] = JSON.parse(req.body[field]);
+        } catch (err) {
+          // leave as-is
+        }
+      }
+    }
+
     const files = req.files || {};
 
     // Upload coverImage (required)
@@ -79,6 +91,18 @@ exports.update = async (req, res, next) => {
   try {
     const existing = await Event.findById(req.params.id);
     if (!existing) return next(new AppError('Event not found', 404));
+
+    // Parse all JSON-stringified fields from FormData
+    const jsonFields = ['contact', 'location', 'operatingHours', 'workingDays'];
+    for (const field of jsonFields) {
+      if (req.body[field] && typeof req.body[field] === 'string') {
+        try {
+          req.body[field] = JSON.parse(req.body[field]);
+        } catch (err) {
+          // leave as-is
+        }
+      }
+    }
 
     const files = req.files || {};
 

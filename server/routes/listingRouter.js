@@ -1,4 +1,4 @@
-const router = require('express').Router();
+const express = require('express');
 const { protect, adminOnly, optionalAuth } = require('../middleware/auth');
 const { fields } = require('../middleware/upload');
 
@@ -11,7 +11,7 @@ const listingUpload = fields([
 // Generic route builder for Place, Restaurant, Hotel
 // Pass in a controller created with listingController.js
 const createListingRouter = (controller) => {
-  const r = router;
+  const r = express.Router();
 
   // Public (but admins get to see unpublished items too)
   r.get('/', optionalAuth, controller.getAll);

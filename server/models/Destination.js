@@ -14,6 +14,8 @@ const destinationSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    tagline: { type: String },
+    description: { type: String },
     image: {
       type: String,
     },

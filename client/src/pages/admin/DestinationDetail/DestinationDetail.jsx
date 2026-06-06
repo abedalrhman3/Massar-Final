@@ -47,21 +47,9 @@ const buildListingFormData = (formData, destinationId) => {
   if (formData.bookingLink) fd.append("bookingUrl", formData.bookingLink);
 
   // Parse contact array to contact object
-  const contactObj = {};
-  if (formData.contacts && formData.contacts.length > 0) {
-    formData.contacts.forEach((val) => {
-      const { type, display } = detectContactType(val);
-      if (type === "phone") contactObj.phone = display;
-      else if (type === "whatsapp") contactObj.whatsapp = display;
-      else if (type === "facebook") contactObj.facebook = display;
-      else if (type === "instagram") contactObj.instagramUrl = display;
-      else if (type === "x") contactObj.twitterUrl = display;
-      else if (type === "url") {
-        if (display.includes("@")) contactObj.email = display;
-        else contactObj.address = display;
-      }
-    });
-  }
+  const contactObj = {
+    methods: (formData.contacts || []).filter(c => c.value).map(c => ({ type: c.type, value: c.value }))
+  };
   fd.append("contact", JSON.stringify(contactObj));
 
   // coordinates → location JSON
@@ -108,31 +96,14 @@ const buildEventFormData = (formData, destinationId) => {
   if (formData.bookingUrl) fd.append("bookingUrl", formData.bookingUrl);
 
   // Parse contact array to contact object
-  const contactObj = {};
-  if (formData.contacts && formData.contacts.length > 0) {
-    formData.contacts.forEach((val) => {
-      const { type, display } = detectContactType(val);
-      if (type === "phone") contactObj.phone = display;
-      else if (type === "whatsapp") contactObj.whatsapp = display;
-      else if (type === "facebook") contactObj.facebook = display;
-      else if (type === "instagram") contactObj.instagramUrl = display;
-      else if (type === "x") contactObj.twitterUrl = display;
-      else if (type === "url") {
-        if (display.includes("@")) contactObj.email = display;
-        else contactObj.address = display;
-      }
-    });
-  }
+  const contactObj = {
+    methods: (formData.contacts || []).filter(c => c.value).map(c => ({ type: c.type, value: c.value }))
+  };
   fd.append("contact", JSON.stringify(contactObj));
 
-  // startTime / endTime — model requires { from: Date, to: Date }
-  // EventsModal should supply these; fall back to midnight–midnight on the date
-  const startFrom = formData.startTimeFrom || formData.startDate;
-  const startTo = formData.startTimeTo || formData.startDate;
-  const endFrom = formData.endTimeFrom || formData.endDate;
-  const endTo = formData.endTimeTo || formData.endDate;
-  if (startFrom && startTo) fd.append("startTime", JSON.stringify({ from: startFrom, to: startTo }));
-  if (endFrom && endTo) fd.append("endTime", JSON.stringify({ from: endFrom, to: endTo }));
+  // startTime / endTime — Event.js stores these as plain strings e.g. "08:00"
+  if (formData.startTimeFrom) fd.append("startTime", formData.startTimeFrom);
+  if (formData.endTimeFrom) fd.append("endTime", formData.endTimeFrom);
 
   if (formData.coordinates) {
     const [lat, lng] = formData.coordinates.split(",").map(Number);
@@ -193,15 +164,7 @@ const mapItemToEditData = (item) => {
   if (!item) return null;
   
   // map contact object to contacts array
-  const contacts = [];
-  if (item.contact) {
-    if (item.contact.phone) contacts.push(item.contact.phone);
-    if (item.contact.whatsapp) contacts.push(item.contact.whatsapp);
-    if (item.contact.email) contacts.push(item.contact.email);
-    if (item.contact.address) contacts.push(item.contact.address);
-    if (item.contact.instagramUrl) contacts.push(item.contact.instagramUrl);
-    if (item.contact.twitterUrl) contacts.push(item.contact.twitterUrl);
-  }
+  const contacts = item.contact?.methods || [];
 
   // map coordinates
   let coordinates = "";
@@ -209,19 +172,9 @@ const mapItemToEditData = (item) => {
     coordinates = `${item.location.coordinates[1]}, ${item.location.coordinates[0]}`;
   }
 
-  // startTime / endTime for Event model format to form format
-  let startTimeFrom = "";
-  let startTimeTo = "";
-  if (item.startTime) {
-    if (item.startTime.from) startTimeFrom = new Date(item.startTime.from).toTimeString().slice(0, 5);
-    if (item.startTime.to) startTimeTo = new Date(item.startTime.to).toTimeString().slice(0, 5);
-  }
-  let endTimeFrom = "";
-  let endTimeTo = "";
-  if (item.endTime) {
-    if (item.endTime.from) endTimeFrom = new Date(item.endTime.from).toTimeString().slice(0, 5);
-    if (item.endTime.to) endTimeTo = new Date(item.endTime.to).toTimeString().slice(0, 5);
-  }
+  // startTime / endTime — Event.js stores them as plain strings now
+  const startTimeFrom = typeof item.startTime === "string" ? item.startTime : "";
+  const endTimeFrom   = typeof item.endTime   === "string" ? item.endTime   : "";
 
   return {
     ...item,
@@ -233,9 +186,7 @@ const mapItemToEditData = (item) => {
     contacts,
     bookingLink: item.bookingUrl || "",
     startTimeFrom,
-    startTimeTo,
     endTimeFrom,
-    endTimeTo,
   };
 };
 
@@ -260,6 +211,7 @@ function DestinationDetail() {
   const [editingItem, setEditingItem] = useState(null);
   const [editingType, setEditingType] = useState(null);
   const [removingItem, setRemovingItem] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [removingType, setRemovingType] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [cardTabs, setCardTabs] = useState({});
@@ -322,6 +274,7 @@ function DestinationDetail() {
 
   // ── Save handlers ──────────────────────────────────────────────────────────
   const handleSavePlace = async (formData) => {
+    setSaving(true);
     try {
       const fd = buildListingFormData(formData, destId);
       if (editingItem) {
@@ -331,13 +284,17 @@ function DestinationDetail() {
         const res = await placesApi.create(fd);
         setPlaces([...places, res.data.data]);
       }
+      setShowPlacesModal(false);
+      setEditingItem(null); setEditingType(null);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to save place.");
+    } finally {
+      setSaving(false);
     }
-    setEditingItem(null); setEditingType(null);
   };
 
   const handleSaveHotel = async (formData) => {
+    setSaving(true);
     try {
       const fd = buildListingFormData(formData, destId);
       if (editingItem) {
@@ -347,13 +304,17 @@ function DestinationDetail() {
         const res = await hotelsApi.create(fd);
         setHotels([...hotels, res.data.data]);
       }
+      setShowHotelsModal(false);
+      setEditingItem(null); setEditingType(null);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to save hotel.");
+    } finally {
+      setSaving(false);
     }
-    setEditingItem(null); setEditingType(null);
   };
 
   const handleSaveRestaurant = async (formData) => {
+    setSaving(true);
     try {
       const fd = buildListingFormData(formData, destId);
       if (editingItem) {
@@ -363,13 +324,17 @@ function DestinationDetail() {
         const res = await restaurantsApi.create(fd);
         setRestaurants([...restaurants, res.data.data]);
       }
+      setShowRestaurantsModal(false);
+      setEditingItem(null); setEditingType(null);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to save restaurant.");
+    } finally {
+      setSaving(false);
     }
-    setEditingItem(null); setEditingType(null);
   };
 
   const handleSaveEvent = async (formData) => {
+    setSaving(true);
     try {
       const fd = buildEventFormData(formData, destId);
       if (editingItem) {
@@ -379,10 +344,13 @@ function DestinationDetail() {
         const res = await createEvent(fd);
         setEvents([...events, res.data.data]);
       }
+      setShowEventsModal(false);
+      setEditingItem(null); setEditingType(null);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to save event.");
+    } finally {
+      setSaving(false);
     }
-    setEditingItem(null); setEditingType(null);
   };
 
   // ── Delete handlers ────────────────────────────────────────────────────────
@@ -569,18 +537,9 @@ function DestinationDetail() {
         );
 
       case "contact": {
-        // API returns item.contact as an object: { phone, whatsapp, email, address, instagramUrl, twitterUrl }
-        const contactObj = item.contact || {};
-        const contactEntries = [
-          { key: "phone", value: contactObj.phone, type: "phone" },
-          { key: "whatsapp", value: contactObj.whatsapp, type: "whatsapp" },
-          { key: "email", value: contactObj.email, type: "url" },
-          { key: "address", value: contactObj.address, type: "url" },
-          { key: "instagramUrl", value: contactObj.instagramUrl, type: "instagram" },
-          { key: "twitterUrl", value: contactObj.twitterUrl, type: "x" },
-        ].filter((c) => c.value);
+        const contactMethods = item.contact?.methods || [];
 
-        if (!contactEntries.length) return (
+        if (!contactMethods.length) return (
           <div className={styles.emptyContent}>
             <span className="material-symbols-outlined" style={{ fontSize: "2.5rem", color: "#9ca3af" }}>contact_phone</span>
             <p>No contact information available</p>
@@ -588,8 +547,8 @@ function DestinationDetail() {
         );
         return (
           <div className={styles.contactListContent}>
-            {contactEntries.map(({ key, value, type }) => (
-              <div key={key} className={styles.contactItemContent}>
+            {contactMethods.map(({ type, value }, i) => (
+              <div key={i} className={styles.contactItemContent}>
                 <div className={styles.contactIconContent} data-type={type}>
                   <span className="material-symbols-outlined">{getContactIcon(type)}</span>
                 </div>
@@ -779,16 +738,16 @@ function DestinationDetail() {
       </div>
 
       {/* Add Modals */}
-      <PlacesModal isOpen={showPlacesModal} onClose={() => setShowPlacesModal(false)} onSave={handleSavePlace} destinationName={displayName} />
-      <HotelsModal isOpen={showHotelsModal} onClose={() => setShowHotelsModal(false)} onSave={handleSaveHotel} destinationName={displayName} />
-      <RestaurantsModal isOpen={showRestaurantsModal} onClose={() => setShowRestaurantsModal(false)} onSave={handleSaveRestaurant} destinationName={displayName} />
-      <EventsModal isOpen={showEventsModal} onClose={() => setShowEventsModal(false)} onSave={handleSaveEvent} destinationName={displayName} />
+      <PlacesModal isOpen={showPlacesModal} onClose={() => !saving && setShowPlacesModal(false)} onSave={handleSavePlace} destinationName={displayName} saving={saving} />
+      <HotelsModal isOpen={showHotelsModal} onClose={() => !saving && setShowHotelsModal(false)} onSave={handleSaveHotel} destinationName={displayName} saving={saving} />
+      <RestaurantsModal isOpen={showRestaurantsModal} onClose={() => !saving && setShowRestaurantsModal(false)} onSave={handleSaveRestaurant} destinationName={displayName} saving={saving} />
+      <EventsModal isOpen={showEventsModal} onClose={() => !saving && setShowEventsModal(false)} onSave={handleSaveEvent} destinationName={displayName} saving={saving} />
 
       {/* Edit Modals */}
-      {editingItem && editingType === "place" && <PlacesModal isOpen onClose={closeEditModal} onSave={handleSavePlace} destinationName={displayName} editData={editingItem} />}
-      {editingItem && editingType === "hotel" && <HotelsModal isOpen onClose={closeEditModal} onSave={handleSaveHotel} destinationName={displayName} editData={editingItem} />}
-      {editingItem && editingType === "restaurant" && <RestaurantsModal isOpen onClose={closeEditModal} onSave={handleSaveRestaurant} destinationName={displayName} editData={editingItem} />}
-      {editingItem && editingType === "event" && <EventsModal isOpen onClose={closeEditModal} onSave={handleSaveEvent} destinationName={displayName} editData={editingItem} />}
+      {editingItem && editingType === "place" && <PlacesModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSavePlace} destinationName={displayName} editData={editingItem} saving={saving} />}
+      {editingItem && editingType === "hotel" && <HotelsModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSaveHotel} destinationName={displayName} editData={editingItem} saving={saving} />}
+      {editingItem && editingType === "restaurant" && <RestaurantsModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSaveRestaurant} destinationName={displayName} editData={editingItem} saving={saving} />}
+      {editingItem && editingType === "event" && <EventsModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSaveEvent} destinationName={displayName} editData={editingItem} saving={saving} />}
 
       {/* Remove Confirmation */}
       {removingItem && (

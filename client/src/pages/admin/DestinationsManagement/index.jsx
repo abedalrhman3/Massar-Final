@@ -6,6 +6,8 @@ import {
   createDestination,
   updateDestination,
   deleteDestination,
+  updateDestinationDetails,
+  getDestinationDetails,
 } from "@/api/destination";
 
 const toSlug = (name) =>
@@ -89,29 +91,54 @@ function DestinationsManagement() {
     setShowModal(true);
   };
 
-  const openEditModal = (dest) => {
+  const openEditModal = async (dest) => {
     setEditingDestination(dest);
-    setNewDest({
+    // Start with what the Destination doc gives us
+    const base = {
       name: dest.name || "",
       tagline: dest.tagline || "",
-      location: dest.location?.coordinates
-        ? `${dest.location.coordinates[1]}, ${dest.location.coordinates[0]}`
-        : "",
+      location: "",
       coordinates: dest.location?.coordinates
         ? `${dest.location.coordinates[1]}, ${dest.location.coordinates[0]}`
         : "",
-      recommendedStay: dest.recommendedStay || "",
-      bestSeason: dest.bestSeason || "",
-      averageCost: dest.averageCost || "",
+      recommendedStay: "",
+      bestSeason: "",
+      averageCost: "",
       description: dest.description || "",
       budget: dest.budget || "",
       isPublished: dest.isPublished || false,
       image: null,
       imagePreview: "",
       imageUrl: dest.image || "",
-      activities: dest.activities || [],
-      travelGuide: dest.travelGuide || { howToGetThere: "", bestTimeToVisit: "", whatToBring: "" },
-    });
+      activities: [],
+      travelGuide: { howToGetThere: "", bestTimeToVisit: "", whatToBring: "" },
+    };
+
+    // Fetch DestinationDetail to pre-fill overview + activities + guideSections
+    try {
+      const detailRes = await getDestinationDetails(dest._id);
+      const detail = detailRes.data.data;
+      if (detail) {
+        base.location        = detail.overview?.locationText    || "";
+        base.recommendedStay = detail.overview?.recommendedStay || "";
+        base.bestSeason      = detail.overview?.bestSeason      || "";
+        base.averageCost     = detail.overview?.averageCost     || "";
+        // activities stored as [{name}], form uses flat strings
+        base.activities = (detail.activities || []).map(a => a.name || "");
+        // guideSections back to travelGuide
+        const guide = detail.guideSections || [];
+        const find = (titles) => guide.find(s => titles.includes(s.title))?.content || "";
+        base.travelGuide = {
+          howToGetThere:  find(["How to Get There"]),
+          bestTimeToVisit: find(["Best Time to Visit"]),
+          whatToBring:    find(["What to Bring"]),
+        };
+      }
+    } catch (_) {
+      // no detail doc yet — that's fine, form stays blank for those fields
+    }
+
+    setNewDest(base);
     setCoordinatesError("");
     setShowModal(true);
     setOpenMenu(null);
@@ -183,6 +210,8 @@ function DestinationsManagement() {
       formData.append("name", newDest.name);
       formData.append("budget", newDest.budget);
       formData.append("isPublished", newDest.isPublished);
+      formData.append("tagline", newDest.tagline);
+      formData.append("description", newDest.description);
 
       // Build GeoJSON location from coordinates string
       if (newDest.coordinates) {
@@ -198,16 +227,36 @@ function DestinationsManagement() {
         formData.append("image", newDest.image);
       }
 
+      let destinationId;
       if (editingDestination) {
         const res = await updateDestination(editingDestination._id, formData);
         const updated = res.data.data;
+        destinationId = updated._id;
         setDestinations(destinations.map((d) =>
           d._id === updated._id ? updated : d
         ));
       } else {
         const res = await createDestination(formData);
+        destinationId = res.data.data._id;
         setDestinations([...destinations, res.data.data]);
       }
+
+      await updateDestinationDetails(destinationId, {
+        overview: {
+          text:            newDest.description,
+          locationText:    newDest.location,
+          recommendedStay: newDest.recommendedStay,
+          bestSeason:      newDest.bestSeason,
+          averageCost:     newDest.averageCost,
+        },
+        // flat strings → [{name}], skip blanks
+        activities: newDest.activities.filter(a => a.trim()).map(name => ({ name })),
+        guideSections: [
+          { type: 'transport', title: 'How to Get There',  content: newDest.travelGuide.howToGetThere,  sortOrder: 0 },
+          { type: 'tips',     title: 'Best Time to Visit', content: newDest.travelGuide.bestTimeToVisit, sortOrder: 1 },
+          { type: 'other',    title: 'What to Bring',      content: newDest.travelGuide.whatToBring,     sortOrder: 2 },
+        ],
+      });
 
       closeModal();
     } catch (err) {
@@ -432,6 +481,11 @@ function DestinationsManagement() {
               <div className={styles.formGroup}>
                 <label className={styles.label}>Description</label>
                 <textarea className={styles.textarea} placeholder="Describe the destination..." rows={4} value={newDest.description} onChange={(e) => setNewDest({ ...newDest, description: e.target.value })} />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Location Text</label>
+                <input type="text" className={styles.input} placeholder="e.g., Southern Jordan, 4 hours from Amman" value={newDest.location} onChange={(e) => setNewDest({ ...newDest, location: e.target.value })} />
               </div>
 
               <div className={styles.formGroup}>

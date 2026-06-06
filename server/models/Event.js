@@ -22,19 +22,13 @@ const eventSchema = new mongoose.Schema(
       type: Date,
       required: [true, 'Start date is required'],
     },
-    startTime: {
-      from: { type: Date, required: true },  // 2026-01-07T08:00:00.000+03:00
-      to: { type: Date, required: true },  // 2026-01-07T21:00:00.000+03:00
-    },
+    startTime: { type: String }, // e.g. "8:00 AM"
     endDate: {
       type: Date,
       required: [true, 'End date is required'],
     },
-    endTime: {
-      from: { type: Date, required: true },  // 2026-01-08T08:00:00.000+03:00
-      to: { type: Date, required: true },  // 2026-01-08T21:00:00.000+03:00
-    },
-    startingFromPrice: { type: Number },
+    endTime: { type: String }, // e.g. "5:00 PM"
+    startingFromPrice: { type: String },
     durationText: { type: String },
     bookingUrl: { type: String },
 

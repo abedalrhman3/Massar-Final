@@ -19,7 +19,7 @@ const getInitialFormData = (destinationName, editData = null) => ({
   contacts: editData?.contacts || [],
 });
 
-function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData = null }) {
+function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData = null, saving = false }) {
   const [formData, setFormData] = useState(() => getInitialFormData(destinationName, editData));
   const [errors, setErrors] = useState({});
 
@@ -52,7 +52,6 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
   const handleSave = () => {
     if (validate()) {
       onSave(formData);
-      onClose();
     }
   };
 
@@ -69,7 +68,7 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
       >
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{editData ? "Edit Restaurant" : "Add New Restaurant"}</h2>
-          <button className={styles.modalClose} onClick={onClose}>
+          <button className={styles.modalClose} onClick={onClose} disabled={saving}>
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -172,11 +171,11 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.cancelBtn} onClick={onClose}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button className={styles.saveBtn} onClick={handleSave}>
-            {editData ? "Update Restaurant" : "Save Restaurant"}
+          <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : (editData ? "Update Restaurant" : "Save Restaurant")}
           </button>
         </div>
       </div>

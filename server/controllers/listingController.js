@@ -54,6 +54,18 @@ const createListingController = (Model, uploadFn) => ({
     let coverImage = null;
     let images = [];
     try {
+      // Parse all JSON-stringified fields from FormData
+      const jsonFields = ['contact', 'location', 'operatingHours', 'workingDays'];
+      for (const field of jsonFields) {
+        if (req.body[field] && typeof req.body[field] === 'string') {
+          try {
+            req.body[field] = JSON.parse(req.body[field]);
+          } catch (err) {
+            // leave as-is
+          }
+        }
+      }
+
       const files = req.files || {};
 
       // Upload coverImage (required)
@@ -86,6 +98,18 @@ const createListingController = (Model, uploadFn) => ({
     try {
       const existing = await Model.findById(req.params.id);
       if (!existing) return next(new AppError('Not found', 404));
+
+      // Parse all JSON-stringified fields from FormData
+      const jsonFields = ['contact', 'location', 'operatingHours', 'workingDays'];
+      for (const field of jsonFields) {
+        if (req.body[field] && typeof req.body[field] === 'string') {
+          try {
+            req.body[field] = JSON.parse(req.body[field]);
+          } catch (err) {
+            // leave as-is
+          }
+        }
+      }
 
       const files = req.files || {};
 

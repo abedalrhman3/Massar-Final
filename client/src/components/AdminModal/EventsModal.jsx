@@ -14,16 +14,14 @@ const getInitialFormData = (destinationName, editData = null) => ({
   durationText: editData?.durationText || "",
   startDate: editData?.startDate ? new Date(editData.startDate).toISOString().split("T")[0] : "",
   endDate: editData?.endDate ? new Date(editData.endDate).toISOString().split("T")[0] : "",
-  startTimeFrom: editData?.startTimeFrom || "",
-  startTimeTo: editData?.startTimeTo || "",
-  endTimeFrom: editData?.endTimeFrom || "",
-  endTimeTo: editData?.endTimeTo || "",
+  startTimeFrom: editData?.startTimeFrom || "",  // maps to Event.startTime
+  endTimeFrom:   editData?.endTimeFrom   || "",  // maps to Event.endTime
   bookingUrl: editData?.bookingUrl || "",
   photos: editData?.photos || [],
   contacts: editData?.contacts || [],
 });
 
-function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null }) {
+function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null, saving = false }) {
   const [formData, setFormData] = useState(() => getInitialFormData(destinationName, editData));
   const [errors, setErrors] = useState({});
 
@@ -49,7 +47,6 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
     if (!formData.startDate) newErrors.startDate = "Start date is required";
     if (!formData.endDate) newErrors.endDate = "End date is required";
     if (!formData.startTimeFrom) newErrors.startTimeFrom = "Start time is required";
-    if (!formData.startTimeTo) newErrors.startTimeTo = "End time for start day is required";
     if (formData.contacts.length === 0) newErrors.contacts = "At least one contact is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -58,7 +55,6 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
   const handleSave = () => {
     if (validate()) {
       onSave(formData);
-      onClose();
     }
   };
 
@@ -75,7 +71,7 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
       >
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{editData ? "Edit Event" : "Add New Event"}</h2>
-          <button className={styles.modalClose} onClick={onClose}>
+          <button className={styles.modalClose} onClick={onClose} disabled={saving}>
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -157,7 +153,7 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
 
           <div style={{ display: "flex", gap: "1rem" }}>
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label className={styles.label}>Start Time (From)</label>
+              <label className={styles.label}>Start Time</label>
               <input
                 type="time"
                 className={styles.input}
@@ -167,34 +163,12 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
               {errors.startTimeFrom && <span className={styles.errorText}>{errors.startTimeFrom}</span>}
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label className={styles.label}>Start Time (To)</label>
-              <input
-                type="time"
-                className={styles.input}
-                value={formData.startTimeTo}
-                onChange={(e) => setFormData({ ...formData, startTimeTo: e.target.value })}
-              />
-              {errors.startTimeTo && <span className={styles.errorText}>{errors.startTimeTo}</span>}
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: "1rem" }}>
-            <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label className={styles.label}>End Time (From)</label>
+              <label className={styles.label}>End Time</label>
               <input
                 type="time"
                 className={styles.input}
                 value={formData.endTimeFrom}
                 onChange={(e) => setFormData({ ...formData, endTimeFrom: e.target.value })}
-              />
-            </div>
-            <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label className={styles.label}>End Time (To)</label>
-              <input
-                type="time"
-                className={styles.input}
-                value={formData.endTimeTo}
-                onChange={(e) => setFormData({ ...formData, endTimeTo: e.target.value })}
               />
             </div>
           </div>
@@ -258,11 +232,11 @@ function EventsModal({ isOpen, onClose, onSave, destinationName, editData = null
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.cancelBtn} onClick={onClose}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button className={styles.saveBtn} onClick={handleSave}>
-            {editData ? "Update Event" : "Save Event"}
+          <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : (editData ? "Update Event" : "Save Event")}
           </button>
         </div>
       </div>

@@ -49,7 +49,7 @@ function Section({ title, destinations, showTooltip, tooltipText, loading }) {
                             id={dest._id}
                             image={dest.image}
                             name={dest.name}
-                            description={dest.overview?.summary || ''}
+                            description={dest.tagline || dest.description || ''}
                             rating={dest.rating}
                             likes={dest.likes}
                             slug={dest.slug}
@@ -81,8 +81,8 @@ function Tours() {
         if (!q) return all;
         return all.filter((d) =>
             d.name?.toLowerCase().includes(q) ||
-            d.overview?.summary?.toLowerCase().includes(q) ||
-            d.overview?.locationText?.toLowerCase().includes(q)
+            d.tagline?.toLowerCase().includes(q) ||
+            d.description?.toLowerCase().includes(q)
         );
     }, [all, query]);
 

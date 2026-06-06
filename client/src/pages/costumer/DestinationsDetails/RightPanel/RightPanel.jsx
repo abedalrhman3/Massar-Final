@@ -203,15 +203,9 @@ const RightPanel = ({ card, onClose }) => {
 
     // ── Contact ───────────────────────────────────────────────────────────
     const renderContact = () => {
-        if (details.section === "events" && !contact?.isAvailable) {
-            return (
-                <div className={styles["tab-content"]}>
-                    <p className={styles.empty}>No contact info available for this event.</p>
-                </div>
-            );
-        }
+        const methods = contact?.methods || [];
 
-        if (!contact?.phone && !contact?.whatsapp && !contact?.facebook && !contact?.instagram && !contact?.x) {
+        if (!methods.length) {
             return (
                 <div className={styles["no-contact"]}>
                     No contact is available
@@ -219,38 +213,49 @@ const RightPanel = ({ card, onClose }) => {
             );
         }
 
+        const getHref = (type, value) => {
+            switch (type) {
+                case "whatsapp":  return `https://wa.me/${value.replace(/\D/g, "")}`;
+                case "facebook":  return `https://facebook.com/${value}`;
+                case "instagram": return `https://instagram.com/${value}`;
+                case "x":         return `https://x.com/${value}`;
+                case "website":   return value.startsWith("http") ? value : `https://${value}`;
+                case "email":     return `mailto:${value}`;
+                default:          return null;
+            }
+        };
+
+        const getIcon = (type) => {
+            switch (type) {
+                case "phone":     return <Phone size={17} />;
+                case "whatsapp":  return <img src={whatsapp} alt="whatsapp" width={17} />;
+                case "facebook":  return <img src={facebook} alt="facebook" width={17} />;
+                case "instagram": return <img src={instagram} alt="instagram" width={17} />;
+                case "x":         return <img src={x} alt="x" width={17} />;
+                default:          return <Phone size={17} />;
+            }
+        };
+
         return (
             <div className={styles["tab-content"]}>
-                {contact?.phone && (
-                    <div className={styles["contact-item"]}>
-                        <Phone size={17} />
-                        <p>{contact.phone}</p>
-                    </div>
-                )}
-                {contact?.whatsapp && (
-                    <a href={`https://wa.me/${contact.whatsapp}`} className={styles["contact-item"]}>
-                        <img src={whatsapp} alt="whatsapp" width={17} />
-                        <p>{contact.whatsapp}</p>
-                    </a>
-                )}
-                {contact?.facebook && (
-                    <a href={`https://facebook.com/${contact.facebook}`} className={styles["contact-item"]}>
-                        <img src={facebook} alt="facebook" width={17} />
-                        <p>{contact.facebook}</p>
-                    </a>
-                )}
-                {contact?.instagram && (
-                    <a href={`https://instagram.com/${contact.instagram}`} className={styles["contact-item"]}>
-                        <img src={instagram} alt="instagram" width={17} />
-                        <p>{contact.instagram}</p>
-                    </a>
-                )}
-                {contact?.x && (
-                    <a href={`https://x.com/${contact.x}`} className={styles["contact-item"]}>
-                        <img src={x} alt="x" width={17} />
-                        <p>{contact.x}</p>
-                    </a>
-                )}
+                {methods.map(({ type, value }, i) => {
+                    const href = getHref(type, value);
+                    const content = (
+                        <>
+                            {getIcon(type)}
+                            <p>{value}</p>
+                        </>
+                    );
+                    return href ? (
+                        <a key={i} href={href} className={styles["contact-item"]} target="_blank" rel="noreferrer">
+                            {content}
+                        </a>
+                    ) : (
+                        <div key={i} className={styles["contact-item"]}>
+                            {content}
+                        </div>
+                    );
+                })}
             </div>
         );
     };

@@ -1,11 +1,7 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema(
-  {
-    name:      { type: String },
-    icon:      { type: String },
-    sortOrder: { type: Number, default: 0 },
-  },
+  { name: { type: String } },
   { _id: false }
 );
 
@@ -38,8 +34,6 @@ const destinationDetailSchema = new mongoose.Schema(
       recommendedStay: { type: String },
       bestSeason:      { type: String },
       averageCost:     { type: String },
-      pricingSummary:  { type: String },
-      bookTourUrl:     { type: String },
     },
 
     // Embedded arrays

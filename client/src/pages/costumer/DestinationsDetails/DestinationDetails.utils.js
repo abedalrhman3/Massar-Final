@@ -8,24 +8,26 @@ function toCard(item, section) {
         id: item._id,
         name: item.name,
         image: item.coverImage,
-        isSaved: false,           // you can wire saved state later
+        isSaved: false,
         details: {
             section,
             about: section === "events"
                 ? {
-                    address: item.contact?.address ?? item.location?.address ?? "",
+                    address: item.contact?.methods?.find(m => m.type === "address")?.value
+                        ?? item.location?.address ?? "",
                     fees: item.startingFromPrice ? `${item.startingFromPrice} JOD` : "—",
                     startDate: item.startDate ? new Date(item.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
                     endDate: item.endDate ? new Date(item.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
-                    startTime: item.startTime?.formatted ?? "",
-                    endTime: item.endTime?.formatted ?? "",
+                    startTime: typeof item.startTime === "string" ? item.startTime : "",
+                    endTime:   typeof item.endTime   === "string" ? item.endTime   : "",
                 }
                 : {
-                    address: item.contact?.address ?? item.location?.address ?? "",
-                    workDays: [],           // not in API — leave empty or omit
-                    cost: item.startingFromPrice ? `From ${item.startingFromPrice} JOD` : "—",
-                    openTime: "",
-                    closeTime: "",
+                    address: item.contact?.methods?.find(m => m.type === "address")?.value
+                        ?? item.location?.address ?? "",
+                    workDays: item.workingDays ?? [],
+                    cost: item.budget ? `${item.budget}` : item.startingFromPrice ? `From ${item.startingFromPrice} JOD` : "—",
+                    openTime: item.operatingHours?.start ?? "",
+                    closeTime: item.operatingHours?.end ?? "",
                 },
             reviews: {
                 rating: 0,
@@ -54,14 +56,14 @@ export function buildComposed(destination, details, places, restaurants, hotels,
             _id: destination._id,
             id: destination._id,
             name: destination.name,
-            title: destination.subtitle ?? "",
+            title: destination.tagline ?? "",
             image: destination.image,
             location: ov.locationText ?? "",
         },
         _id: destination._id,
         id: destination._id,
         name: destination.name,
-        title: destination.subtitle ?? "",
+        title: destination.tagline ?? "",
         lat: destination.location?.coordinates?.[1],
         lng: destination.location?.coordinates?.[0],
         imageURL: destination.image,

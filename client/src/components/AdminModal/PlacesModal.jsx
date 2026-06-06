@@ -19,7 +19,7 @@ const getInitialFormData = (destinationName, editData = null) => ({
   contacts: editData?.contacts || [],
 });
 
-function PlacesModal({ isOpen, onClose, onSave, destinationName, editData = null }) {
+function PlacesModal({ isOpen, onClose, onSave, destinationName, editData = null, saving = false }) {
   const [formData, setFormData] = useState(() => getInitialFormData(destinationName, editData));
   const [errors, setErrors] = useState({});
 
@@ -51,7 +51,6 @@ function PlacesModal({ isOpen, onClose, onSave, destinationName, editData = null
   const handleSave = () => {
     if (validate()) {
       onSave(formData);
-      onClose();
     }
   };
 
@@ -68,7 +67,7 @@ function PlacesModal({ isOpen, onClose, onSave, destinationName, editData = null
       >
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{editData ? "Edit Place" : "Add New Place"}</h2>
-          <button className={styles.modalClose} onClick={onClose}>
+          <button className={styles.modalClose} onClick={onClose} disabled={saving}>
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -169,11 +168,11 @@ function PlacesModal({ isOpen, onClose, onSave, destinationName, editData = null
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.cancelBtn} onClick={onClose}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button className={styles.saveBtn} onClick={handleSave}>
-            {editData ? "Update Place" : "Save Place"}
+          <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : (editData ? "Update Place" : "Save Place")}
           </button>
         </div>
       </div>

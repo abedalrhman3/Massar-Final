@@ -20,7 +20,8 @@ export function AuthProvider({ children }) {
     } catch (_) {
       // ignore server errors
     } finally {
-      setUser(null); // ← always runs, instantly updates Navbar
+      setUser(null);
+      window.location.href = '/'; // force full reload to clear all states
     }
   };
 
