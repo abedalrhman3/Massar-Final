@@ -83,7 +83,6 @@ const RightPanel = ({ card, onClose }) => {
                         </div>
                     </div>
                     <div className={styles["info-container"]}>
-                        <p className={styles.info}><MapPin size={17} /> {about.address}</p>
                         <p className={styles.info}><CircleDollarSign size={17} /> {about.fees}</p>
                         <p className={styles.info}><Calendar size={17} /> {about.startDate} — {about.endDate}</p>
                         <p className={styles.info}><Clock size={17} /> {about.startTime} — {about.endTime}</p>
@@ -104,7 +103,7 @@ const RightPanel = ({ card, onClose }) => {
                     </div>
                 </div>
                 <div className={styles["info-container"]}>
-                    <p className={styles.info}><MapPin size={17} /> {about.address}</p>
+
                     <p className={styles.info}><CircleDollarSign size={17} /> {about.cost}</p>
                     <p className={styles.info}><Clock size={17} /> {about.openTime} — {about.closeTime}</p>
                     <div className={`${styles["work-days"]} ${styles.info}`}>
@@ -215,24 +214,24 @@ const RightPanel = ({ card, onClose }) => {
 
         const getHref = (type, value) => {
             switch (type) {
-                case "whatsapp":  return `https://wa.me/${value.replace(/\D/g, "")}`;
-                case "facebook":  return `https://facebook.com/${value}`;
+                case "whatsapp": return `https://wa.me/${value.replace(/\D/g, "")}`;
+                case "facebook": return `https://facebook.com/${value}`;
                 case "instagram": return `https://instagram.com/${value}`;
-                case "x":         return `https://x.com/${value}`;
-                case "website":   return value.startsWith("http") ? value : `https://${value}`;
-                case "email":     return `mailto:${value}`;
-                default:          return null;
+                case "x": return `https://x.com/${value}`;
+                case "website": return value.startsWith("http") ? value : `https://${value}`;
+                case "email": return `mailto:${value}`;
+                default: return null;
             }
         };
 
         const getIcon = (type) => {
             switch (type) {
-                case "phone":     return <Phone size={17} />;
-                case "whatsapp":  return <img src={whatsapp} alt="whatsapp" width={17} />;
-                case "facebook":  return <img src={facebook} alt="facebook" width={17} />;
+                case "phone": return <Phone size={17} />;
+                case "whatsapp": return <img src={whatsapp} alt="whatsapp" width={17} />;
+                case "facebook": return <img src={facebook} alt="facebook" width={17} />;
                 case "instagram": return <img src={instagram} alt="instagram" width={17} />;
-                case "x":         return <img src={x} alt="x" width={17} />;
-                default:          return <Phone size={17} />;
+                case "x": return <img src={x} alt="x" width={17} />;
+                default: return <Phone size={17} />;
             }
         };
 
