@@ -60,6 +60,8 @@
   align-items: start;
 }
 
+
+
 .resultsCounter {
   font-size: 14px;
   color: #374151;
@@ -88,6 +90,10 @@
   grid-template-columns: repeat(4, calc(25% - 18px));
   gap: 24px;
   width: 100%;
+}
+
+.toursGrid.searchGrid {
+  gap: 12.52rem;
 }
 
 .toursGrid>div,

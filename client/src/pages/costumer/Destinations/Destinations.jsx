@@ -18,7 +18,7 @@ function Tooltip({ text }) {
 // ── Destination grid section ──────────────────────────────────────
 const PAGE_SIZE = 8;
 
-function Section({ title, destinations, showTooltip, tooltipText, loading }) {
+function Section({ title, destinations, showTooltip, tooltipText, loading, isSearch }) {
     const [visible, setVisible] = useState(PAGE_SIZE);
 
     if (loading) {
@@ -42,7 +42,7 @@ function Section({ title, destinations, showTooltip, tooltipText, loading }) {
                 {title}
                 {showTooltip && tooltipText && <Tooltip text={tooltipText} />}
             </h2>
-            <div className={styles.toursGrid}>
+            <div className={`${styles.toursGrid} ${isSearch ? styles.searchGrid : ''}`}>
                 {destinations.slice(0, visible).map((dest) => (
                     <div key={dest._id} className={styles.cardWrapper}>
                         <DestinationCard
@@ -124,6 +124,7 @@ function Tours() {
                             title={`Search results for "${query}"`}
                             destinations={filtered}
                             loading={loading}
+                            isSearch={true}
                         />
                         <div className={styles.resultsCounter}>
                             results  : {filtered.length}
