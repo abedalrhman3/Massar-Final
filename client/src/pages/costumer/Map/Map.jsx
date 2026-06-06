@@ -109,33 +109,17 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
 const Map = () => {
   const locationState = useLocation();
   const initialCoords = locationState.state; // { lat, lng, name }
-  const hasInitialCoords = initialCoords && typeof initialCoords.lat === "number" && typeof initialCoords.lng === "number" && !isNaN(initialCoords.lat) && !isNaN(initialCoords.lng);
 
   const [locations, setLocations] = useState([]);
   const [quests, setQuests] = useState([]);
   const [budget, setBudget] = useState("");
   const [activeLocation, setActiveLocation] = useState(null);
-  const [manualMode, setManualMode] = useState(false);
-  const [manualPos, setManualPos] = useState(null);
   const [activeReviewsLocation, setActiveReviewsLocation] = useState(null);
   const [isCelebrating, setIsCelebrating] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualPos, setManualPos] = useState(null);
   const [autoPos, setAutoPos] = useState(null);
-  // ── Detect user location on initial load when not in manual mode ──
-  useEffect(() => {
-    if (!manualMode && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          setAutoPos({ lat: latitude, lng: longitude });
-        },
-        (err) => {
-          console.warn('Geolocation error on load:', err);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
-    }
-  }, [manualMode]);
-
+  const [routeCoords, setRouteCoords] = useState([]);
   const [joiningQuestId, setJoiningQuestId] = useState(null);
   const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
@@ -291,9 +275,9 @@ const Map = () => {
             attribution="&copy; OpenStreetMap contributors"
           />
 
-          {hasInitialCoords && <MapCenterSetter coords={initialCoords} />}
+          {initialCoords && <MapCenterSetter coords={initialCoords} />}
 
-          {hasInitialCoords && (
+          {initialCoords && (
             <Marker position={[initialCoords.lat, initialCoords.lng]}>
               <Popup>
                 <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
