@@ -111,8 +111,15 @@ function UserProfile() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/");
+    try {
+      await logout();
+    }
+    catch (err) {
+      console.error("Logout failed:", err);
+    }
+    finally {
+      navigate("/");
+    }
   };
 
   const [activeModal, setActiveModal] = useState(null);

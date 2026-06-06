@@ -6,6 +6,7 @@ function toCard(item, section) {
     return {
         _id: item._id,
         id: item._id,
+        _rawItem: item,
         name: item.name,
         image: item.coverImage,
         isSaved: false,
@@ -19,7 +20,7 @@ function toCard(item, section) {
                     startDate: item.startDate ? new Date(item.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
                     endDate: item.endDate ? new Date(item.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
                     startTime: typeof item.startTime === "string" ? item.startTime : "",
-                    endTime:   typeof item.endTime   === "string" ? item.endTime   : "",
+                    endTime: typeof item.endTime === "string" ? item.endTime : "",
                     durationText: item.durationText ?? "",
                 }
                 : {

@@ -99,7 +99,12 @@ const DestinationDetails = () => {
                     shareTitle={`Check out ${destination.name}!`}
                 />
             )}
-            <MapView lat={destination.lat} lng={destination.lng} name={destination.name} />
+            <MapView
+                lat={destination.lat}
+                lng={destination.lng}
+                name={destination.name}
+                selectedCard={selectedCard}
+            />
             <LeftPanel
                 data={destination} // Pass the live 'destination' object
                 onCardClick={setSelectedCard}
