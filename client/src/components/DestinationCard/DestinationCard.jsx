@@ -1,12 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./DestinationCard.module.css";
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { toggleLikeDestination } from "@/api/destination";
 
-function DestinationCard({ id, slug, image, name, description, rating, likes, isLiked = false }) {
+function DestinationCard({ id, slug, image, name, description, rating, likes, isLiked = false, onLikeToggle }) {
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes ?? 0);
+
+  useEffect(() => {
+    setLiked(isLiked);
+  }, [isLiked]);
+
+  useEffect(() => {
+    setLikeCount(likes ?? 0);
+  }, [likes]);
 
   const handleLike = async (e) => {
     e.preventDefault();
@@ -14,22 +22,30 @@ function DestinationCard({ id, slug, image, name, description, rating, likes, is
 
     // Optimistic update
     const newLiked = !liked;
+    const newLikeCount = likeCount + (newLiked ? 1 : -1);
     setLiked(newLiked);
-    setLikeCount((c) => c + (newLiked ? 1 : -1));
+    setLikeCount(newLikeCount);
+    onLikeToggle?.(id, newLiked, newLikeCount);
 
     try {
       const response = await toggleLikeDestination(id);
       // Reconcile with server truth if it returns the new state
+      let finalLiked = newLiked;
+      let finalLikeCount = newLikeCount;
       if (response.data && typeof response.data.isLiked === "boolean") {
-        setLiked(response.data.isLiked);
+        finalLiked = response.data.isLiked;
+        setLiked(finalLiked);
       }
       if (response.data && typeof response.data.likes === "number") {
-        setLikeCount(response.data.likes);
+        finalLikeCount = response.data.likes;
+        setLikeCount(finalLikeCount);
       }
+      onLikeToggle?.(id, finalLiked, finalLikeCount);
     } catch (err) {
       // Rollback on failure
       setLiked(liked);
-      setLikeCount((c) => c + (newLiked ? -1 : 1));
+      setLikeCount(likeCount);
+      onLikeToggle?.(id, liked, likeCount);
       if (err.response?.status === 401) {
         alert("Please log in to like this destination.");
       }

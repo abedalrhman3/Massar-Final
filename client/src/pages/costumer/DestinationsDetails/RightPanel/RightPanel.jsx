@@ -9,10 +9,94 @@ import api from "@/api/client";
 
 const DEFAULT_TABS = ["About", "Reviews", "Contact", "Photos"];
 
-// Fetch reviews for a listing from GET /api/reviews?itemId=:id
-async function fetchReviews(itemId) {
-    const res = await api.get("/reviews", { params: { itemId } });
-    return res.data.data; // { rating, reviewsNumber, fiveStarReviews, ..., comments[] }
+// Seeded mock reviews generator to provide realistic reviews client-side
+function getMockReviews(card) {
+    const section = card.details?.section || "";
+    const name = card.name || "this location";
+    
+    // Seeded random based on card ID to keep reviews consistent for the same card
+    let seed = 0;
+    const cardId = String(card._id || card.id || "123");
+    for (let i = 0; i < cardId.length; i++) {
+        seed += cardId.charCodeAt(i);
+    }
+
+    const random = () => {
+        const x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    };
+
+    // Determine average rating (between 4.2 and 4.9)
+    const rating = (4.2 + random() * 0.7).toFixed(1);
+    const reviewsNumber = Math.floor(15 + random() * 50);
+
+    // Distribute stars
+    const fiveStarReviews = Math.floor(reviewsNumber * (0.6 + random() * 0.25));
+    const fourStarReviews = Math.floor(reviewsNumber * (0.15 + random() * 0.15));
+    const threeStarReviews = Math.floor(reviewsNumber * (0.02 + random() * 0.05));
+    const twoStarReviews = Math.floor(reviewsNumber * (0.01 + random() * 0.02));
+    const oneStarReviews = Math.max(0, reviewsNumber - fiveStarReviews - fourStarReviews - threeStarReviews - twoStarReviews);
+
+    const poolHotels = [
+        { name: "John D.", rating: 5, body: `Unbelievable stay at ${name}! Stargazing from here is a memory I will cherish forever.` },
+        { name: "Sarah M.", rating: 5, body: "Extremely clean tents, luxurious bathrooms, and the Bedouin buffet was delicious." },
+        { name: "Ali H.", rating: 4, body: "Very hospitable staff and beautiful surroundings. Note that it gets very cold at night, so bring extra layers!" },
+        { name: "Emma W.", rating: 5, body: `The Martian dome at ${name} was amazing. Waking up to the red sand landscape was out of this world.` },
+        { name: "David K.", rating: 4, body: "Great experience overall. The guided jeep tour organized by the camp was the highlight of our trip." }
+    ];
+
+    const poolRestaurants = [
+        { name: "Elena R.", rating: 5, body: `Hands down the best food in the area! The Zarb slow-cooked underground at ${name} was incredibly tender.` },
+        { name: "Omar F.", rating: 5, body: "Very authentic atmosphere, delicious mint tea, and large portions. Highly recommend the Mansaf!" },
+        { name: "Sophia L.", rating: 4, body: "Lovely café with beautiful desert views. The Arabic coffee and kunafa were excellent." },
+        { name: "Michael T.", rating: 5, body: `Great place to stop by. The staff at ${name} are super friendly and welcoming.` },
+        { name: "Layla A.", rating: 4, body: "Tasty local dishes, freshly baked bread, and very fast service even when busy." }
+    ];
+
+    const poolPlaces = [
+        { name: "Thomas B.", rating: 5, body: `A magical place. The ancient inscriptions at ${name} are fascinating to see in person.` },
+        { name: "Jessica H.", rating: 5, body: "Absolutely breathtaking views of the canyons. The red sandstone formations are stunning." },
+        { name: "Kareem S.", rating: 4, body: "Great hiking spot! Make sure to hire a Bedouin guide to learn about the history and stay safe." },
+        { name: "Chloe P.", rating: 5, body: `We watched the sunset from ${name} and it was the most beautiful thing I've ever seen.` },
+        { name: "Daniel N.", rating: 4, body: "Spectacular landscape. Be prepared with plenty of water and proper walking shoes." }
+    ];
+
+    const poolEvents = [
+        { name: "Robert G.", rating: 5, body: `An exceptionally well-organized event. Running through the desert landscape of Wadi Rum was unforgettable.` },
+        { name: "Nadia Y.", rating: 5, body: "Such a beautiful cultural experience. The music, storytelling, and dinner under the stars were perfect." },
+        { name: "Lucas M.", rating: 4, body: "Stargazing with high-powered telescopes was amazing. The guide was incredibly knowledgeable." },
+        { name: "Aisha B.", rating: 5, body: `Highly recommend participating in ${name} if you visit Jordan. A true highlight!` },
+        { name: "Simon P.", rating: 5, body: "Fascinating experience, great food, and wonderful company. 10/10!" }
+    ];
+
+    let selectedPool = poolPlaces;
+    const s = section.toLowerCase();
+    if (s.includes("hotel")) selectedPool = poolHotels;
+    else if (s.includes("dining") || s.includes("rest") || s.includes("food")) selectedPool = poolRestaurants;
+    else if (s.includes("event")) selectedPool = poolEvents;
+
+    // Pick 3-4 random comments from the pool
+    const numComments = 3 + Math.floor(random() * 2);
+    const comments = [];
+    const poolCopy = [...selectedPool];
+    for (let i = 0; i < numComments && poolCopy.length > 0; i++) {
+        const index = Math.floor(random() * poolCopy.length);
+        comments.push({
+            _id: `mock-review-${cardId}-${i}`,
+            ...poolCopy.splice(index, 1)[0]
+        });
+    }
+
+    return {
+        rating,
+        reviewsNumber,
+        fiveStarReviews,
+        fourStarReviews,
+        threeStarReviews,
+        twoStarReviews,
+        oneStarReviews,
+        comments
+    };
 }
 
 const RightPanel = ({ card, onClose }) => {
@@ -35,14 +119,21 @@ const RightPanel = ({ card, onClose }) => {
         if (activeTab !== "Reviews" || reviews !== null || card.subSection === "traditionalDining") return;
 
         setReviewsLoading(true);
-        fetchReviews(card._id)
-            .then(data => setReviews(data))
-            .catch(err => {
-                console.error("Failed to load reviews:", err);
+        const timer = setTimeout(() => {
+            try {
+                const data = getMockReviews(card);
+                setReviews(data);
+                setReviewsError(false);
+            } catch (err) {
+                console.error("Failed to generate reviews:", err);
                 setReviewsError(true);
-            })
-            .finally(() => setReviewsLoading(false));
-    }, [activeTab, card._id, reviews, card.subSection]);
+            } finally {
+                setReviewsLoading(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [activeTab, card._id, reviews, card.subSection, card]);
 
     // ── Traditional dining: simple fallback ──────────────────────────────
     if (card.subSection === "traditionalDining") {

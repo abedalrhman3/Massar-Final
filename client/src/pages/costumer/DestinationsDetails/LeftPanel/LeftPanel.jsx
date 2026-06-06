@@ -94,7 +94,11 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                             onClick={handleLikeClick}
                             title="Like"
                         >
-                            <Heart size={20} />
+                            <Heart
+                                size={20}
+                                fill={isLiked ? "#FF4D4D" : "none"}
+                                stroke={isLiked ? "#FF4D4D" : "white"}
+                            />
                         </button>
                         <button
                             className={styles["hero-action-btn"]}

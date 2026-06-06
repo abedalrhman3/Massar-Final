@@ -37,7 +37,10 @@ function toCard(item, section) {
                 comments: [],
             },
             contact: item.contact ?? {},
-            photos: item.images ?? [],
+            photos: [
+                ...(item.coverImage ? [item.coverImage] : []),
+                ...(item.images || [])
+            ].filter((val, index, self) => self.indexOf(val) === index),
             ...(section === "hotels" && {
                 book: { bookingUrl: item.bookingUrl ?? "" }
             }),
@@ -49,6 +52,18 @@ export function buildComposed(destination, details, places, restaurants, hotels,
     const ov = details?.overview ?? {}
     const acts = details?.activities ?? []
     const guide = details?.guideSections ?? []
+
+    const firstPlace = places?.[0];
+    const fallbackLat = firstPlace?.location?.coordinates?.[1] || 31.9539;
+    const fallbackLng = firstPlace?.location?.coordinates?.[0] || 35.9106;
+
+    const lat = typeof destination.location?.coordinates?.[1] === "number"
+        ? destination.location.coordinates[1]
+        : fallbackLat;
+
+    const lng = typeof destination.location?.coordinates?.[0] === "number"
+        ? destination.location.coordinates[0]
+        : fallbackLng;
 
     return {
         // Nest destination info to match LeftPanel expectation (data.destination)
@@ -64,8 +79,8 @@ export function buildComposed(destination, details, places, restaurants, hotels,
         id: destination._id,
         name: destination.name,
         title: destination.tagline ?? "",
-        lat: destination.location?.coordinates?.[1],
-        lng: destination.location?.coordinates?.[0],
+        lat,
+        lng,
         imageURL: destination.image,
         isLiked: destination.isLiked ?? false,
         sections: {
