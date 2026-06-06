@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styles from "./Home.module.css";
 import Navbar from "../../../components/Navbar/Navbar";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 // Heroes
 const deadSea = "images/homepage/dead-sea.jpeg";
@@ -29,6 +30,7 @@ function Home() {
   const navigate = useNavigate();
   const images = [deadSea, petra, wadiRum];
   const [index, setIndex] = useState(0);
+  const { user } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,10 +52,14 @@ function Home() {
           Aqaba as the stars come out.
           <p>
             We will guide you{" "}
-            <button
-              className={styles.secondBtn}
-              onClick={() => navigate("/login")}
-            >Let's start</button>
+            {!user ? (
+              <button
+                className={styles.secondBtn}
+                onClick={() => navigate("/login")}
+              >Let's start</button>
+            ) : (
+              <></>
+            )}
           </p>
         </div>
 
