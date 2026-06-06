@@ -13,7 +13,7 @@ const DEFAULT_TABS = ["About", "Reviews", "Contact", "Photos"];
 function getMockReviews(card) {
     const section = card.details?.section || "";
     const name = card.name || "this location";
-    
+
     // Seeded random based on card ID to keep reviews consistent for the same card
     let seed = 0;
     const cardId = String(card._id || card.id || "123");
@@ -175,8 +175,10 @@ const RightPanel = ({ card, onClose }) => {
                     </div>
                     <div className={styles["info-container"]}>
                         <p className={styles.info}><CircleDollarSign size={17} /> {about.fees}</p>
+                        {console.log("duration", about.durationText)}
                         <p className={styles.info}><Calendar size={17} /> {about.startDate} — {about.endDate}</p>
                         <p className={styles.info}><Clock size={17} /> {about.startTime} — {about.endTime}</p>
+                        <p className={styles.info}><Clock size={17} /> {about.durationText || "Not specified"}</p>
                     </div>
                 </div>
             );

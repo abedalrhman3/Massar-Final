@@ -20,6 +20,7 @@ function toCard(item, section) {
                     endDate: item.endDate ? new Date(item.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
                     startTime: typeof item.startTime === "string" ? item.startTime : "",
                     endTime:   typeof item.endTime   === "string" ? item.endTime   : "",
+                    durationText: item.durationText ?? "",
                 }
                 : {
                     address: item.contact?.methods?.find(m => m.type === "address")?.value

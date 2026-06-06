@@ -94,6 +94,8 @@ const buildEventFormData = (formData, destinationId) => {
   if (formData.startDate) fd.append("startDate", formData.startDate);
   if (formData.endDate) fd.append("endDate", formData.endDate);
   if (formData.bookingUrl) fd.append("bookingUrl", formData.bookingUrl);
+    if (formData.startingFromPrice) fd.append("startingFromPrice", formData.startingFromPrice);
+    if (formData.durationText) fd.append("durationText", formData.durationText);
 
   // Parse contact array to contact object
   const contactObj = {
@@ -412,12 +414,8 @@ function DestinationDetail() {
           : "Not specified";
 
         if (type === "event") {
-          const formattedStartTime = item.startTime
-            ? `${formatTime(item.startTime.from)} — ${formatTime(item.startTime.to)}`
-            : "Not specified";
-          const formattedEndTime = item.endTime
-            ? `${formatTime(item.endTime.from)} — ${formatTime(item.endTime.to)}`
-            : "Not specified";
+          const formattedStartTime = item.startTime ? formatTime(item.startTime) : "Not specified";
+          const formattedEndTime = item.endTime ? formatTime(item.endTime) : "Not specified";
           const startDateStr = item.startDate
             ? new Date(item.startDate).toLocaleDateString("en-US", { dateStyle: "medium" })
             : "Not specified";
