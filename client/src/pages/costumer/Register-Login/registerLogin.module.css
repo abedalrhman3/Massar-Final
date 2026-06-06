@@ -3,7 +3,7 @@
 .container {
   position: relative;
   width: 1000px;
-  height: 730px;
+  height: 700px;
   background: #fff;
   margin: 20px;
   border-radius: 30px;
@@ -280,7 +280,7 @@
 
 .socialBtns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-bottom: 10px;
 }

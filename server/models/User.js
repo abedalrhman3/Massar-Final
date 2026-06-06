@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password is required'],
+      required: function() { return !(this.googleId || this.facebookId || this.discordId || this.instagramId); },
     },
     role: {
       type: String,
@@ -27,6 +27,25 @@ const userSchema = new mongoose.Schema(
     avatar_url: {
       type: String,
       default: null,
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+    },
+    facebookId: {
+      type: String,
+      sparse: true,
+    },
+    discordId: {
+      type: String,
+      sparse: true,
+    },
+    instagramId: {
+      type: String,
+      sparse: true,
+    },
+    avatar: {
+      type: String,
     },
     isVerified: {
       type: Boolean,

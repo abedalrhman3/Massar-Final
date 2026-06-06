@@ -73,8 +73,10 @@ exports.login = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   try {
     await authService.logout(req.token);
+    // Clear httpOnly cookie
     res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
-    res.json({ success: true, message: 'Logged out successfully' });
+    // Redirect user to home page
+    res.redirect(`${process.env.CLIENT_URL}/`);
   } catch (err) {
     next(err);
   }

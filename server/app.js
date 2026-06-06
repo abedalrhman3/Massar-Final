@@ -7,6 +7,11 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
+// Passport initialization
+const passport = require('passport');
+require('./config/passport');
+app.use(passport.initialize());
+
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));

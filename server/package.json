@@ -19,6 +19,8 @@
     "mongoose": "^9.6.2",
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.5",
     "slugify": "^1.6.9",
     "socket.io": "^4.8.3"
