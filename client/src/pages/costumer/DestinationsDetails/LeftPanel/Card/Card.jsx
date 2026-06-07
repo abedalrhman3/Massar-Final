@@ -5,9 +5,8 @@ import eventImage from "/images/detailPage/icons/event.png";
 import hotelImage from "/images/detailPage/icons/home.png";
 import { Bookmark } from "lucide-react";
 import styles from "./Card.module.css";
-import { saveItem, removeSavedItem } from "@/api/index";
+import { saveItem, removeSavedItem } from "@/api/saved"; // ✅ correct path
 
-// type → entityType expected by the saved API
 const TYPE_TO_ENTITY = {
     place: "place",
     restaurant: "restaurant",
@@ -23,14 +22,13 @@ const TYPE_ICONS = {
 };
 
 const Card = ({ data, type, number, onClick }) => {
-    // data.isSaved / data.savedId can be pre-populated by the parent if known
     const [savedId, setSavedId] = useState(data.savedId ?? null);
     const [saving, setSaving] = useState(false);
 
     const icon = TYPE_ICONS[type] ?? "";
 
     async function handleSave(e) {
-        e.stopPropagation(); // don't trigger the card click / RightPanel open
+        e.stopPropagation();
         if (saving) return;
         setSaving(true);
         try {
@@ -45,6 +43,9 @@ const Card = ({ data, type, number, onClick }) => {
             }
         } catch (err) {
             console.error("Save/unsave failed:", err);
+            if (err.response?.status === 401) {
+                alert("Please log in to save this item.");
+            }
         } finally {
             setSaving(false);
         }
@@ -56,7 +57,7 @@ const Card = ({ data, type, number, onClick }) => {
                 <div className={styles["icon-container"]}>
                     <img src={icon} alt="icon" className={styles.icon} width={30} />
                     <p
-                        className={`${styles.order} ${type === "place" ? styles["order-place"] : ""} 
+                        className={`${styles.order} ${type === "place" ? styles["order-place"] : ""}
                         ${type === "restaurant" ? styles["order-restaurant"] : ""}`}
                     >
                         {number}
@@ -72,11 +73,11 @@ const Card = ({ data, type, number, onClick }) => {
                     disabled={saving}
                     aria-label={savedId ? "Unsave" : "Save"}
                 >
-                    <p>{savedId ? "Saved" : "Save"}</p>
+                    <p>{saving ? "…" : savedId ? "Saved" : "Save"}</p>
                     <Bookmark size={15} fill={savedId ? "currentColor" : "none"} />
                 </button>
                 <div className={styles["image-container"]}>
-                    <img src={data.image} alt={data.name} className={styles["card-image"]} />
+                    <img src={data.image || data.coverImage} alt={data.name} className={styles["card-image"]} />
                 </div>
             </div>
         </div>

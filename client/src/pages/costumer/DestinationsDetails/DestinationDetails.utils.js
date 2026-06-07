@@ -1,7 +1,5 @@
 // DestinationDetails.utils.js
 
-// Maps a backend place/restaurant/hotel/event to the card shape RightPanel expects.
-// The "details" sub-object is constructed from the listing's own fields.
 function toCard(item, section) {
     return {
         _id: item._id,
@@ -9,7 +7,8 @@ function toCard(item, section) {
         _rawItem: item,
         name: item.name,
         image: item.coverImage,
-        isSaved: false,
+        savedId: item.savedId ?? null,   // ✅ preserve savedId from enriched entity
+        isSaved: !!item.savedId,         // ✅ derive from actual data
         details: {
             section,
             about: section === "events"
@@ -68,7 +67,6 @@ export function buildComposed(destination, details, places, restaurants, hotels,
         : fallbackLng;
 
     return {
-        // Nest destination info to match LeftPanel expectation (data.destination)
         destination: {
             _id: destination._id,
             id: destination._id,
@@ -85,6 +83,7 @@ export function buildComposed(destination, details, places, restaurants, hotels,
         lng,
         imageURL: destination.image,
         isLiked: destination.isLiked ?? false,
+        savedId: destination.savedId ?? null,  // ✅ destination's own savedId
         sections: {
             overview: {
                 title: "Overview",
@@ -123,7 +122,7 @@ export function buildComposed(destination, details, places, restaurants, hotels,
                 },
                 traditionalDining: {
                     subTitle: "Traditional Dining",
-                    isAvailable: false,   // no API endpoint for this yet
+                    isAvailable: false,
                     cardList: [],
                 },
             },
@@ -138,3 +137,5 @@ export function buildComposed(destination, details, places, restaurants, hotels,
         },
     }
 }
+console.log("composed.savedId:", buildComposed.savedId);
+console.log("composed.sections.placesToVisit.placesList[0].savedId:", buildComposed.sections?.placesToVisit?.placesList?.[0]?.savedId);

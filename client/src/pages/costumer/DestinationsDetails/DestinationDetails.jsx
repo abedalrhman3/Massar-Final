@@ -6,18 +6,35 @@ import LeftPanel from "./LeftPanel/LeftPanel";
 import RightPanel from "./RightPanel/RightPanel";
 import SharePopup from "./SharePopup/SharePopup";
 
-// API and composer utility imports
 import { getDestination, getDestinationDetails } from "@/api/destination";
 import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 import { getEvents } from "@/api/events";
+import { getSavedItems } from "@/api/saved";
 import { buildComposed } from "./DestinationDetails.utils";
+
+// The controller returns populated items: { _id, entityType, entity: { _id, ... } }
+// Build a lookup: entity._id → savedItem._id
+function buildSavedMap(savedItems) {
+    const map = {};
+    for (const item of savedItems) {
+        const entityId = item.entity?._id ?? item.entityId;
+        if (entityId) map[String(entityId)] = String(item._id);
+    }
+    return map;
+}
+
+function attachSavedId(entities, savedMap) {
+    return entities.map((e) => {
+        const id = String(e._id);
+        return savedMap[id] ? { ...e, savedId: savedMap[id] } : e;
+    });
+}
 
 const DestinationDetails = () => {
     const { slug } = useParams();
     const [selectedCard, setSelectedCard] = useState(null);
     const [showShare, setShowShare] = useState(false);
 
-    // Composed destination state
     const [destination, setDestination] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -30,7 +47,7 @@ const DestinationDetails = () => {
                 setLoading(true);
                 setError(null);
 
-                // 1. Fetch the destination metadata by slug
+                // 1. Fetch destination metadata by slug
                 const destRes = await getDestination(slug);
                 const dest = destRes.data?.data;
                 if (!dest) {
@@ -40,8 +57,8 @@ const DestinationDetails = () => {
                 }
                 const destId = dest._id;
 
-                // 2. Fetch details and listings in parallel
-                const [detailsRes, placesRes, restaurantsRes, hotelsRes, eventsRes] = await Promise.all([
+                // 2. Fetch everything in parallel
+                const [detailsRes, placesRes, restaurantsRes, hotelsRes, eventsRes, savedRes] = await Promise.all([
                     getDestinationDetails(destId).catch((err) => {
                         console.warn("Details fetch failed, using fallback:", err);
                         return { data: { data: null } };
@@ -61,7 +78,13 @@ const DestinationDetails = () => {
                     getEvents({ destinationId: destId }).catch((err) => {
                         console.error("Events fetch failed:", err);
                         return { data: { data: [] } };
-                    })
+                    }),
+                    getSavedItems().catch((err) => {
+                        if (err.response?.status !== 401) {
+                            console.warn("Saved items fetch failed:", err);
+                        }
+                        return { data: { data: [] } };
+                    }),
                 ]);
 
                 const details = detailsRes.data?.data;
@@ -69,11 +92,29 @@ const DestinationDetails = () => {
                 const restaurants = restaurantsRes.data?.data || [];
                 const hotels = hotelsRes.data?.data || [];
                 const events = eventsRes.data?.data || [];
+                const savedItems = savedRes.data?.data || [];
 
-                // 3. Compose using buildComposed
-                const composed = buildComposed(dest, details, places, restaurants, hotels, events);
-                console.log("Composed Destination Data:", composed);
-                console.log("Extracted coordinates:", { lat: composed.lat, lng: composed.lng });
+                // 3. Build savedMap and enrich each entity
+                const savedMap = buildSavedMap(savedItems);
+
+                const enrichedPlaces = attachSavedId(places, savedMap);
+                const enrichedRestaurants = attachSavedId(restaurants, savedMap);
+                const enrichedHotels = attachSavedId(hotels, savedMap);
+                const enrichedEvents = attachSavedId(events, savedMap);
+
+                const destSavedId = savedMap[String(destId)] ?? null;
+                const enrichedDest = destSavedId ? { ...dest, savedId: destSavedId } : dest;
+
+                // 4. Compose
+                const composed = buildComposed(
+                    enrichedDest,
+                    details,
+                    enrichedPlaces,
+                    enrichedRestaurants,
+                    enrichedHotels,
+                    enrichedEvents
+                );
+
                 setDestination(composed);
             } catch (err) {
                 console.error("Error loading destination details:", err);
@@ -106,7 +147,7 @@ const DestinationDetails = () => {
                 selectedCard={selectedCard}
             />
             <LeftPanel
-                data={destination} // Pass the live 'destination' object
+                data={destination}
                 onCardClick={setSelectedCard}
                 onShareClick={() => setShowShare(true)}
             />

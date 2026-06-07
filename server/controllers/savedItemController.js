@@ -2,12 +2,43 @@ const SavedItem = require('../models/SavedItem');
 const { checkAndAward } = require('../services/achievementService');
 const AppError = require('../utils/AppError');
 
+const modelMap = {
+  place: () => require('../models/Place'),
+  restaurant: () => require('../models/Restaurant'),
+  hotel: () => require('../models/Hotel'),
+  event: () => require('../models/Event'),
+  destination: () => require('../models/Destination'),
+};
 
 // GET /api/saved  — private
+// Returns saved items with full entity details populated
 exports.getAll = async (req, res, next) => {
   try {
     const items = await SavedItem.find({ userId: req.user.userId });
-    res.json({ success: true, data: items });
+
+    const populated = await Promise.all(
+      items.map(async (item) => {
+        try {
+          const Model = modelMap[item.entityType]?.();
+          if (!Model) return null;
+          const entity = await Model.findById(item.entityId).lean();
+          if (!entity) return null;
+          return {
+            _id: item._id,           // savedId — used for DELETE
+            entityType: item.entityType,
+            savedAt: item.savedAt,
+            entity,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    res.json({
+      success: true,
+      data: populated.filter(Boolean), // drop any that failed to fetch
+    });
   } catch (err) {
     next(err);
   }
@@ -15,16 +46,9 @@ exports.getAll = async (req, res, next) => {
 
 // POST /api/saved  — private
 exports.save = async (req, res, next) => {
-  const modelMap = {
-    place: require('../models/Place'),
-    restaurant: require('../models/Restaurant'),
-    hotel: require('../models/Hotel'),
-    event: require('../models/Event'),
-    destination: require('../models/Destination'),
-  };
   try {
     const { entityType, entityId } = req.body;
-    const Model = modelMap[entityType];
+    const Model = modelMap[entityType]?.();
     if (!Model) return next(new AppError('Invalid entity type', 400));
     const exists = await Model.findById(entityId);
     if (!exists) return next(new AppError('Entity not found', 404));
@@ -35,7 +59,6 @@ exports.save = async (req, res, next) => {
       savedAt: new Date(),
     });
 
-    // Check if saving this item earns the user an achievement
     await checkAndAward(req.user.userId, 'save_count');
 
     res.status(201).json({ success: true, data: item });
