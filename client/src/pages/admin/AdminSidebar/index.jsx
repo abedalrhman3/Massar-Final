@@ -95,6 +95,15 @@ function AdminSidebar(params) {
               <span className="material-symbols-outlined">bookmark</span>
               <span>Save List</span>
             </NavLink>
+            <NavLink
+              to="/gallery"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">image</span>
+              <span>Gallery</span>
+            </NavLink>
 
 
           </nav>

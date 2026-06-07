@@ -1,0 +1,661 @@
+/* ── Page ───────────────────────────────────────────── */
+.page {
+    min-height: 100vh;
+    background: #f4f6f8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-left: 15rem;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    padding: 0 2rem;
+}
+
+.headerInner {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.headerTitle {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: #111;
+}
+
+.headerCount {
+    font-size: 13px;
+    color: #999;
+    font-weight: 400;
+}
+
+/* ── Add button ─────────────────────────────────────── */
+.addBtn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: none;
+    background: var(--color-accent, #1591DC);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(21, 145, 220, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    letter-spacing: -0.01em;
+}
+
+.addBtn:hover {
+    background: #1280c4;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(21, 145, 220, 0.45);
+}
+
+.addBtn:active {
+    transform: translateY(0);
+}
+
+/* ── Grid ───────────────────────────────────────────── */
+.gridWrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+/* ── Empty state ────────────────────────────────────── */
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 420px;
+    gap: 16px;
+    text-align: center;
+}
+
+.emptyIcon {
+    font-size: 56px;
+    opacity: 0.25;
+}
+
+.emptyTitle {
+    font-weight: 600;
+    font-size: 18px;
+    color: #555;
+    margin: 0;
+}
+
+.emptyDesc {
+    font-size: 14px;
+    color: #999;
+    max-width: 260px;
+    margin: 0;
+}
+
+.emptyBtn {
+    margin-top: 8px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    background: var(--color-accent, #1591DC);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+}
+
+.emptyBtn:hover {
+    background: #1280c4;
+    transform: translateY(-1px);
+}
+
+/* ── Photo card ─────────────────────────────────────── */
+.card {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 4 / 3;
+    cursor: pointer;
+    background: #111;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+
+.cardImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cardOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+            rgba(0, 0, 0, 0.72) 0%,
+            rgba(0, 0, 0, 0.1) 50%,
+            transparent 100%);
+}
+
+.cardLabel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Card options button ────────────────────────────── */
+.optionsBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #444;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: background 0.15s;
+    z-index: 2;
+}
+
+.optionsBtn:hover {
+    background: rgba(255, 255, 255, 1);
+}
+
+/* ── Dropdown menu ──────────────────────────────────── */
+.menuWrapper {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.menuBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+}
+
+.menu {
+    position: absolute;
+    top: 38px;
+    right: 0;
+    z-index: 20;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    min-width: 130px;
+    overflow: hidden;
+    animation: menuIn 0.12s ease-out;
+}
+
+@keyframes menuIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #222;
+    text-align: left;
+    transition: background 0.1s;
+    box-sizing: border-box;
+}
+
+.menuItem:hover {
+    background: #f0f7fd;
+    color: var(--color-accent, #1591DC);
+}
+
+.menuItemDelete {
+    color: #e24b4a;
+}
+
+.menuItemDelete:hover {
+    background: #fff0f0;
+    color: #e24b4a;
+}
+
+.menuDivider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.07);
+    margin: 0 10px;
+}
+
+/* ── Modal overlay ──────────────────────────────────── */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: modalIn 0.22s cubic-bezier(0.22, 0.68, 0, 1.2);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.modalTitle {
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    color: #111;
+}
+
+.modalCloseBtn {
+    background: #f1f0ee;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: background 0.15s;
+}
+
+.modalCloseBtn:hover {
+    background: #e5e4e2;
+}
+
+.modalBody {
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Form fields ────────────────────────────────────── */
+.fieldLabel {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.textInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(0, 0, 0, 0.15);
+    font-size: 15px;
+    outline: none;
+    background: #fff;
+    color: #111;
+    transition: border-color 0.15s;
+    font-family: inherit;
+}
+
+.textInput:focus {
+    border-color: var(--color-accent, #1591DC);
+    box-shadow: 0 0 0 3px rgba(21, 145, 220, 0.12);
+}
+
+/* ── Upload zone ────────────────────────────────────── */
+.uploadZone {
+    border: 2px dashed rgba(0, 0, 0, 0.18);
+    border-radius: 12px;
+    background: #f8fafc;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    overflow: hidden;
+    position: relative;
+}
+
+.uploadZone:hover {
+    border-color: var(--color-accent, #1591DC);
+    background: #edf6fd;
+}
+
+.uploadZoneDragging {
+    border-color: var(--color-accent, #1591DC);
+    background: #dff0fa;
+}
+
+.uploadPlaceholder {
+    padding: 2rem;
+    text-align: center;
+    color: #aaa;
+}
+
+.uploadIconWrap {
+    margin-bottom: 8px;
+    opacity: 0.5;
+    display: flex;
+    justify-content: center;
+    color: var(--color-accent, #1591DC);
+}
+
+.uploadHint {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+}
+
+.uploadSub {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #aaa;
+}
+
+.previewImage {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+.removePhotoBtn {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+/* ── Modal actions ──────────────────────────────────── */
+.modalActions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.cancelBtn {
+    padding: 9px 20px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(0, 0, 0, 0.15);
+    background: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #666;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.cancelBtn:hover {
+    background: #f5f5f5;
+}
+
+.saveBtn {
+    padding: 9px 22px;
+    border-radius: 10px;
+    border: none;
+    background: var(--color-accent, #1591DC);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.saveBtn:hover {
+    background: #1280c4;
+    transform: translateY(-1px);
+}
+
+.saveBtnDisabled {
+    background: #e0e0e0;
+    color: #bbb;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ── Lightbox ───────────────────────────────────────── */
+.lightboxOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    cursor: zoom-out;
+}
+
+.lightboxCloseBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 210;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s;
+}
+
+.lightboxCloseBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.lightboxContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 860px;
+    width: 100%;
+    cursor: default;
+    animation: lbIn 0.22s cubic-bezier(0.22, 0.68, 0, 1.1);
+}
+
+@keyframes lbIn {
+    from {
+        opacity: 0;
+        transform: scale(0.93);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.lightboxImage {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.lightboxLabel {
+    margin-top: 1.25rem;
+    text-align: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Loading state ──────────────────────────────────── */
+.stateCenter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 420px;
+    gap: 14px;
+    text-align: center;
+}
+
+.stateText {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+}
+
+.loadingSpinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(21, 145, 220, 0.15);
+    border-top-color: var(--color-accent, #1591DC);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Inline spinner inside options button */
+.spinner {
+    animation: spin 0.7s linear infinite;
+    color: var(--color-accent, #1591DC);
+}
+
+/* ── Card badges ────────────────────────────────────── */
+.badgePrivate,
+.badgeReported {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+}
+
+.badgePrivate {
+    background: rgba(21, 145, 220, 0.85);
+    color: #fff;
+}
+
+.badgeReported {
+    background: rgba(226, 75, 74, 0.85);
+    color: #fff;
+    left: 44px;
+    /* sit next to private badge if both present */
+}
+
+/* ── Lightbox meta (username) ───────────────────────── */
+.lightboxMeta {
+    margin-top: 6px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0;
+}

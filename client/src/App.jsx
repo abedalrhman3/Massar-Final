@@ -8,6 +8,7 @@ import Destinations from "./pages/costumer/Destinations/Destinations";
 import Map from "./pages/costumer/Map/Map";
 import Support from "./pages/costumer/Support";
 import SaveList from "./pages/costumer/SaveList/SaveList";
+import Gallery from "./pages/costumer/Gallery/Gallery";
 
 // Register-Login Pages
 import RegisterLogin, {
@@ -129,6 +130,17 @@ function App() {
             <PrivateRoute>
               <ErrorBoundary message="The save list failed to load. Please refresh.">
                 <SaveList />
+              </ErrorBoundary>
+            </PrivateRoute>
+          }
+
+        />
+        <Route
+          path="/gallery"
+          element={
+            <PrivateRoute>
+              <ErrorBoundary message="The gallery failed to load. Please refresh.">
+                <Gallery />
               </ErrorBoundary>
             </PrivateRoute>
           }
