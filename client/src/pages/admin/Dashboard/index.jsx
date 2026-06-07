@@ -134,7 +134,7 @@ function Dashboard() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Performance Summary</h1>
+          <h1 className={styles.title}>Status Summary</h1>
           <p className={styles.subtitle}>
             Welcome back. Here is the latest data from the Editorial ecosystem.
           </p>
@@ -159,95 +159,9 @@ function Dashboard() {
           badgeColor="#16a34a"
           loading={usersLoading}
         />
-        <StatCard
-          label={`${chartPeriod === "daily" ? "Daily" : chartPeriod === "weekly" ? "Weekly" : "Monthly"} Visits`}
-          value={currentStats.visits}
-          icon="visibility"
-          badge={currentStats.visitsChange}
-          badgeColor={currentStats.visitsColor}
-        />
-        <StatCard
-          label="Lifetime Visits"
-          value="150k"
-          icon="history"
-          badge="↑ +22% year-over-year"
-          badgeColor="#16a34a"
-        />
+
       </div>
 
-      {/* Middle section */}
-      <div className={styles.middleGrid}>
-        {/* Traffic chart */}
-        <div className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <h2 className={styles.sectionTitle}>Traffic Over Time</h2>
-            <div className={styles.tabGroup}>
-              {["daily", "weekly", "monthly"].map((p) => (
-                <button
-                  key={p}
-                  className={`${styles.tab} ${chartPeriod === p ? styles.tabActive : ""}`}
-                  onClick={() => setChartPeriod(p)}
-                >
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.chartArea}>
-            <svg viewBox="0 0 600 160" className={styles.chart}>
-              <defs>
-                <linearGradient id={`chartGrad-${chartPeriod}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1B56FD" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#1B56FD" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d={chartData[chartPeriod].path} fill="none" stroke="#1B56FD" strokeWidth="2.5" />
-              <path d={chartData[chartPeriod].fillPath} fill={`url(#chartGrad-${chartPeriod})`} />
-            </svg>
-            <div className={styles.chartDays}>
-              {chartData[chartPeriod].labels.map((d) => (
-                <span key={d}>{d}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className={styles.activityCard}>
-          <h2 className={styles.sectionTitle}>
-            Recent Activity
-            {reportedPhotos.length > 0 && (
-              <span style={{ fontSize: "0.75rem", color: "#ef4444", marginLeft: "0.5rem", fontWeight: 500 }}>
-                {reportedPhotos.length} reported photo{reportedPhotos.length !== 1 ? "s" : ""}
-              </span>
-            )}
-          </h2>
-          <div className={styles.activityList}>
-            {reportedLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className={styles.activityItem} style={{ opacity: 0.4 }}>
-                  <div className={styles.activityIcon}>
-                    <span className="material-symbols-outlined">hourglass_empty</span>
-                  </div>
-                  <div className={styles.activityBody}>
-                    <p className={styles.activityText}>Loading…</p>
-                  </div>
-                </div>
-              ))
-              : activityItems.map((item, i) => (
-                <div key={i} className={styles.activityItem}>
-                  <div className={styles.activityIcon}>
-                    <span className="material-symbols-outlined">{item.icon}</span>
-                  </div>
-                  <div className={styles.activityBody}>
-                    <p className={styles.activityText}>{item.text}</p>
-                    <span className={styles.activityTime}>{item.time}</span>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      </div>
 
       {/* Top destinations */}
       <div className={styles.destSection}>
@@ -297,27 +211,7 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Pro tip */}
-      <div className={styles.proTip}>
-        <div>
-          <h3 className={styles.proTipTitle}>
-            <em>Editor&apos;s Pro Tip</em>
-          </h3>
-          <p>
-            Use the "Global Sync" feature to update tax rates across all{" "}
-            {totalDestinations ?? "your"} destinations simultaneously from the Destination
-            Management tab.
-            {budgetLabel && (
-              <span style={{ display: "block", marginTop: "0.35rem", opacity: 0.8, fontSize: "0.85em" }}>
-                Current budget ranges: <strong>{budgetLabel}</strong>
-              </span>
-            )}
-          </p>
-        </div>
-        <button className={styles.syncBtn} onClick={handleSyncNow}>
-          TRY SYNC NOW
-        </button>
-      </div>
+
     </div>
   );
 }

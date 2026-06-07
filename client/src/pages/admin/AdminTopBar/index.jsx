@@ -64,22 +64,7 @@ function AdminTopBar({ placeholder, user }) {
       </div>
 
       <div className={styles.actions}>
-        <div className={styles.notificationWrapper}>
-          <button
-            className={`${styles.iconBtn} ${showNotifications ? styles.iconBtnActive : ""}`}
-            title="Notifications"
-            aria-label="Notifications"
-            onClick={toggleNotifications}
-          >
-            <span className="material-symbols-outlined">notifications</span>
-            {!notificationRead && <span className={styles.badge}></span>}
-          </button>
-          <NotificationDropdown
-            isOpen={showNotifications}
-            onClose={() => setShowNotifications(false)}
-            onMarkAllRead={() => setNotificationRead(true)}
-          />
-        </div>
+
 
         <button
           className={styles.mainPageBtn}

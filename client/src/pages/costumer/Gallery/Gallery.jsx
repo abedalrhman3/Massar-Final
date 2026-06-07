@@ -7,6 +7,8 @@ import styles from "./Gallery.module.css";
 
 import AdminSidebar from "@/pages/admin/AdminSidebar";
 
+import { useNavigate } from "react-router-dom";
+
 import {
     getPublicPhotos,
     togglePhotoPrivacy,
@@ -199,6 +201,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
 // ── Gallery ────────────────────────────────────────────────────────────────
 
 export default function Gallery() {
+    const navigate = useNavigate();
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -275,6 +278,12 @@ export default function Gallery() {
     return (
         <div className={styles.page}>
             <AdminSidebar type="user" />
+            <button
+                className={styles.addPhotoBtn}
+                onClick={() => navigate("/map")}
+            >
+                Add Photo
+            </button>
             {/* ── Header ── */}
             <header className={styles.header}>
                 <div className={styles.headerInner}>

@@ -6,6 +6,34 @@
     padding-left: 15rem;
 }
 
+.addPhotoBtn {
+    position: fixed;
+    top: 1.5rem;
+    right: 2rem;
+    z-index: 100;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    border: none;
+    background: var(--color-accent, #1591DC);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(21, 145, 220, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    letter-spacing: -0.01em;
+}
+
+.addPhotoBtn:hover {
+    background: #1280c4;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(21, 145, 220, 0.45);
+}
+
+.addPhotoBtn:active {
+    transform: translateY(0);
+}
+
 /* ── Header ─────────────────────────────────────────── */
 .header {
     position: sticky;

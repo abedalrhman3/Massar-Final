@@ -292,9 +292,11 @@ function UserProfile() {
   ];
   const isNewPwValid = pwRules.every((r) => r.test(newPw));
 
+
+
   return (
     <div className={styles.page}>
-      <AdminSidebar type={"user"} />
+      <AdminSidebar type={user.role} />
       <section className={styles.heroSection}>
         <div className={styles.heroMain}>
           <div className={styles.avatarWrapper}>
