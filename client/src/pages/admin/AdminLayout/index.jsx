@@ -11,7 +11,7 @@ const MOCK_USER = {
 function AdminLayout() {
   return (
     <div className={styles.layout}>
-      <AdminSidebar />
+      <AdminSidebar type={"admin"} />
       <div className={styles.content}>
         <AdminTopBar user={MOCK_USER} />
         <main className={styles.main}>

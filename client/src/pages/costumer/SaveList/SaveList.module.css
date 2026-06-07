@@ -1,0 +1,549 @@
+/* ═══════════════════════════════════════════════════════════════
+   SavedLists.module.css
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Layout ───────────────────────────────────────────────────── */
+.root {
+  display: flex;
+  min-height: 100vh;
+  background: #fafafa;
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+.body {
+  /* margin-left: 200px; */
+  flex: 1;
+  padding-top: 56px;
+}
+
+.main {
+  padding: 36px 40px;
+  /* max-width: 1100px; */
+  padding-left: 25rem;
+}
+
+/* ── Topbar ───────────────────────────────────────────────────── */
+.topbar {
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: fixed;
+  top: 0;
+  left: 200px;
+  right: 0;
+  z-index: 99;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbarTitle {
+  font-family: var(--font-body, Georgia, serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  font-style: italic;
+}
+
+.topbarTab {
+  padding: 5px 13px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #777;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  transition: all 0.15s;
+}
+
+.topbarTab:hover {
+  background: #f5f5f5;
+  color: #111;
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbarSearchWrap {
+  width: 220px;
+}
+
+.iconBtn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #eee;
+  background: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #555;
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.iconBtn:hover {
+  border-color: #ccc;
+}
+
+.notifDot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  background: #1b56fd;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+}
+
+/* ── Page header ─────────────────────────────────────────────── */
+.pageHeader {
+  margin-bottom: 36px;
+}
+
+.pageTitle {
+  font-family: var(--font-body, Georgia, serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: #777;
+  line-height: 1.65;
+}
+
+/* ── Section ─────────────────────────────────────────────────── */
+.section {
+  margin-bottom: 48px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-family: var(--font-body, Georgia, serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+}
+
+.viewAllBtn {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #1b56fd;
+  cursor: pointer;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  padding: 0;
+}
+
+.viewAllBtn:hover {
+  text-decoration: underline;
+}
+
+/* ── Stars ───────────────────────────────────────────────────── */
+.stars {
+  display: inline-flex;
+  gap: 1px;
+}
+
+/* ── Saved Destinations grid (3 col) ─────────────────────────── */
+.destGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 40rem);
+  gap: 24px;
+}
+
+.destCard {
+  background: #fff;
+  border: 1px solid #ebebeb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.destCard:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.destImgWrap {
+  height: 180px;
+
+  overflow: hidden;
+}
+
+.destImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s;
+}
+
+.destCard:hover .destImg {
+  transform: scale(1.03);
+}
+
+.destBody {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.destTitle {
+  font-family: var(--font-body, Georgia, serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+.destDesc {
+  max-height: 30rem;
+  font-size: 13px;
+  color: #888;
+  line-height: 1.55;
+
+
+
+}
+
+.destFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ratingLabel {
+  font-size: 12px;
+  color: #888;
+}
+
+.destCount {
+  font-size: 12px;
+  color: #bbb;
+}
+
+/* ── Places to Visit grid (4 col) ───────────────────────────── */
+.placesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.placeCard {
+  background: #fff;
+  border: 1px solid #ebebeb;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.placeCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.placeImgWrap {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+}
+
+.placeImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s;
+}
+
+.placeCard:hover .placeImg {
+  transform: scale(1.04);
+}
+
+.placeAddBtn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  background: #1b56fd;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(27, 86, 253, 0.3);
+}
+
+.placeBody {
+  padding: 12px 14px 14px;
+}
+
+.placeTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 4px;
+}
+
+.placeDesc {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.placeFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.placeCount {
+  font-size: 11px;
+  color: #bbb;
+}
+
+/* ── Two-column: Restaurants + Hotels ───────────────────────── */
+.twoColSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.listCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.listCard {
+  display: flex;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #ebebeb;
+  border-radius: 10px;
+  padding: 12px;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+
+.listCard:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.listCardImg {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.listCardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.listCardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 3px;
+}
+
+.listCardDesc {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.listCardFooter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.listCardLocation {
+  font-size: 11px;
+  color: #aaa;
+}
+
+/* ── Events ──────────────────────────────────────────────────── */
+.eventsLayout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.eventFeatured {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  min-height: 260px;
+}
+
+.eventFeaturedImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 260px;
+}
+
+.eventFeaturedOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top,
+      rgba(0, 0, 0, 0.72) 0%,
+      rgba(0, 0, 0, 0.1) 60%,
+      transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 28px;
+}
+
+.eventFeaturedTitle {
+  font-family: var(--font-body, Georgia, serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.eventFeaturedDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.eventTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.eventTag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 3px 9px;
+}
+
+.eventSideCard {
+  background: #fff;
+  border: 1px solid #ebebeb;
+  border-radius: 14px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.eventSideIcon {
+  font-size: 28px;
+  margin-bottom: 14px;
+}
+
+.eventSideTitle {
+  font-family: var(--font-body, Georgia, serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.eventSideDesc {
+  font-size: 13px;
+  color: #777;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.eventSideMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.eventSideDate {
+  font-size: 12px;
+  color: #555;
+}
+
+.eventSideDot {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.eventSideLocation {
+  font-size: 12px;
+  color: #555;
+}
+
+.eventDetailsBtn {
+  width: 100%;
+  padding: 10px 0;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #444;
+  cursor: pointer;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.eventDetailsBtn:hover {
+  border-color: #1b56fd;
+  color: #1b56fd;
+}

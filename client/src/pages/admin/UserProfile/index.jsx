@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { destinations } from "@/data/destinations";
 import styles from "./UserProfile.module.css";
 import { useAuth } from "@/context/AuthContext";
+import AdminSidebar from "../AdminSidebar";
 
 // ─── SWAP AXIOS FOR YOUR CUSTOM INSTANCE ─────────────────────────────────────
 import api from "@/api/client"; // This already targets '${BASE_URL}/api' automatically[cite: 7]
@@ -243,6 +244,7 @@ function UserProfile() {
 
   return (
     <div className={styles.page}>
+      <AdminSidebar type={"user"} />
       <section className={styles.heroSection}>
         <div className={styles.heroMain}>
           <div className={styles.avatarWrapper}>
@@ -284,7 +286,7 @@ function UserProfile() {
             </div>
           </div>
         </div>
-        <button className={styles.logoutBtn} onClick={() => handleLogout()}>Logout</button>
+
       </section>
 
       <section className={styles.bentoGrid}>

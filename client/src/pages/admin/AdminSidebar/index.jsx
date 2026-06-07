@@ -3,7 +3,9 @@ import { NavLink, useNavigate } from "react-router-dom";
 import styles from "./AdminSidebar.module.css";
 import { useAuth } from '@/context/AuthContext';
 
-function AdminSidebar() {
+
+function AdminSidebar(params) {
+  const { type } = params;
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { logout } = useAuth();
@@ -17,6 +19,7 @@ function AdminSidebar() {
     navigate('/');
   };
 
+  console.log(params.type)
   return (
     <>
       <aside className={styles.sidebar}>
@@ -25,61 +28,88 @@ function AdminSidebar() {
           <p className={styles.subtitle}>Admin Portal</p>
         </div>
 
-        <nav className={styles.nav}>
-          <NavLink
-            to="/admin/dashboard"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            <span>Dashboard</span>
-          </NavLink>
+        {type === "admin" && (
+          <nav className={styles.nav}>
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">person</span>
+              <span>Profile</span>
+            </NavLink>
+            <NavLink
+              to="/admin/dashboard"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">dashboard</span>
+              <span>
+                Dashboard
+              </span>
+            </NavLink>
 
-          <NavLink
-            to="/admin/destinations"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-          >
-            <span className="material-symbols-outlined">travel_explore</span>
-            <span>Destinations</span>
-          </NavLink>
+            <NavLink
+              to="/admin/destinations"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">travel_explore</span>
+              <span>Destinations</span>
+            </NavLink>
 
-          <NavLink
-            to="/admin/accounts"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-          >
-            <span className="material-symbols-outlined">manage_accounts</span>
-            <span>Accounts</span>
-          </NavLink>
+            <NavLink
+              to="/admin/accounts"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">manage_accounts</span>
+              <span>Accounts</span>
+            </NavLink>
+          </nav>
+        )}
+
+        {type === "user" && (
+          <nav className={styles.nav}>
+            {console.log("user applied")}
+
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">person</span>
+              <span>Profile</span>
+            </NavLink>
+            <NavLink
+              to="/save-list"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">bookmark</span>
+              <span>Save List</span>
+            </NavLink>
 
 
-        </nav>
+          </nav>
+        )}
 
         <div className={styles.footer}>
           <NavLink
-            to="/admin/profile"
+            to="/"
             className={({ isActive }) =>
               `${styles.navItem} ${isActive ? styles.active : ""}`
             }
           >
-            <span className="material-symbols-outlined">person</span>
-            <span>Profile</span>
+            <span className="material-symbols-outlined">home</span>
+            <span>Home</span>
           </NavLink>
-
-          <NavLink
-            to="/admin/settings"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-          >
-            <span className="material-symbols-outlined">settings</span>
-            <span>Settings</span>
-          </NavLink>
-
           <button className={styles.navItem} onClick={handleLogout}>
             <span className="material-symbols-outlined">logout</span>
             <span>Logout</span>

@@ -7,6 +7,7 @@ import DestinationDetails from "./pages/costumer/DestinationsDetails/Destination
 import Destinations from "./pages/costumer/Destinations/Destinations";
 import Map from "./pages/costumer/Map/Map";
 import Support from "./pages/costumer/Support";
+import SaveList from "./pages/costumer/SaveList/SaveList";
 
 // Register-Login Pages
 import RegisterLogin, {
@@ -117,6 +118,17 @@ function App() {
             <PrivateRoute>
               <ErrorBoundary message="The map failed to load. Please refresh.">
                 <Map />
+              </ErrorBoundary>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/save-list"
+          element={
+            <PrivateRoute>
+              <ErrorBoundary message="The save list failed to load. Please refresh.">
+                <SaveList />
               </ErrorBoundary>
             </PrivateRoute>
           }

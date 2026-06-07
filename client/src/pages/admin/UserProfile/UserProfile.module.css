@@ -1,7 +1,37 @@
 .page {
   padding: 2.5rem;
+  padding-left: 10rem;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.homeBtn {
+  height: 5rem;
+  width: 5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: "2rem";
+  right: "5rem";
+  z-index: "1000";
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border-radius: 50%;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 3px solid var(--color-accent);
+}
+
+.homeBtn span {
+  font-size: 3rem;
+}
+
+.homeBtn:hover {
+  background-color: var(--color-white);
+  color: var(--color-accent);
+
 }
 
 .logoutBtn {
