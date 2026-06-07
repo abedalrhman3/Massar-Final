@@ -3,7 +3,7 @@ import storage from '../utils/storage';
 
 // ← غيّر هذا إلى IP جهازك: ipconfig في Windows ثم ابحث عن IPv4
 // في الإنتاج: 'https://your-domain.com'
-export const BASE_URL = 'https://71a4c213b03adc.lhr.life'; // Direct Local IP
+export const BASE_URL = 'https://4cd17d71473b96.lhr.life'; // Direct Local IP
 // export const BASE_URL = 'http://192.168.1.x:5000'; // جهاز حقيقي
 
 const api = axios.create({ baseURL: BASE_URL, timeout: 15000 });
@@ -21,7 +21,7 @@ api.interceptors.request.use(async (config) => {
         config.headers['Authorization'] = `Bearer ${parsed.token}`;
       }
     }
-  } catch (_) {}
+  } catch (_) { }
   return config;
 });
 
