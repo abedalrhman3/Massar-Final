@@ -36,7 +36,7 @@ app.use('/api/locations', require('./routes/locations'));
 app.use('/api/quests', require('./routes/quests'));
 app.use('/api/photos', require('./routes/photos'));
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api', require('./routes/game'));
+app.use('/api/game', require('./routes/game'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));

@@ -214,10 +214,60 @@ function UserProfile() {
     navigate(`/admin/settings?tab=${encodeURIComponent(targetTab)}`);
   };
 
+  // ─── Live badges from API ────────────────────────────────────────────────────
+  const [badges, setBadges] = useState([]);
+  const [badgesLoading, setBadgesLoading] = useState(true);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+
+  useEffect(() => {
+    if (!user?._id) return;
+    const fetchBadges = async () => {
+      try {
+        setBadgesLoading(true);
+        const res = await api.get(`/game/users/${user._id}/profile`);
+        setBadges(res.data.data?.unlocked_badges ?? []);
+      } catch (err) {
+        console.error("Failed to fetch badges:", err);
+        setBadges([]);
+      } finally {
+        setBadgesLoading(false);
+      }
+    };
+    fetchBadges();
+  }, [user?._id]);
+
+  // ─── Live stats from API ─────────────────────────────────────────────────────
+  const [photoCount, setPhotoCount] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const fetchPhotoCount = async () => {
+      try {
+        setStatsLoading(true);
+        // GET /api/photos returns all public photos; count those belonging to this user
+        const res = await api.get("/photos");
+        const photos = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+        const myPhotos = photos.filter(
+          (p) => String(p.user_id?._id ?? p.user_id) === String(user._id)
+        );
+        setPhotoCount(myPhotos.length);
+      } catch (err) {
+        console.error("Failed to fetch photo count:", err);
+        setPhotoCount(0);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchPhotoCount();
+  }, [user?._id]);
+
   const stats = {
-    totalArticles: user?.stats?.totalArticles ?? 128,
-    accuracyScore: user?.stats?.accuracyScore ?? 94,
-    managedAuthors: user?.stats?.managedAuthors ?? 14
+    xp: user?.total_xp ?? 0,
+    photosNumber: photoCount ?? 0,
+    badgesNumber: user?.unlocked_badges?.length ?? 0,
   };
 
   const settingsCards = [
@@ -271,20 +321,74 @@ function UserProfile() {
         </div>
         <div className={styles.achievementsCard}>
           <h3 className={styles.achievementsTitle}>Verified Achievements</h3>
-          <div className={styles.achievementsGrid}>
-            <div className={styles.achievementItem}>
-              <div className={`${styles.achievementIcon} ${styles.achievementStar}`}><span className="material-symbols-outlined">star</span></div>
-              <span className={styles.achievementLabel}>Top Curator</span>
-            </div>
-            <div className={styles.achievementItem}>
-              <div className={`${styles.achievementIcon} ${styles.achievementVerified}`}><span className="material-symbols-outlined">verified</span></div>
-              <span className={styles.achievementLabel}>Verified</span>
-            </div>
-            <div className={styles.achievementItem}>
-              <div className={`${styles.achievementIcon} ${styles.achievementVeteran}`}><span className="material-symbols-outlined">history_edu</span></div>
-              <span className={styles.achievementLabel}>Veteran</span>
-            </div>
-          </div>
+
+          {badgesLoading ? (
+            <p className={styles.achievementsEmpty}>Loading badges…</p>
+          ) : badges.length === 0 ? (
+            <p className={styles.achievementsEmpty}>No badges earned yet.</p>
+          ) : (
+            <>
+              <div className={styles.achievementsGrid}>
+                {(showAllBadges ? badges : badges.slice(0, 4)).map((badge) => (
+                  <div
+                    key={badge._id}
+                    className={`${styles.achievementItem} ${badge.is_rare ? styles.achievementRare : ""}`}
+                  >
+                    <div className={`${styles.achievementIcon} ${badge.is_rare ? styles.achievementVeteran : styles.achievementVerified}`}>
+                      <img
+                        src={badge.icon_url}
+                        alt={badge.title_en}
+                        className={styles.badgeImg}
+                      />
+                    </div>
+                    <span className={styles.achievementLabel}>{badge.title_en}</span>
+                  </div>
+                ))}
+              </div>
+
+              {badges.length > 4 && (
+                <>
+                  <button
+                    className={styles.showMoreBtn}
+                    onClick={() => setShowAllBadges(true)}
+                  >
+                    <span className="material-symbols-outlined">expand_more</span>
+                    {`Show ${badges.length - 4} more`}
+                  </button>
+
+                  {/* Popup overlay */}
+                  {showAllBadges && (
+                    <div className={styles.badgePopupOverlay} onClick={() => setShowAllBadges(false)}>
+                      <div className={styles.badgePopup} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.badgePopupHeader}>
+                          <h3>All Badges ({badges.length})</h3>
+                          <button className={styles.badgePopupClose} onClick={() => setShowAllBadges(false)}>
+                            <span className="material-symbols-outlined">close</span>
+                          </button>
+                        </div>
+                        <div className={styles.badgePopupList}>
+                          {badges.map((badge) => (
+                            <div
+                              key={badge._id}
+                              className={`${styles.badgePopupItem} ${badge.is_rare ? styles.achievementRare : ""}`}
+                            >
+                              <div className={`${styles.achievementIcon} ${badge.is_rare ? styles.achievementVeteran : styles.achievementVerified}`}>
+                                <img src={badge.icon_url} alt={badge.title_en} className={styles.badgeImg} />
+                              </div>
+                              <div className={styles.badgePopupInfo}>
+                                <span className={styles.badgePopupName}>{badge.title_en}</span>
+                                {badge.is_rare && <span className={styles.badgePopupRare}>⭐ Rare</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
         </div>
 
       </section>
@@ -321,58 +425,35 @@ function UserProfile() {
 
         <div className={styles.statsPanel}>
           <div className={`${styles.statCard} ${styles.statPrimary}`}>
-            <span className="material-symbols-outlined">auto_stories</span>
-            <div className={styles.statValue}>{stats.totalArticles}</div>
-            <div className={styles.statLabel}>Total Articles Edited</div>
+            <span className="material-symbols-outlined">add_diamond</span>
+            <div className={styles.statValue}>{stats.xp}</div>
+            <div className={styles.statLabel}>XP</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValueSmall}>{stats.accuracyScore}%</div>
-            <div className={styles.statLabelSmall}>Accuracy Score</div>
+            <div className={styles.statValueSmall}>
+              {statsLoading ? "—" : stats.photosNumber}
+            </div>
+            <div className={styles.statLabelSmall}>Uploaded Photos</div>
             <div className={styles.progressBar}>
-              <div className={styles.progressFill} style={{ width: `${stats.accuracyScore}%` }} />
+              <div
+                className={styles.progressFill}
+                style={{ width: statsLoading ? "0%" : `${Math.min(stats.photosNumber, 100)}%` }}
+              />
             </div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.authorsRow}>
-              <div className={styles.authorsIcon}><span className="material-symbols-outlined">groups</span></div>
+              <div className={styles.authorsIcon}><span className="material-symbols-outlined">stars</span></div>
               <div>
-                <div className={styles.statValueSmall}>{stats.managedAuthors}</div>
-                <div className={styles.statLabelSmall}>Managed Authors</div>
+                <div className={styles.statValueSmall}>{stats.badgesNumber}</div>
+                <div className={styles.statLabelSmall}>Badges Earned</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className={styles.settingsSection}>
-        <div className={styles.settingsHeader}>
-          <div>
-            <h3 className={styles.settingsTitle}>Profile Settings</h3>
-            <p className={styles.settingsSubtitle}>Manage your workspace preferences and security configurations.</p>
-          </div>
-          <button className={styles.saveBtn} onClick={handleSave}>Save Changes</button>
-        </div>
-        <div className={styles.settingsGrid}>
-          {settingsCards.map((card) => (
-            <div
-              key={card.id}
-              className={`${styles.settingsCard} ${card.disabled ? styles.settingsCardDisabled : ""}`}
-              onClick={() => !card.disabled && handleCardClick(card.id)}
-            >
-              <div className={styles.cardIcon}><span className="material-symbols-outlined">{card.icon}</span></div>
-              {!card.disabled && <span className={`material-symbols-outlined ${styles.chevron}`}>chevron_right</span>}
-              {card.disabled && <span className={`material-symbols-outlined ${styles.chevron} ${styles.lockIcon}`}>lock</span>}
-              <h4 className={styles.cardTitle}>{card.title}</h4>
-              <p className={styles.cardDesc}>{card.description}</p>
-              {card.disabled && <span className={styles.comingSoonBadge}>Coming soon</span>}
-            </div>
-          ))}
-        </div>
-      </section>
 
-      <footer className={styles.footer}>
-        <p>The Editorial Archive Admin Portal © 2024</p>
-      </footer>
 
       <SlideModal open={activeModal === "name"} onClose={closeModal} title="Change Name">
         <p className={styles.modalHint}>Update your display name across the platform.</p>
