@@ -13,7 +13,6 @@ import { BASE_URL } from "@/api/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import SearchBar from "./searchBar/searchBar";
 import LeftPanel from "./leftPanel/leftPanel";
-import { tokyoMockData, tokyoQuestsMockData } from "@/assets/data/mapMockData";
 import QuestsPanel from "./rightPanel/questPanel";
 import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 
@@ -253,7 +252,7 @@ const Map = () => {
       />
 
       <QuestsPanel
-        quests={tokyoQuestsMockData}
+        quests={quests}
         isExpanded={openPanel === "quest"}
         onToggle={toggleQuest}
         isLeftOpen={openPanel === "left"}

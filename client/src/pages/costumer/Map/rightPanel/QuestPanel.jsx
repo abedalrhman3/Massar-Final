@@ -3,10 +3,13 @@ import { ChevronUp, ChevronDown, Swords, Star, X, Upload } from "lucide-react";
 import styles from "./QuestPanel.module.css";
 import { joinQuest } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
     const expanded = isExpanded ?? true;
     const { user, setUser } = useAuth();
+    const { i18n } = useTranslation();
+    const isAr = i18n.language === "ar";
 
     const [claimed, setClaimed] = useState({});
     const [joining, setJoining] = useState({});
@@ -53,6 +56,7 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                     setUser(res.data.user);
                     localStorage.setItem("user", JSON.stringify(res.data.user));
                 }
+                alert(isAr ? "تم الانضمام للمسار بنجاح! تم فتح المواقع المرتبطة به." : "Successfully joined the quest! Linked locations are unlocked.");
             }
         } catch (err) {
             alert(err.response?.data?.message || "Failed to join quest.");
@@ -84,11 +88,13 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
             >
                 <div className={styles.headerLeft}>
                     <Swords size={15} strokeWidth={2.2} className={styles.headerIcon} />
-                    <span className={styles.headerTitle}>Quests</span>
+                    <span className={styles.headerTitle}>{isAr ? "المسارات" : "Quests"}</span>
                 </div>
                 <div className={styles.headerRight}>
                     {expanded && (
-                        <span className={styles.questCount}>{quests.length} quests</span>
+                        <span className={styles.questCount}>
+                            {quests.length} {isAr ? "مسارات" : "quests"}
+                        </span>
                     )}
                     <button
                         className={styles.toggleBtn}
@@ -104,13 +110,17 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
             {expanded && (
                 <div className={styles.body}>
                     {quests.length === 0 && (
-                        <p className={styles.empty}>No quests available for this destination.</p>
+                        <p className={styles.empty}>
+                            {isAr ? "لا توجد مسارات متاحة لهذه الوجهة." : "No quests available for this destination."}
+                        </p>
                     )}
 
                     <div className={styles.questList}>
                         {quests.map((quest, i) => {
                             const done = !!claimed[String(quest._id)];
                             const isJoining = !!joining[quest._id];
+                            const title = isAr ? quest.title : (quest.title_en || quest.title);
+                            const description = isAr ? quest.description : (quest.description_en || quest.description);
 
                             return (
                                 <div
@@ -120,7 +130,7 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                                     <div className={styles.questTop}>
                                         <div className={styles.questLeft}>
                                             <div className={styles.questIndex}>{i + 1}</div>
-                                            <p className={styles.questTitle}>{quest.title}</p>
+                                            <p className={styles.questTitle}>{title}</p>
                                         </div>
                                         <div className={styles.xpBadge}>
                                             <Star size={11} strokeWidth={2.5} aria-hidden="true" />
@@ -128,7 +138,7 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                                         </div>
                                     </div>
 
-                                    <p className={styles.questDesc}>{quest.description}</p>
+                                    <p className={styles.questDesc}>{description}</p>
 
                                     <div className={styles.questFooter}>
                                         <div className={styles.xpBar}>
@@ -143,7 +153,7 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                                             disabled={done || isJoining}
                                             aria-label={done ? "Quest joined" : `Join quest for ${quest.bonus_xp ?? quest.xp} XP`}
                                         >
-                                            {isJoining ? "Joining…" : done ? "Joined ✓" : "Claim XP"}
+                                            {isJoining ? (isAr ? "جاري..." : "Joining…") : done ? (isAr ? "مشارك ✓" : "Joined ✓") : (isAr ? "انضمام" : "Join Quest")}
                                         </button>
                                     </div>
                                 </div>
@@ -162,9 +172,13 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                             <X size={16} />
                         </button>
 
-                        <h3 className={styles.photoTitle}>Join Quest</h3>
-                        <p className={styles.photoQuestName}>{photoQuest.title}</p>
-                        <p className={styles.photoHint}>Upload a photo to prove your visit</p>
+                        <h3 className={styles.photoTitle}>{isAr ? "الانضمام للمسار" : "Join Quest"}</h3>
+                        <p className={styles.photoQuestName}>
+                            {isAr ? photoQuest.title : (photoQuest.title_en || photoQuest.title)}
+                        </p>
+                        <p className={styles.photoHint}>
+                            {isAr ? "قم برفع صورة لإثبات زيارتك" : "Upload a photo to prove your visit"}
+                        </p>
 
                         <label className={styles.photoLabel}>
                             {photoPreview ? (
@@ -172,7 +186,7 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                             ) : (
                                 <div className={styles.photoPlaceholder}>
                                     <Upload size={22} strokeWidth={1.8} />
-                                    <span>Choose photo</span>
+                                    <span>{isAr ? "اختر صورة" : "Choose photo"}</span>
                                 </div>
                             )}
                             <input
@@ -188,7 +202,9 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
                             onClick={handleSubmit}
                             disabled={!photo || !!joining[photoQuest._id]}
                         >
-                            {joining[photoQuest._id] ? "Submitting…" : "Submit & Claim XP"}
+                            {joining[photoQuest._id]
+                                ? (isAr ? "جاري الإرسال..." : "Submitting…")
+                                : (isAr ? "إرسال وتأكيد الانضمام" : "Submit & Join Quest")}
                         </button>
 
                     </div>
