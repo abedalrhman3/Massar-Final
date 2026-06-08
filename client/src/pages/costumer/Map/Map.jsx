@@ -15,6 +15,7 @@ import SearchBar from "./searchBar/searchBar";
 import LeftPanel from "./leftPanel/leftPanel";
 import { tokyoMockData, tokyoQuestsMockData } from "@/assets/data/mapMockData";
 import QuestsPanel from "./rightPanel/questPanel";
+import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -125,6 +126,26 @@ const Map = () => {
   const [autoPos, setAutoPos] = useState(null);
   const [routeCoords, setRouteCoords] = useState([]);
   const [joiningQuestId, setJoiningQuestId] = useState(null);
+  const [panelData, setPanelData] = useState({ places: [], restaurants: [], hotels: [] });
+
+  useEffect(() => {
+    const destinationId = initialCoords?.destinationId ?? null;
+    const params = destinationId ? { destinationId } : {};
+
+    Promise.all([
+      placesApi.getAll(params),
+      restaurantsApi.getAll(params),
+      hotelsApi.getAll(params),
+    ])
+      .then(([placesRes, restaurantsRes, hotelsRes]) => {
+        setPanelData({
+          places:      Array.isArray(placesRes.data?.data)      ? placesRes.data.data      : (Array.isArray(placesRes.data)      ? placesRes.data      : []),
+          restaurants: Array.isArray(restaurantsRes.data?.data) ? restaurantsRes.data.data : (Array.isArray(restaurantsRes.data) ? restaurantsRes.data : []),
+          hotels:      Array.isArray(hotelsRes.data?.data)      ? hotelsRes.data.data      : (Array.isArray(hotelsRes.data)      ? hotelsRes.data      : []),
+        });
+      })
+      .catch((err) => console.error("Failed to load panel data:", err));
+  }, [initialCoords?.destinationId]);
   const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
   const navigate = useNavigate(); // Assured this is active
@@ -225,8 +246,8 @@ const Map = () => {
       <SearchBar />
 
       <LeftPanel
-        destination={tokyoMockData.destination}
-        data={tokyoMockData.data}
+        destination={initialCoords?.name || "Explore"}
+        data={panelData}
         isExpanded={openPanel === "left"}
         onToggle={toggleLeft}
       />

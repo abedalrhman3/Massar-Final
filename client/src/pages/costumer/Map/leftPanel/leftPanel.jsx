@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bookmark, MapPin, Camera, UtensilsCrossed, Building2, ChevronUp, ChevronDown } from "lucide-react";
 import styles from "./leftPanel.module.css";
 import { saveItem, removeSavedItem } from "@/api/saved";
@@ -9,11 +9,39 @@ const TABS = [
     { key: "hotels", label: "Hotels", Icon: Building2 },
 ];
 
+// API expects singular entity type
+const ENTITY_TYPE = {
+    places: "place",
+    restaurants: "restaurant",
+    hotels: "hotel",
+};
+
 const LeftPanel = ({ destination, data = {}, isExpanded, onToggle }) => {
     const expanded = isExpanded ?? true;
     const [activeTab, setActiveTab] = useState("places");
-    const [savedMap, setSavedMap] = useState({});
     const [savingMap, setSavingMap] = useState({});
+
+    // Seed savedMap from incoming data (items already carry savedId from the server)
+    const [savedMap, setSavedMap] = useState(() => {
+        const map = {};
+        Object.entries(data).forEach(([tab, items]) => {
+            (items ?? []).forEach((item, i) => {
+                if (item.savedId) map[`${tab}_${i}`] = { savedId: item.savedId };
+            });
+        });
+        return map;
+    });
+
+    // Re-seed if data prop changes (e.g. after a fetch)
+    useEffect(() => {
+        const map = {};
+        Object.entries(data).forEach(([tab, items]) => {
+            (items ?? []).forEach((item, i) => {
+                if (item.savedId) map[`${tab}_${i}`] = { savedId: item.savedId };
+            });
+        });
+        setSavedMap(map);
+    }, [data]);
 
     const handleSave = async (e, item, key) => {
         e.stopPropagation();
@@ -26,7 +54,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle }) => {
                 await removeSavedItem(current.savedId);
                 setSavedMap((prev) => ({ ...prev, [key]: null }));
             } else {
-                const res = await saveItem(activeTab, item._id);
+                const res = await saveItem(ENTITY_TYPE[activeTab], item._id);
                 setSavedMap((prev) => ({ ...prev, [key]: { savedId: res.data.data._id } }));
             }
         } catch (err) {
