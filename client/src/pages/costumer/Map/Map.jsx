@@ -54,9 +54,17 @@ const MapCenterSetter = ({ coords }) => {
   }, [coords, map]);
   return null;
 };
+
 const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
   const [position, setPosition] = useState(null);
   const navigate = useNavigate();
+
+  const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+  const avatarSrc = userAvatarUrl
+    ? `${BASE_URL.replace(/\/$/, "")}/${userAvatarUrl.replace(/^\//, "")}`
+    : defaultAvatar;
+
   const map = useMapEvents({
     locationfound(e) {
       setPosition(e.latlng);
@@ -77,12 +85,13 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
 
   if (!position) return null;
 
-  const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-  const avatarSrc = userAvatarUrl ? `${BASE_URL}${userAvatarUrl}` : defaultAvatar;
-
   const avatarIcon = new L.divIcon({
-    html: `<img src="${avatarSrc}" class="user-avatar-marker ${isCelebrating ? "celebrate-animation" : ""
-      }" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--color-accent); background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); object-fit: cover;" />`,
+    html: `<img 
+      src="${avatarSrc}" 
+      onerror="this.onerror=null;this.src='${defaultAvatar}';"
+      class="user-avatar-marker ${isCelebrating ? "celebrate-animation" : ""}"
+      style="width:40px;height:40px;border-radius:50%;border:2px solid var(--color-accent);background-color:white;box-shadow:0 0 10px rgba(0,0,0,0.3);object-fit:cover;"
+    />`,
     className: "custom-avatar-container",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -108,11 +117,9 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
   );
 };
 
-// ... (Keep all your existing imports, icon fixes, and helper components exactly the same)
-
 const Map = () => {
   const locationState = useLocation();
-  const initialCoords = locationState.state; // { lat, lng, name }
+  const initialCoords = locationState.state;
 
   const [locations, setLocations] = useState([]);
   const [quests, setQuests] = useState([]);
@@ -138,16 +145,17 @@ const Map = () => {
     ])
       .then(([placesRes, restaurantsRes, hotelsRes]) => {
         setPanelData({
-          places:      Array.isArray(placesRes.data?.data)      ? placesRes.data.data      : (Array.isArray(placesRes.data)      ? placesRes.data      : []),
+          places: Array.isArray(placesRes.data?.data) ? placesRes.data.data : (Array.isArray(placesRes.data) ? placesRes.data : []),
           restaurants: Array.isArray(restaurantsRes.data?.data) ? restaurantsRes.data.data : (Array.isArray(restaurantsRes.data) ? restaurantsRes.data : []),
-          hotels:      Array.isArray(hotelsRes.data?.data)      ? hotelsRes.data.data      : (Array.isArray(hotelsRes.data)      ? hotelsRes.data      : []),
+          hotels: Array.isArray(hotelsRes.data?.data) ? hotelsRes.data.data : (Array.isArray(hotelsRes.data) ? hotelsRes.data : []),
         });
       })
       .catch((err) => console.error("Failed to load panel data:", err));
   }, [initialCoords?.destinationId]);
+
   const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
-  const navigate = useNavigate(); // Assured this is active
+  const navigate = useNavigate();
 
   const drawRoute = async (destLat, destLng) => {
     if (!userPosition) {
@@ -179,11 +187,8 @@ const Map = () => {
       const res = await joinQuest(questId);
       if (res.data.success) {
         alert(i18n.language === "ar" ? "تم الانضمام للمسار بنجاح! تم فتح المواقع المرتبطة به." : "Successfully joined the quest! Linked locations are unlocked.");
-
         setUser(res.data.user);
         localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        // Re-fetch locations to show/hide quest locations
         const params = budget && budget !== "All" ? { budgetCategory: budget } : {};
         getLocations(params)
           .then((res) => setLocations(Array.isArray(res.data) ? res.data : []))
@@ -234,12 +239,11 @@ const Map = () => {
     [33.4, 39.3],
   ];
 
-  const [openPanel, setOpenPanel] = useState("left"); // "left" | "quest" | null
+  const [openPanel, setOpenPanel] = useState("left");
   const toggleLeft = () => setOpenPanel(p => p === "left" ? null : "left");
   const toggleQuest = () => setOpenPanel(p => p === "quest" ? null : "quest");
 
   return (
-    // FIXED: Ensured the main wrapper explicitly controls the full screen layout
     <div className={styles.container} style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", justifyContent: "flex-start", alignItems: "stretch" }}>
 
       <SearchBar />
@@ -291,22 +295,17 @@ const Map = () => {
                 : `⬇️ ${i18n.language === "ar" ? "انقر على خريطتك الفعلية" : "Click your real position on map"}`}
             </span>
           )}
-
         </div>
 
-        {/* Home Button inside the controls bar to keep it safely on top of Leaflet layers */}
         <button
           className={styles.hBtn}
           onClick={() => navigate("/")}
           style={{ cursor: "pointer", zIndex: 20, marginLeft: "auto" }}
         >
-          <span className="material-symbols-outlined">
-            home
-          </span>
+          <span className="material-symbols-outlined">home</span>
         </button>
       </div>
 
-      {/* FIXED: Added explicit flex growth and height rules to the Map wrapper */}
       <div style={{ flex: 1, position: "relative", zIndex: 1, borderRadius: "25px", overflow: "hidden", border: "1px solid var(--color-border, #E8E8E8)", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", height: "calc(100vh - 80px)" }}>
         <MapContainer
           center={[31.2, 36.5]}
@@ -314,7 +313,7 @@ const Map = () => {
           minZoom={7}
           maxBounds={JORDAN_BOUNDS}
           maxBoundsViscosity={0.8}
-          style={{ height: "100%", width: "100%" }} // Changed to 100% of parent wrapper
+          style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -354,7 +353,7 @@ const Map = () => {
                 color: "var(--color-accent)",
                 weight: 5,
                 opacity: 0.8,
-                dashArray: "5, 10"
+                dashArray: "5, 10",
               }}
             />
           )}
@@ -371,7 +370,7 @@ const Map = () => {
                 radius={500}
                 pathOptions={{
                   color: "var(--color-accent)",
-                  fillFillColor: "var(--color-accent)",
+                  fillColor: "var(--color-accent)",
                   fillOpacity: 0.08,
                   weight: 1,
                   dashArray: "6",
@@ -452,7 +451,7 @@ const Map = () => {
                           cursor: "pointer",
                           fontSize: "1.1rem",
                           width: "100%",
-                          marginTop: "8px"
+                          marginTop: "8px",
                         }}
                       >
                         {user.joined_quests?.map(String).includes(String(quest._id))

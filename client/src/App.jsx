@@ -33,6 +33,12 @@ import BanHistory from "./pages/admin/BanHistory";
 import AdminSettings from "./pages/admin/Settings";
 import AdminUserProfile from "./pages/admin/UserProfile";
 import AdminChat from "./pages/admin/AdminChat";
+import Game from "./pages/admin/Game/index";
+import Locations from "./pages/admin/Game/locations/index";
+import BudgetSettings from "./pages/admin/Game/BudgetSettings/index";
+import Quests from "./pages/admin/Game/Quests/index";
+import Reports from "./pages/admin/Game/Reports/index"
+
 
 // Shared Components
 import Chatbot from "./components/Chatbot/Chatbot";
@@ -191,6 +197,11 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="profile" element={<AdminUserProfile />} />
           <Route path="chat" element={<AdminChat />} />
+          <Route path="game" element={<Game />} />
+          <Route path="game/locations" element={<Locations />} />
+          <Route path="game/budget-settings" element={<BudgetSettings />} />
+          <Route path="game/quests" element={<Quests />} />
+          <Route path="game/reports" element={<Reports />} />
         </Route>
 
         {/* Fallback */}

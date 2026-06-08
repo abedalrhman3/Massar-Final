@@ -60,6 +60,15 @@ function AdminSidebar(params) {
               <span className="material-symbols-outlined">travel_explore</span>
               <span>Destinations</span>
             </NavLink>
+            <NavLink
+              to="/admin/game"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+            >
+              <span className="material-symbols-outlined">gamepad</span>
+              <span>Game</span>
+            </NavLink>
 
             <NavLink
               to="/admin/accounts"

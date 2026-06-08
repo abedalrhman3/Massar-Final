@@ -66,15 +66,7 @@ function AdminTopBar({ placeholder, user }) {
       <div className={styles.actions}>
 
 
-        <button
-          className={styles.mainPageBtn}
-          title="Main Page"
-          aria-label="Main Page"
-          onClick={() => window.location.href = "http://localhost:5173/"}
-        >
-          <span className="material-symbols-outlined">home</span>
-          <span>Main Page</span>
-        </button>
+
       </div>
     </header>
   );
