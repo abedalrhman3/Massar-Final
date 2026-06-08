@@ -11,6 +11,10 @@ import { getQuests, joinQuest } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
 import { BASE_URL } from "@/api/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import SearchBar from "./searchBar/searchBar";
+import LeftPanel from "./leftPanel/leftPanel";
+import { tokyoMockData, tokyoQuestsMockData } from "@/assets/data/mapMockData";
+import QuestsPanel from "./rightPanel/questPanel";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -210,9 +214,29 @@ const Map = () => {
     [33.4, 39.3],
   ];
 
+  const [openPanel, setOpenPanel] = useState("left"); // "left" | "quest" | null
+  const toggleLeft = () => setOpenPanel(p => p === "left" ? null : "left");
+  const toggleQuest = () => setOpenPanel(p => p === "quest" ? null : "quest");
+
   return (
     // FIXED: Ensured the main wrapper explicitly controls the full screen layout
     <div className={styles.container} style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", justifyContent: "flex-start", alignItems: "stretch" }}>
+
+      <SearchBar />
+
+      <LeftPanel
+        destination={tokyoMockData.destination}
+        data={tokyoMockData.data}
+        isExpanded={openPanel === "left"}
+        onToggle={toggleLeft}
+      />
+
+      <QuestsPanel
+        quests={tokyoQuestsMockData}
+        isExpanded={openPanel === "quest"}
+        onToggle={toggleQuest}
+        isLeftOpen={openPanel === "left"}
+      />
 
       {/* Controls Bar */}
       <div className={styles.controlsBar} style={{ zIndex: 10 }}>
@@ -256,7 +280,9 @@ const Map = () => {
           onClick={() => navigate("/")}
           style={{ cursor: "pointer", zIndex: 20, marginLeft: "auto" }}
         >
-          🏠 Home
+          <span className="material-symbols-outlined">
+            home
+          </span>
         </button>
       </div>
 
