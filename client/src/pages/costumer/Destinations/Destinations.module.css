@@ -139,6 +139,10 @@
   }
 }
 
+.cardWrapper {
+  border-radius: 12px;
+}
+
 /* ── Show More button ── */
 .toursMore {
   display: flex;

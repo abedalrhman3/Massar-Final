@@ -180,37 +180,30 @@ exports.remove = async (req, res, next) => {
 exports.toggleLike = async (req, res, next) => {
   try {
     const User = require('../models/User');
-    const destination = await Destination.findById(req.params.id);
+    const destinationId = req.params.id;
+    const userId = req.user.userId;
+
+    const destination = await Destination.findById(destinationId).lean();
     if (!destination) return next(new AppError('Destination not found', 404));
 
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(userId).select('likedDestinations').lean();
     if (!user) return next(new AppError('User not found', 404));
 
-    if (!user.likedDestinations) {
-      user.likedDestinations = [];
-    }
+    const alreadyLiked = (user.likedDestinations || [])
+      .map(id => id.toString())
+      .includes(destinationId.toString());
 
-    const index = user.likedDestinations.indexOf(destination._id);
-    let isLiked = false;
-
-    if (index === -1) {
-      user.likedDestinations.push(destination._id);
-      destination.likes = (destination.likes || 0) + 1;
-      isLiked = true;
+    if (alreadyLiked) {
+      await User.updateOne({ _id: userId }, { $pull: { likedDestinations: destination._id } });
+      await Destination.updateOne({ _id: destinationId }, { $inc: { likes: -1 } });
     } else {
-      user.likedDestinations.splice(index, 1);
-      destination.likes = Math.max(0, (destination.likes || 0) - 1);
-      isLiked = false;
+      await User.updateOne({ _id: userId }, { $addToSet: { likedDestinations: destination._id } });
+      await Destination.updateOne({ _id: destinationId }, { $inc: { likes: 1 } });
     }
 
-    await user.save();
-    await destination.save();
+    const updated = await Destination.findById(destinationId).select('likes').lean();
 
-    res.json({
-      success: true,
-      likes: destination.likes,
-      isLiked
-    });
+    res.json({ success: true, likes: updated.likes, isLiked: !alreadyLiked });
   } catch (err) {
     next(err);
   }

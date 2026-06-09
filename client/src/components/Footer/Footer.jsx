@@ -1,6 +1,9 @@
 import styles from "./Footer.module.css";
+import { useNavigate } from 'react-router-dom'
+
 
 function Footer() {
+  const navigate = useNavigate();
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContainer}>
@@ -23,40 +26,53 @@ function Footer() {
 
         {/* Section 2: Information navigation links */}
         <div className={styles.footerSection}>
-          <h2>Information</h2>
+          <h2>Navigate</h2>
           <ul>
-            <li>
-              <a href="#">About</a>
+            <li
+              onClick={() => {
+                navigate('/')
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }, 10)
+              }}
+            >
+              <p>Home</p>
             </li>
-            <li>
-              <a href="#">Destinations</a>
-            </li>
-            <li>
-              <a href="#">Tour packages</a>
-            </li>
-            <li>
-              <a href="#">Reviews</a>
+            <li
+              onClick={() => {
+                navigate('/destinations')
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }, 10)
+              }}
+            >
+              <p>Destination</p>
+            </li> <li
+              onClick={() => {
+                navigate('/map')
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }, 10)
+              }}
+            >
+              <p>Map</p>
+            </li> <li
+              onClick={() => {
+                navigate('/support')
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }, 10)
+              }}
+            >
+              <p>Support</p>
             </li>
           </ul>
         </div>
 
         {/* Section 3: Category navigation links */}
         <div className={styles.footerSection}>
-          <h2>Category</h2>
-          <ul>
-            <li>
-              <a href="#">Tour</a>
-            </li>
-            <li>
-              <a href="#">Tour Group</a>
-            </li>
-            <li>
-              <a href="#">College Tour</a>
-            </li>
-            <li>
-              <a href="#">Contact Us</a>
-            </li>
-          </ul>
+
+
         </div>
 
         {/* Section 4: Newsletter subscription */}
@@ -102,7 +118,7 @@ function Footer() {
           </div>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 }
 

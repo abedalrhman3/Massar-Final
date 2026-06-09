@@ -7,30 +7,17 @@ const UserSession = require("../models/UserSession");
 // -------------------------------------------------------
 exports.protect = async (req, res, next) => {
   try {
-    // Get token from cookie first, fall back to Authorization header
     let token = req.cookies.token;
-
     if (!token) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.split(' ')[1];
       }
     }
+    if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
 
-    if (!token) {
-      return res.status(401).json({ message: 'Not authorized, no token' });
-    }
-
-    // Verify JWT signature
+    // JWT verification is CPU-only — no DB hit
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Check session still exists in DB (handles logout)
-    const session = await UserSession.findOne({ token });
-    if (!session) {
-      return res.status(401).json({ message: 'Session expired, please login again' });
-    }
-
-    // Attach user info and token to request
     req.user = decoded;
     req.token = token;
     next();
@@ -69,7 +56,7 @@ exports.optionalAuth = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const session = await UserSession.findOne({ token });
-    
+
     if (session) {
       req.user = decoded;
       req.token = token;

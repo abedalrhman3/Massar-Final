@@ -14,7 +14,7 @@ import about1 from "../../../assets/images/decor/about-1.png";
 import about2 from "../../../assets/images/decor/about-2.png";
 import about3 from "../../../assets/images/decor/about-3.jpg";
 import about4 from "../../../assets/images/decor/about-4.jpg";
-import video from "../../../assets/images/decor/video.jpg";
+import video from "/video/about-test.mp4";
 
 export default function AboutPage() {
   return (
@@ -73,8 +73,10 @@ export default function AboutPage() {
 
         <div className={styles.aboutGuide}>
           <div className={styles.aboutVideoWrapper}>
-            <img src={video} alt="Jordan" className={styles.aboutVideo} />
-            <img src={play} alt="Play" className={styles.aboutPlay} />
+            <video className={styles.aboutVideo} controls>
+              <source src={video} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </div>
           <div className={styles.aboutQuote}>
             <h2 className={styles.aboutGuideTitle}>

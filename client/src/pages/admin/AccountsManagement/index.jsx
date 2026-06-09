@@ -9,12 +9,10 @@ import { getAllUsers, toggleBanUser } from "@/api/auth";
 //   { _id, name, email, role, isBanned, createdAt, profilePicture?, ... }
 //
 // The UI expects:
-//   { id, username, email, avatar, subscription_date, tier, status }
+//   { id, username, email, avatar, subscription_date, status }
 //
 // normalizeUser converts one API user → UI shape.
 // status is derived: isBanned → 'banned', else 'active'
-// tier is derived from role: 'admin' → 'Elite', else 'Standard'
-// (extend this logic once you add a real tier/subscription field)
 
 function normalizeUser(user) {
   return {
@@ -23,7 +21,6 @@ function normalizeUser(user) {
     email: user.email,
     avatar: user.profilePicture || null,
     subscription_date: user.createdAt,
-    tier: user.role === "admin" ? "Elite" : "Standard",
     status: user.isBanned ? "banned" : "active",
     // keep original for reference
     _raw: user,
@@ -122,7 +119,6 @@ function AccountsManagement() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [tierFilter, setTierFilter] = useState("all");
   const [showFilter, setShowFilter] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
 
@@ -154,8 +150,6 @@ function AccountsManagement() {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      // GET /api/auth/users — returns { success, data: User[] } (or similar)
-      // Adjust res.data path if your getAllUsers response shape differs.
       const res = await getAllUsers();
       const rawUsers = res.data.data ?? res.data.users ?? res.data ?? [];
       const normalized = rawUsers.map(normalizeUser);
@@ -186,7 +180,7 @@ function AccountsManagement() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, tierFilter, debouncedSearch]);
+  }, [statusFilter, debouncedSearch]);
 
   // ── Animated stat counters ────────────────────────────────────────────────
 
@@ -212,16 +206,13 @@ function AccountsManagement() {
     return accounts.filter((acc) => {
       const matchesStatus =
         statusFilter === "all" || acc.status === statusFilter;
-      const matchesTier =
-        tierFilter === "all" ||
-        acc.tier?.toLowerCase() === tierFilter.toLowerCase();
       const matchesSearch =
         !debouncedSearch ||
         acc.username?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         acc.email?.toLowerCase().includes(debouncedSearch.toLowerCase());
-      return matchesStatus && matchesTier && matchesSearch;
+      return matchesStatus && matchesSearch;
     });
-  }, [accounts, statusFilter, tierFilter, debouncedSearch]);
+  }, [accounts, statusFilter, debouncedSearch]);
 
   const paginatedAccounts = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -231,9 +222,6 @@ function AccountsManagement() {
   const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage);
 
   // ── Reported accounts ─────────────────────────────────────────────────────
-  // NOTE: Your API has no reported-users endpoint.
-  // This section is wired to show banned users as a placeholder.
-  // Replace this logic once a /api/auth/reported-users endpoint is added.
 
   const [reportedSearchInput, setReportedSearchInput] = useState("");
   const [debouncedReportedSearch, setDebouncedReportedSearch] = useState("");
@@ -246,7 +234,6 @@ function AccountsManagement() {
     return () => clearTimeout(timer);
   }, [reportedSearchInput]);
 
-  // Derive "reported" accounts from banned users as a stand-in
   const reportedAccounts = useMemo(() => {
     return accounts
       .filter((acc) => acc.status === "banned")
@@ -262,7 +249,7 @@ function AccountsManagement() {
       )
       .map((acc) => ({
         ...acc,
-        flags: 1, // placeholder — replace with real flags field when available
+        flags: 1,
         last_incident: acc.subscription_date,
       }));
   }, [accounts, debouncedReportedSearch]);
@@ -283,12 +270,9 @@ function AccountsManagement() {
 
   // ── Action handlers ───────────────────────────────────────────────────────
 
-  // No suspend endpoint — maps to ban (toggleBanUser) as the closest action.
-  // The UI shows "Suspend Account" but the effect is a ban toggle until a
-  // dedicated suspend endpoint is added to the API.
   const handleSuspend = async (account) => {
     try {
-      await toggleBanUser(account.id); // PUT /api/auth/users/:id/ban
+      await toggleBanUser(account.id);
       await fetchAccounts();
       setActiveMenu(null);
     } catch (err) {
@@ -299,7 +283,6 @@ function AccountsManagement() {
     }
   };
 
-  // No reactivate endpoint — toggleBanUser on a banned user unbans them.
   const handleReactivate = async (account) => {
     try {
       await toggleBanUser(account.id);
@@ -321,9 +304,6 @@ function AccountsManagement() {
   const confirmBan = async () => {
     if (!banDialog.reason.trim()) return;
     try {
-      // toggleBanUser bans/unbans — calling it here bans an active user.
-      // The reason field is accepted by the UI but your current API endpoint
-      // doesn't take a reason body. Pass it once the endpoint supports it.
       await toggleBanUser(banDialog.account.id);
       setBanDialog({ open: false, account: null, reason: "" });
       await fetchAccounts();
@@ -335,15 +315,12 @@ function AccountsManagement() {
     }
   };
 
-  // No clear-flags endpoint — closes the dialog without an API call.
-  // Replace with a real API call once the endpoint is available.
   const handleClearFlags = (account) => {
     setClearDialog({ open: true, account });
   };
 
   const confirmClearFlags = async () => {
     try {
-      // TODO: call a clearFlags(clearDialog.account.id) endpoint when available
       alert(
         `Flags cleared for ${clearDialog.account.username} (UI only — no API endpoint yet)`,
       );
@@ -388,7 +365,6 @@ function AccountsManagement() {
     }
   };
 
-  // Close action menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
     if (activeMenu) {
@@ -495,7 +471,7 @@ function AccountsManagement() {
         <div className={styles.sectionHeader}>
           <div className={styles.sectionTitleRow}>
             <h2 className={styles.sectionTitle}>All Accounts</h2>
-            {(statusFilter !== "all" || tierFilter !== "all") && (
+            {statusFilter !== "all" && (
               <span className={styles.filterBadge}>Filtered</span>
             )}
           </div>
@@ -526,20 +502,6 @@ function AccountsManagement() {
                 ))}
               </div>
             </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Tier</label>
-              <div className={styles.filterOptions}>
-                {["all", "standard", "elite"].map((tier) => (
-                  <button
-                    key={tier}
-                    className={`${styles.filterOption} ${tierFilter === tier ? styles.filterOptionActive : ""}`}
-                    onClick={() => setTierFilter(tier)}
-                  >
-                    {tier.charAt(0).toUpperCase() + tier.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -558,7 +520,6 @@ function AccountsManagement() {
                 <th>Subscriber</th>
                 <th>Email Address</th>
                 <th>Subscription Date</th>
-                <th>Tier</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -588,13 +549,6 @@ function AccountsManagement() {
                   <td className={styles.email}>{acc.email}</td>
                   <td className={styles.date}>
                     {formatDate(acc.subscription_date)}
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.tierBadge} ${styles[acc.tier?.toLowerCase()]}`}
-                    >
-                      {acc.tier}
-                    </span>
                   </td>
                   <td>
                     <span
@@ -946,7 +900,6 @@ function AccountsManagement() {
               This will clear all flags and reports for this account. The user
               will be restored to good standing.
             </p>
-
             <div className={styles.dialogActions}>
               <button
                 className={styles.dialogCancel}
@@ -955,8 +908,9 @@ function AccountsManagement() {
                 Cancel
               </button>
               <button
-                className={styles.clearConfirmBtn}
+                className={styles.dialogConfirm}
                 onClick={confirmClearFlags}
+                style={{ backgroundColor: "#22c55e" }}
               >
                 Clear Flags
               </button>

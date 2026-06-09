@@ -5,6 +5,8 @@ import SearchBar from "@/components/SearchBar/SearchBar";
 import { getDestinations } from "@/api/destination";
 import { useApi } from "@/hooks/useApi";
 
+
+
 // ── Tooltip helper ────────────────────────────────────────────────
 function Tooltip({ text }) {
     return (

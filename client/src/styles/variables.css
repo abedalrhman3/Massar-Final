@@ -19,6 +19,7 @@
 
     /* Missing — derived from design */
     --color-accent: var(--color-main-blue);
+    --color-accent-hover: rgba(21, 145, 220, 0.3);
     /* primary brand color — buttons, active tabs, highlights */
     --color-border: #E8E8E8;
     /* light gray — dividers, card borders */

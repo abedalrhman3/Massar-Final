@@ -31,7 +31,7 @@ exports.register = async (req, res, next) => {
     await UserSession.findOneAndUpdate(
       { userId: user._id },
       { token, expiresAt },
-      { upsert: true, new: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
     res.cookie('token', token, {
@@ -75,8 +75,7 @@ exports.logout = async (req, res, next) => {
     await authService.logout(req.token);
     // Clear httpOnly cookie
     res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
-    // Redirect user to home page
-    res.redirect(`${process.env.CLIENT_URL}/`);
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (err) {
     next(err);
   }

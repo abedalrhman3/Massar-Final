@@ -55,7 +55,7 @@ function DestinationCard({ id, slug, image, name, description, rating, likes, is
   return (
     <Link
       to={`/destinations/${slug}`}
-      style={{ textDecoration: "none", color: "inherit" }}
+      style={{ textDecoration: "none", color: "inherit", borderRadius: "12px" }}
     >
       <div className={styles.destCard}>
         <img src={image} alt={name} className={styles.destCardImg} />

@@ -20,6 +20,7 @@ const guide = "/images/homepage/guide.png";
 const halfPhone = "/images/homepage/half-phone.PNG";
 const phone = "/images/homepage/phone.png";
 const star = "/images/homepage/star.png";
+const phoneBackground = "/images/homepage/phonePlaceholder.png";
 
 // Adventure
 const nature = "/images/homepage/nature.jpg";
@@ -89,7 +90,11 @@ function Home() {
               <br /> breathtaking escape.
             </p>
           </figcaption>
-          <button className={styles.learnMoreBtn}>learn more</button>
+          <button
+            className={styles.learnMoreBtn}
+            style={{ zIndex: 100, position: "relative" }}
+            onClick={() => navigate("/destinations/wadi-rum")}
+          >learn more</button>
         </figure>
         <img
           src={petraDest}
@@ -105,7 +110,10 @@ function Home() {
               <br /> temples, tombs and timeless mystery waiting to
               <br /> be discovered.
             </p>
-            <button className={styles.learnMoreBtn}>learn more</button>
+            <button
+              className={styles.learnMoreBtn}
+              onClick={() => navigate("/destinations/petra")}
+            >learn more</button>
           </figcaption>
         </figure>
         <h3 className={styles.adventure}>
@@ -131,7 +139,10 @@ function Home() {
               for thousands of years.
             </p>
           </figcaption>
-          <button className={styles.learnMoreBtn}>learn more</button>
+          <button
+            className={styles.learnMoreBtn}
+            onClick={() => navigate("/destinations/dead-sea")}
+          >learn more</button>
         </figure>
       </div>
 
@@ -145,8 +156,14 @@ function Home() {
         </div>
         <img src={route} alt="route" className={styles.trackRoute} />
         <img src={guide} alt="map guide" className={styles.trackGuide} />
-        <img src={halfPhone} alt="phone" className={styles.trackHalfPhone} />
-        <img src={phone} alt="phone" className={styles.trackPhone} />
+        <div className={styles.trackHalfPhoneContainer}>
+          <img src={halfPhone} alt="phone" className={styles.trackHalfPhone} />
+          {/* <img src={phoneBackground} alt={`Phone Background`} className={styles.phoneBackground} /> */}
+        </div>
+        <div className={styles.trackPhoneContainer}>
+          <img src={phone} alt="phone" className={styles.trackPhone} />
+
+        </div>
       </div>
 
       <div className={styles.adventureContainer}>

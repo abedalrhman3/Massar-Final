@@ -12,6 +12,9 @@ import { getEvents } from "@/api/events";
 import { getSavedItems } from "@/api/saved";
 import { buildComposed } from "./DestinationDetails.utils";
 
+import LeftPanelSkeleton from "./SkeletonLoading/LeftPanelSkeleton/LeftPanelSkeleton";
+/* import RightPanelSkeleton from "./Skeleton/RightPanel/rightPanelSkeleton"; */
+
 // The controller returns populated items: { _id, entityType, entity: { _id, ... } }
 // Build a lookup: entity._id → savedItem._id
 function buildSavedMap(savedItems) {
@@ -127,9 +130,9 @@ const DestinationDetails = () => {
         fetchDetails();
     }, [slug]);
 
-    if (loading) return <div className={styles.loading}>Loading...</div>;
-    if (error) return <div className={styles.error}>{error}</div>;
-    if (!destination) return <div className={styles.notFound}>Data not found</div>;
+    /* if (loading) return <div className={styles.loading}>Loading...</div>; */
+    /* if (error) return <div className={styles.error}>{error}</div>;
+    if (!destination) return <div className={styles.notFound}>Data not found</div>; */
 
     return (
         <main className={styles.main}>
@@ -137,20 +140,29 @@ const DestinationDetails = () => {
                 <SharePopup
                     onClose={() => setShowShare(false)}
                     shareUrl={window.location.href}
-                    shareTitle={`Check out ${destination.name}!`}
+                    shareTitle={`Check out ${destination?.name || "this destination"}!`}
                 />
             )}
+
+            {/* Render MapView immediately with safe fallbacks or loading state */}
             <MapView
-                lat={destination.lat}
-                lng={destination.lng}
-                name={destination.name}
+                lat={destination ? destination.lat : 31.9522}  /* Optional: standard Jordan coordinate fallback */
+                lng={destination ? destination.lng : 35.9106}
+                name={destination ? destination.name : "Loading..."}
                 selectedCard={selectedCard}
             />
-            <LeftPanel
-                data={destination}
-                onCardClick={setSelectedCard}
-                onShareClick={() => setShowShare(true)}
-            />
+
+            {/* 3. Conditional Step: Show skeleton while loading, real panel when true */}
+            {loading ? (
+                <LeftPanelSkeleton />
+            ) : (
+                <LeftPanel
+                    data={destination}
+                    onCardClick={setSelectedCard}
+                    onShareClick={() => setShowShare(true)}
+                />
+            )}
+
             {selectedCard && (
                 <RightPanel
                     card={selectedCard}

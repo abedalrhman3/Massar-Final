@@ -242,7 +242,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         <>
                             {sections.foodAndDining.restaurants.isAvailable && (
                                 <div className={styles.subsection}>
-                                    <h3>{sections.foodAndDining.restaurants.subTitle}</h3>
+
                                     <div className={styles["cards-list"]}>
                                         {sections.foodAndDining.restaurants.cardList
                                             .slice(0, showAllRestaurants ? undefined : INITIAL_SHOW)
@@ -269,34 +269,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                                 </div>
                             )}
 
-                            {sections.foodAndDining.traditionalDining.isAvailable && (
-                                <div className={styles.subsection}>
-                                    <h3>{sections.foodAndDining.traditionalDining.subTitle}</h3>
-                                    <div className={styles["cards-list"]}>
-                                        {sections.foodAndDining.traditionalDining.cardList
-                                            .slice(0, showAllDishes ? undefined : INITIAL_SHOW)
-                                            .map((dish, i) => (
-                                                <Card
-                                                    key={dish.id}
-                                                    data={dish}
-                                                    type="restaurant"
-                                                    number={i + 1}
-                                                    onClick={() => onCardClick(dish)}
-                                                />
-                                            ))}
-                                    </div>
-                                    {sections.foodAndDining.traditionalDining.cardList.length > INITIAL_SHOW && (
-                                        <div className={styles["show-more-container"]}>
-                                            <button
-                                                className={styles["show-more"]}
-                                                onClick={() => setshowAllDishes(p => !p)}
-                                            >
-                                                {showAllDishes ? "Show less" : "Show more"}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+
                         </>
                     </section>
 
