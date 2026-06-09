@@ -84,8 +84,9 @@ const SpinnerIcon = () => (
 const normalisePhoto = (raw) => ({
     id: raw._id,
     imageUrl: raw.photo_url,
-    // Prefer Arabic name, fall back to English, then a generic label
-    placeName: raw.location_id?.name || raw.location_id?.name_en || "Unknown location",
+    placeName: raw.location_id?.name || raw.location_id?.name_en
+        || raw.quest_id?.title
+        || "Unknown location",
     username: raw.user_id?.username || raw.user_id?.name || "",
     isPrivate: raw.is_private ?? false,
     isReported: raw.is_reported ?? false,
@@ -216,42 +217,21 @@ export default function Gallery() {
     // ── Fetch on mount ───────────────────────────────────────────────────────
     useEffect(() => {
         const fetchPhotos = async () => {
-            console.log("Fetching photos for user:", user._id);
-            const res = await getPublicPhotos(user._id);
-            console.log("API response:", res.data);
             try {
                 setLoading(true);
                 setError(null);
-                console.log("user ID", user._id)
-                // getPublicPhotos returns a plain array: res.data = Photo[]
                 const res = await getPublicPhotos(user._id);
                 const photosArray = res.data?.data;
-
-                if (!photosArray || photosArray.length === 0) {
-                    setPhotos([]);
-                    return;
-                }
-
-                setPhotos(photosArray.map(normalisePhoto));
+                console.log(photosArray)
+                setPhotos(photosArray?.length ? photosArray.map(normalisePhoto) : []);
             } catch (err) {
                 setError(err?.response?.data?.message || "No photos yet.");
             } finally {
                 setLoading(false);
             }
         };
-
-        console.log(photos);
-        console.log(normalisePhoto.id);
-        console.log(normalisePhoto.photo_url);
-        console.log(normalisePhoto.location_id);
-        console.log(normalisePhoto.user_id);
-        console.log(normalisePhoto.isPrivate);
-        console.log(normalisePhoto.isReported);
-        console.log(normalisePhoto.createdAt);
-        console.log(normalisePhoto.updatedAt);
         fetchPhotos();
-    }, [user]);
-
+    }, [user._id]);  // ← use user._id not user to avoid refetch on unrelated user object changes
     // ── Toggle privacy ───────────────────────────────────────────────────────
     const handleTogglePrivacy = async (photo) => {
         try {

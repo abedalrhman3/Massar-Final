@@ -10,6 +10,15 @@ exports.getAll = async (req, res, next) => {
     next(err);
   }
 };
+exports.getLocationQuests = async (req, res, next) => {
+  try {
+    const locationId = req.params.locationId;
+    const quests = await Quest.find({ locations: locationId }).populate('locations');
+    res.json({ success: true, data: quests });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // GET /api/quests/:id  — public
 exports.getOne = async (req, res, next) => {

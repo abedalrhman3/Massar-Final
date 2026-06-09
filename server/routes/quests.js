@@ -1,11 +1,12 @@
 const router = require('express').Router();
-const { getAll, getOne, create, update, remove, joinQuest } = require('../controllers/questController');
+const { getAll, getLocationQuests, getOne, create, update, remove, joinQuest } = require('../controllers/questController');
 const { protect, adminOnly } = require('../middleware/auth');
 const multer = require('multer');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/', getAll);
+router.get('/location/:locationId', getLocationQuests);
 router.get('/:id', getOne);
 router.post('/:id/join', protect, upload.single('photo'), joinQuest);
 

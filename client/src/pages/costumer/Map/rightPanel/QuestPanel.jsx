@@ -1,23 +1,28 @@
 import { useState, useEffect } from "react";
 import { ChevronUp, ChevronDown, Swords, Star, X, Upload } from "lucide-react";
 import styles from "./QuestPanel.module.css";
-import { joinQuest } from "@/api/quests";
+import { joinQuest, getLocationQuests } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
 
-const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
+const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
     const expanded = isExpanded ?? true;
     const { user, setUser } = useAuth();
     const { i18n } = useTranslation();
     const isAr = i18n.language === "ar";
 
+    const [quests, setQuests] = useState([])
     const [claimed, setClaimed] = useState({});
     const [joining, setJoining] = useState({});
     const [photoQuest, setPhotoQuest] = useState(null); // quest object whose popup is open
     const [photo, setPhoto] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
 
-    // Seed already-joined quests from user context on mount
+    const displayName = destination?._id
+        ? (isAr ? destination.name : destination.name_en)
+        : "Explore";
+
+    //Seed already-joined quests from user context on mount
     useEffect(() => {
         if (user?.joined_quests?.length) {
             const map = {};
@@ -27,6 +32,19 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
             setClaimed(map);
         }
     }, [user]);
+    useEffect(() => {
+        if (!destination?._id) return;
+        const fetchQuests = async () => {
+            try {
+                const res = await getLocationQuests(destination._id);
+                console.log(res.data);
+                setQuests(res.data.data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchQuests();
+    }, [destination?._id]);
 
     // Open photo upload popup for this quest
     const handleClaimClick = (e, quest) => {

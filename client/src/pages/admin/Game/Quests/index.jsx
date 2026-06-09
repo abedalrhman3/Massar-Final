@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./Quests.module.css";
-import { getQuests, createQuest, deleteQuest } from "@/api/quests";
+import { getAllQuests, createQuest, deleteQuest } from "@/api/quests";
 import { getLocations } from "@/api/locations";
 import { uploadAsset } from "@/api/admin";
 
@@ -31,7 +31,7 @@ function Quests() {
 
   const fetchData = async () => {
     try {
-      const [questsRes, locsRes] = await Promise.all([getQuests(), getLocations()]);
+      const [questsRes, locsRes] = await Promise.all([getAllQuests(), getLocations()]);
       setQuests(questsRes.data?.data ?? questsRes.data ?? []);
       const locs = Array.isArray(locsRes.data) ? locsRes.data : (locsRes.data?.data ?? []);
       setAllLocations(locs);

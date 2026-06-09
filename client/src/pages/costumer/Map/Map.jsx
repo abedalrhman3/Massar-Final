@@ -7,13 +7,13 @@ import CheckInModal from "./CheckInModal";
 import LocationReviews from "./LocationReviews";
 import styles from "./Map.module.css";
 import { getLocations } from "@/api/locations";
-import { getQuests, joinQuest } from "@/api/quests";
+import { joinQuest } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
 import { BASE_URL } from "@/api/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import SearchBar from "./searchBar/searchBar";
 import LeftPanel from "./leftPanel/leftPanel";
-import QuestsPanel from "./rightPanel/questPanel";
+import QuestsPanel from "./rightPanel/QuestPanel";
 import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 
 // Fix Leaflet default icon issue
@@ -132,9 +132,41 @@ const Map = () => {
   const [autoPos, setAutoPos] = useState(null);
   const [routeCoords, setRouteCoords] = useState([]);
   const [joiningQuestId, setJoiningQuestId] = useState(null);
+
   const [panelData, setPanelData] = useState({ places: [], restaurants: [], hotels: [] });
+  const [panelLoading, setPanelLoading] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null); // the clicked pin's location doc
 
   useEffect(() => {
+    setQuests([]);
+  }, [locations])
+
+  const handleLocationSelect = async (loc) => {
+    setSelectedLocation(loc);
+    setPanelLoading(true);
+    try {
+      const params = { destinationId: loc.destination_id }; // use the location's linked destination
+      const [placesRes, restaurantsRes, hotelsRes, questsRes] = await Promise.all([
+        placesApi.getAll(params),
+        restaurantsApi.getAll(params),
+        hotelsApi.getAll(params),
+        /*  getQuests(params), */
+      ]);
+      setPanelData({
+        places: Array.isArray(placesRes.data?.data) ? placesRes.data.data : [],
+        restaurants: Array.isArray(restaurantsRes.data?.data) ? restaurantsRes.data.data : [],
+        hotels: Array.isArray(hotelsRes.data?.data) ? hotelsRes.data.data : [],
+      });
+      //setQuests(questsRes.data?.data ?? []);
+    } catch (err) {
+      console.error("Failed to load location details:", err);
+    } finally {
+      setPanelLoading(false);
+    }
+  };
+
+
+  /* useEffect(() => {
     const destinationId = initialCoords?.destinationId ?? null;
     const params = destinationId ? { destinationId } : {};
 
@@ -151,7 +183,7 @@ const Map = () => {
         });
       })
       .catch((err) => console.error("Failed to load panel data:", err));
-  }, [initialCoords?.destinationId]);
+  }, [initialCoords?.destinationId]); */
 
   const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
@@ -214,10 +246,7 @@ const Map = () => {
     getLocations(params)
       .then((res) => setLocations(Array.isArray(res.data) ? res.data : []))
       .catch(() => setLocations([]));
-
-    getQuests()
-      .then((res) => setQuests(res.data?.data ?? []))
-      .catch(() => setQuests([]));
+    // quests now load on pin click, not here
   }, [budget]);
 
   const createQuestIcon = (url) =>
@@ -249,14 +278,17 @@ const Map = () => {
       <SearchBar />
 
       <LeftPanel
-        destination={initialCoords?.name || "Explore"}
+        destination={selectedLocation
+          ? (i18n.language === "ar" ? selectedLocation.name : selectedLocation.name_en)
+          : (initialCoords?.name || "Explore")}
         data={panelData}
         isExpanded={openPanel === "left"}
         onToggle={toggleLeft}
+        loading={panelLoading}
       />
 
       <QuestsPanel
-        quests={quests}
+        destination={selectedLocation}
         isExpanded={openPanel === "quest"}
         onToggle={toggleQuest}
         isLeftOpen={openPanel === "left"}
@@ -380,7 +412,11 @@ const Map = () => {
           )}
 
           {locations.map((loc) => (
-            <Marker key={loc._id} position={[loc.coordinates.lat, loc.coordinates.lng]}>
+            <Marker
+              key={loc._id}
+              position={[loc.coordinates.lat, loc.coordinates.lng]}
+              eventHandlers={{ popupopen: () => handleLocationSelect(loc) }}
+            >
               <Popup>
                 <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
                   <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "#000", margin: "0 0 5px 0" }}>
@@ -418,62 +454,64 @@ const Map = () => {
             </Marker>
           ))}
 
-          {quests.map((quest) => {
-            if (!quest.start_coordinates?.lat) return null;
-            return (
-              <Marker
-                key={quest._id}
-                position={[quest.start_coordinates.lat, quest.start_coordinates.lng]}
-                icon={quest.icon_url ? createQuestIcon(quest.icon_url) : new L.Icon.Default()}
-              >
-                <Popup>
-                  <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
-                    <h3 style={{ color: "#D97706", fontWeight: "800", fontSize: "1.4rem", margin: "0 0 5px 0" }}>
-                      ✨ {i18n.language === "ar" ? quest.title : quest.title_en}
-                    </h3>
-                    <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
-                      <strong>Bonus XP:</strong> {quest.bonus_xp}
-                    </p>
-                    <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
-                      <strong>Title:</strong> {quest.title_reward}
-                    </p>
-                    {user && (
-                      <button
-                        onClick={() => handleJoinQuest(quest._id)}
-                        disabled={joiningQuestId === quest._id}
-                        style={{
-                          background: user.joined_quests?.map(String).includes(String(quest._id)) ? "#2E7D32" : "var(--color-accent)",
-                          color: "white",
-                          border: "none",
-                          padding: "6px 12px",
-                          borderRadius: "8px",
-                          fontWeight: "700",
-                          cursor: "pointer",
-                          fontSize: "1.1rem",
-                          width: "100%",
-                          marginTop: "8px",
-                        }}
-                      >
-                        {user.joined_quests?.map(String).includes(String(quest._id))
-                          ? (i18n.language === "ar" ? "مشارك فيه ✅" : "Joined ✅")
-                          : (i18n.language === "ar" ? "انضمام للمسار" : "Join Quest")}
-                      </button>
-                    )}
-                    {userPosition && (
-                      <button
-                        onClick={() => drawRoute(quest.start_coordinates.lat, quest.start_coordinates.lng)}
-                        style={{ background: "#4F46E5", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem", width: "100%", marginTop: "8px" }}
-                      >
-                        🗺️ {i18n.language === "ar" ? "ارسم المسار" : "Draw Route"}
-                      </button>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MapContainer>
-      </div>
+          {
+            quests.map((quest) => {
+              if (!quest.start_coordinates?.lat) return null;
+              return (
+                <Marker
+                  key={quest._id}
+                  position={[quest.start_coordinates.lat, quest.start_coordinates.lng]}
+                  icon={quest.icon_url ? createQuestIcon(quest.icon_url) : new L.Icon.Default()}
+                >
+                  <Popup>
+                    <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
+                      <h3 style={{ color: "#D97706", fontWeight: "800", fontSize: "1.4rem", margin: "0 0 5px 0" }}>
+                        ✨ {i18n.language === "ar" ? quest.title : quest.title_en}
+                      </h3>
+                      <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
+                        <strong>Bonus XP:</strong> {quest.bonus_xp}
+                      </p>
+                      <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
+                        <strong>Title:</strong> {quest.title_reward}
+                      </p>
+                      {user && (
+                        <button
+                          onClick={() => handleJoinQuest(quest._id)}
+                          disabled={joiningQuestId === quest._id}
+                          style={{
+                            background: user.joined_quests?.map(String).includes(String(quest._id)) ? "#2E7D32" : "var(--color-accent)",
+                            color: "white",
+                            border: "none",
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            fontWeight: "700",
+                            cursor: "pointer",
+                            fontSize: "1.1rem",
+                            width: "100%",
+                            marginTop: "8px",
+                          }}
+                        >
+                          {user.joined_quests?.map(String).includes(String(quest._id))
+                            ? (i18n.language === "ar" ? "مشارك فيه ✅" : "Joined ✅")
+                            : (i18n.language === "ar" ? "انضمام للمسار" : "Join Quest")}
+                        </button>
+                      )}
+                      {userPosition && (
+                        <button
+                          onClick={() => drawRoute(quest.start_coordinates.lat, quest.start_coordinates.lng)}
+                          style={{ background: "#4F46E5", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem", width: "100%", marginTop: "8px" }}
+                        >
+                          🗺️ {i18n.language === "ar" ? "ارسم المسار" : "Draw Route"}
+                        </button>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })
+          }
+        </MapContainer >
+      </div >
 
       {activeLocation && (
         <CheckInModal
@@ -488,13 +526,15 @@ const Map = () => {
         />
       )}
 
-      {activeReviewsLocation && (
-        <LocationReviews
-          location={activeReviewsLocation}
-          onClose={() => setActiveReviewsLocation(null)}
-        />
-      )}
-    </div>
+      {
+        activeReviewsLocation && (
+          <LocationReviews
+            location={activeReviewsLocation}
+            onClose={() => setActiveReviewsLocation(null)}
+          />
+        )
+      }
+    </div >
   );
 };
 

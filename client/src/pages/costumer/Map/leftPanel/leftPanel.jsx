@@ -16,7 +16,7 @@ const ENTITY_TYPE = {
     hotels: "hotel",
 };
 
-const LeftPanel = ({ destination, data = {}, isExpanded, onToggle }) => {
+const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) => {
     const expanded = isExpanded ?? true;
     const [activeTab, setActiveTab] = useState("places");
     const [savingMap, setSavingMap] = useState({});
@@ -113,53 +113,56 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle }) => {
 
                     {/* Card list */}
                     <div className={styles.cardList}>
-                        {(data[activeTab] ?? []).map((item, i) => {
-                            const key = `${activeTab}_${i}`;
-                            const saved = !!savedMap[key]?.savedId;
-                            const saving = !!savingMap[key];
-
-                            return (
-                                <div key={key} className={styles.card}>
-
-                                    {/* Left: number + text info */}
-                                    <div className={styles.cardLeft}>
-                                        <div className={styles.cardNum}>{i + 1}</div>
-                                        <div className={styles.cardInfo}>
-                                            <p className={styles.cardTitle}>{item.name}</p>
-                                            <p className={styles.cardAddress}>
-                                                <MapPin size={10} strokeWidth={2} aria-hidden="true" />
-                                                {item.address}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Right: save button + image */}
-                                    <div className={styles.cardRight}>
-                                        <button
-                                            className={`${styles.saveBtn} ${saved ? styles.saveBtnSaved : ""}`}
-                                            onClick={(e) => handleSave(e, item, key)}
-                                            disabled={saving}
-                                            aria-label={saved ? `Unsave ${item.name}` : `Save ${item.name}`}
-                                        >
-                                            <Bookmark size={12} fill={saved ? "currentColor" : "none"} strokeWidth={2} />
-                                            {saving ? "…" : saved ? "Saved" : "Save"}
-                                        </button>
-                                        <div className={styles.cardImgWrapper}>
-                                            <img
-                                                src={item.coverImage || item.image}
-                                                alt={item.name}
-                                                className={styles.cardImg}
-                                            />
-                                        </div>
-                                    </div>
-
-                                </div>
-                            );
-                        })}
-
-                        {(data[activeTab] ?? []).length === 0 && (
+                        {loading ? (
+                            <p className={styles.empty}>Loading...</p>
+                        ) : (data[activeTab] ?? []).length === 0 ? (
                             <p className={styles.empty}>No {activeTab} found.</p>
-                        )}
+                        ) : (<div>
+                            {(data[activeTab] ?? []).map((item, i) => {
+                                const key = `${activeTab}_${i}`;
+                                const saved = !!savedMap[key]?.savedId;
+                                const saving = !!savingMap[key];
+
+                                return (
+                                    <div key={key} className={styles.card}>
+
+                                        {/* Left: number + text info */}
+                                        <div className={styles.cardLeft}>
+                                            <div className={styles.cardNum}>{i + 1}</div>
+                                            <div className={styles.cardInfo}>
+                                                <p className={styles.cardTitle}>{item.name}</p>
+                                                <p className={styles.cardAddress}>
+                                                    <MapPin size={10} strokeWidth={2} aria-hidden="true" />
+                                                    {item.address}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right: save button + image */}
+                                        <div className={styles.cardRight}>
+                                            <button
+                                                className={`${styles.saveBtn} ${saved ? styles.saveBtnSaved : ""}`}
+                                                onClick={(e) => handleSave(e, item, key)}
+                                                disabled={saving}
+                                                aria-label={saved ? `Unsave ${item.name}` : `Save ${item.name}`}
+                                            >
+                                                <Bookmark size={12} fill={saved ? "currentColor" : "none"} strokeWidth={2} />
+                                                {saving ? "…" : saved ? "Saved" : "Save"}
+                                            </button>
+                                            <div className={styles.cardImgWrapper}>
+                                                <img
+                                                    src={item.coverImage || item.image}
+                                                    alt={item.name}
+                                                    className={styles.cardImg}
+                                                />
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                );
+                            })} </div>)}
+
+
                     </div>
                 </div>
             )}

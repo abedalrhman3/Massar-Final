@@ -67,6 +67,7 @@ exports.getPublicPhotos = async (req, res, next) => {
   try {
     const photos = await Photo.find({ user_id: req.params.id })
       .populate('location_id')
+      .populate('quest_id', 'title title_en')  // ← add this
       .populate('user_id', 'username name');
     res.json({ success: true, data: photos });
   } catch (err) {

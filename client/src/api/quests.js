@@ -2,8 +2,11 @@ import client from './client';
 
 // GET /api/quests  — public
 // returns: { success, data: Quest[] }  with populated locations
-export const getQuests = () =>
+export const getAllQuests = () =>
     client.get('/quests');
+
+export const getLocationQuests = (locationId) =>
+    client.get(`/quests/location/${locationId}`);
 
 // GET /api/quests/:id  — public
 // returns: { success, data: Quest }
@@ -14,8 +17,9 @@ export const getQuest = (id) =>
 // returns: { success, user }
 export const joinQuest = (id, formData) =>
     client.post(`/quests/${id}/join`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
+
 // ── Admin ─────────────────────────────────────────────
 
 // POST /api/quests  — admin
