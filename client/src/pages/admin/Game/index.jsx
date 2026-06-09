@@ -11,15 +11,15 @@ const sections = [
         bg: '#dcfce7',
         border: '#bbf7d0',
     },
-    {
-        key: 'budget-settings',
-        icon: 'monetization_on',
-        label: 'Budget Settings',
-        description: 'Configure cost thresholds that determine budget tiers for locations.',
-        accent: '#d97706',
-        bg: '#fef3c7',
-        border: '#fde68a',
-    },
+    /*  {
+         key: 'budget-settings',
+         icon: 'monetization_on',
+         label: 'Budget Settings',
+         description: 'Configure cost thresholds that determine budget tiers for locations.',
+         accent: '#d97706',
+         bg: '#fef3c7',
+         border: '#fde68a',
+     }, */
     {
         key: 'quests',
         icon: 'map',
@@ -29,7 +29,7 @@ const sections = [
         bg: '#ede9fe',
         border: '#ddd6fe',
     },
-    {
+    /* {
         key: 'reports',
         icon: 'flag',
         label: 'Reports',
@@ -37,7 +37,7 @@ const sections = [
         accent: '#dc2626',
         bg: '#fee2e2',
         border: '#fecaca',
-    },
+    }, */
 ];
 
 const Game = () => {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./Locations.module.css";
+import { useNavigate } from "react-router-dom";
 import { getLocations, createLocation, deleteLocation } from "@/api/locations";
 
 const emptyForm = {
@@ -16,6 +17,7 @@ const emptyForm = {
 const emptyTask = { description: "", description_en: "", xp: 50 };
 
 function Locations() {
+  const navigate = useNavigate();
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -113,7 +115,7 @@ function Locations() {
           <h2 className={styles.title}>Game Locations</h2>
           <p className={styles.subtitle}>Add and manage explorable game locations with tasks.</p>
         </div>
-        <button className={styles.addBtn} onClick={openModal}>
+        <button className={styles.addBtn} onClick={() => navigate("/admin/destinations")}>
           <span className="material-symbols-outlined">add_location_alt</span>
           Add Location
         </button>

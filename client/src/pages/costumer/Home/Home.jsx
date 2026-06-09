@@ -112,7 +112,7 @@ function Home() {
             </p>
             <button
               className={styles.learnMoreBtn}
-              onClick={() => navigate("/destinations/petra")}
+              onClick={() => navigate("/destinations/petra-1")}
             >learn more</button>
           </figcaption>
         </figure>
@@ -141,7 +141,7 @@ function Home() {
           </figcaption>
           <button
             className={styles.learnMoreBtn}
-            onClick={() => navigate("/destinations/dead-sea")}
+            onClick={() => navigate("/destinations/dead-sea-1")}
           >learn more</button>
         </figure>
       </div>
