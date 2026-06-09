@@ -10,11 +10,16 @@ const photoSchema = new mongoose.Schema(
     location_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Location',
-      required: true,
+      default: null,
     },
-    task_index:  { type: Number, default: 0 },
-    photo_url:   { type: String, required: true }, // Cloudinary URL
-    is_private:  { type: Boolean, default: false },
+    quest_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Quest',
+      default: null,
+    },
+    task_index: { type: Number, default: 0 },
+    photo_url: { type: String, required: true }, // Cloudinary URL
+    is_private: { type: Boolean, default: false },
     is_reported: { type: Boolean, default: false },
   },
   { timestamps: true }

@@ -2,8 +2,8 @@ import client from './client';
 
 // GET /api/photos  — public (community feed)
 // NOTE: returns a plain array (not { success, data }), e.g. res.data = Photo[]
-export const getPublicPhotos = () =>
-    client.get('/photos');
+export const getPublicPhotos = (id) =>
+    client.get(`/photos/${id}`);
 
 // PUT /api/photos/:id/privacy  — requires auth (owner only)
 // Toggles is_private on the photo

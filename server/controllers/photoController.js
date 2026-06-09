@@ -65,11 +65,10 @@ exports.completeTask = async (req, res, next) => {
 // GET /api/photos  — public (community photos feed)
 exports.getPublicPhotos = async (req, res, next) => {
   try {
-    const photos = await Photo.find({ is_private: false })
-      .populate('user_id', 'username name current_level')
-      .populate('location_id', 'name name_en')
-      .sort({ createdAt: -1 });
-    res.json(photos);
+    const photos = await Photo.find({ user_id: req.params.id })
+      .populate('location_id')
+      .populate('user_id', 'username name');
+    res.json({ success: true, data: photos });
   } catch (err) {
     next(err);
   }

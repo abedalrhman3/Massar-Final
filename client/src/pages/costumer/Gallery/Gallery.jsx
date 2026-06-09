@@ -9,6 +9,8 @@ import AdminSidebar from "@/pages/admin/AdminSidebar";
 
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "@/context/AuthContext";
+
 import {
     getPublicPhotos,
     togglePhotoPrivacy,
@@ -206,6 +208,7 @@ export default function Gallery() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [lightbox, setLightbox] = useState(null);
+    const { user } = useAuth();
 
     // Track which photo id is currently mid-action (shows spinner on that card)
     const [actionLoading, setActionLoading] = useState(null);
@@ -213,20 +216,41 @@ export default function Gallery() {
     // ── Fetch on mount ───────────────────────────────────────────────────────
     useEffect(() => {
         const fetchPhotos = async () => {
+            console.log("Fetching photos for user:", user._id);
+            const res = await getPublicPhotos(user._id);
+            console.log("API response:", res.data);
             try {
                 setLoading(true);
                 setError(null);
+                console.log("user ID", user._id)
                 // getPublicPhotos returns a plain array: res.data = Photo[]
-                const res = await getPublicPhotos();
-                setPhotos((res.data || []).map(normalisePhoto));
+                const res = await getPublicPhotos(user._id);
+                const photosArray = res.data?.data;
+
+                if (!photosArray || photosArray.length === 0) {
+                    setPhotos([]);
+                    return;
+                }
+
+                setPhotos(photosArray.map(normalisePhoto));
             } catch (err) {
-                setError(err?.response?.data?.message || "Failed to load photos.");
+                setError(err?.response?.data?.message || "No photos yet.");
             } finally {
                 setLoading(false);
             }
         };
+
+        console.log(photos);
+        console.log(normalisePhoto.id);
+        console.log(normalisePhoto.photo_url);
+        console.log(normalisePhoto.location_id);
+        console.log(normalisePhoto.user_id);
+        console.log(normalisePhoto.isPrivate);
+        console.log(normalisePhoto.isReported);
+        console.log(normalisePhoto.createdAt);
+        console.log(normalisePhoto.updatedAt);
         fetchPhotos();
-    }, []);
+    }, [user]);
 
     // ── Toggle privacy ───────────────────────────────────────────────────────
     const handleTogglePrivacy = async (photo) => {
@@ -314,7 +338,7 @@ export default function Gallery() {
                     <div className={styles.stateCenter}>
                         <div className={styles.emptyIcon}>⚠️</div>
                         <p className={styles.emptyTitle}>Something went wrong</p>
-                        <p className={styles.emptyDesc}>{error}</p>
+
                     </div>
                 )}
 
@@ -324,7 +348,7 @@ export default function Gallery() {
                         <div className={styles.emptyIcon}>🏔️</div>
                         <p className={styles.emptyTitle}>No photos yet</p>
                         <p className={styles.emptyDesc}>
-                            Community photos will appear here once members complete check-ins.
+                            Complete a quest to add you first photo
                         </p>
                     </div>
                 )}

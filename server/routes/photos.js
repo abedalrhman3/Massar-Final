@@ -5,12 +5,13 @@ const {
 } = require('../controllers/photoController');
 const { protect, adminOnly } = require('../middleware/auth');
 
-router.get('/', getPublicPhotos);
+// Static routes FIRST — before /:id
+router.get('/reported', protect, adminOnly, getReported);
+
+// Dynamic routes after
+router.get('/:id', getPublicPhotos);
 router.put('/:id/privacy', protect, togglePrivacy);
 router.post('/:id/report', protect, reportPhoto);
-
-// Admin
-router.get('/reported',   protect, adminOnly, getReported);
-router.delete('/:id',     protect, adminOnly, remove);
+router.delete('/:id', protect, adminOnly, remove);
 
 module.exports = router;

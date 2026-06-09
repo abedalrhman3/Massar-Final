@@ -12,9 +12,10 @@ export const getQuest = (id) =>
 
 // POST /api/quests/:id/join  — private
 // returns: { success, user }
-export const joinQuest = (id) =>
-    client.post(`/quests/${id}/join`);
-
+export const joinQuest = (id, formData) =>
+    client.post(`/quests/${id}/join`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
 // ── Admin ─────────────────────────────────────────────
 
 // POST /api/quests  — admin

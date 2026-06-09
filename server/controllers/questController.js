@@ -58,6 +58,9 @@ exports.remove = async (req, res, next) => {
 exports.joinQuest = async (req, res, next) => {
   try {
     const User = require('../models/User');
+    const Photo = require('../models/Photo');
+    const { uploadPhoto } = require('../services/uploadService');
+
     const userId = req.user.userId;
     const questId = req.params.id;
 
@@ -67,20 +70,27 @@ exports.joinQuest = async (req, res, next) => {
     const user = await User.findById(userId);
     if (!user) return next(new AppError('User not found', 404));
 
-    if (!user.joined_quests) {
-      user.joined_quests = [];
+    // Upload photo and save to Photos collection
+    let photoRecord = null;
+    if (req.file) {
+      const photoUrl = await uploadPhoto(req.file.buffer);
+      photoRecord = await Photo.create({
+        user_id: userId,
+        quest_id: questId,
+        photo_url: photoUrl,
+      });
     }
 
-    const questIdStr = questId.toString();
-    const joinedStrs = user.joined_quests.map(id => id.toString());
-
-    if (!joinedStrs.includes(questIdStr)) {
+    // Mark quest as joined (idempotent)
+    if (!user.joined_quests) user.joined_quests = [];
+    const alreadyJoined = user.joined_quests.map(id => id.toString()).includes(questId.toString());
+    if (!alreadyJoined) {
       user.joined_quests.push(questId);
       await user.save();
     }
 
     const updatedUser = await User.findById(userId).select('-passwordHash');
-    res.json({ success: true, message: 'Quest joined successfully', user: updatedUser });
+    res.json({ success: true, message: 'Quest joined successfully', user: updatedUser, photo: photoRecord });
   } catch (err) {
     next(err);
   }

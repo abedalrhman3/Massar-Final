@@ -43,20 +43,24 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
         setPhotoPreview(URL.createObjectURL(file));
     };
 
+
     const handleSubmit = async (e) => {
         e.stopPropagation();
-        if (!photoQuest) return;
+        if (!photoQuest || !photo) return;
 
         setJoining((prev) => ({ ...prev, [photoQuest._id]: true }));
         try {
-            const res = await joinQuest(photoQuest._id);
+            const formData = new FormData();
+            formData.append("photo", photo);
+
+            const res = await joinQuest(photoQuest._id, formData);  // pass formData
             if (res.data.success) {
                 setClaimed((prev) => ({ ...prev, [String(photoQuest._id)]: true }));
                 if (setUser && res.data.user) {
                     setUser(res.data.user);
                     localStorage.setItem("user", JSON.stringify(res.data.user));
                 }
-                alert(isAr ? "تم الانضمام للمسار بنجاح! تم فتح المواقع المرتبطة به." : "Successfully joined the quest! Linked locations are unlocked.");
+                alert(isAr ? "تم الانضمام للمسار بنجاح!..." : "Successfully joined the quest!...");
             }
         } catch (err) {
             alert(err.response?.data?.message || "Failed to join quest.");
@@ -67,6 +71,7 @@ const QuestsPanel = ({ quests = [], isExpanded, onToggle, isLeftOpen }) => {
             setPhotoPreview(null);
         }
     };
+
 
     const handleCancelPopup = (e) => {
         e.stopPropagation();
