@@ -16,8 +16,10 @@ function UserDashboard() {
   };
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  const SERVER = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // Guard: if avatar_url is already an absolute URL (e.g. Cloudinary), don't prepend SERVER.
   const avatarSrc = user.avatar_url
-    ? `http://localhost:5000${user.avatar_url}`
+    ? (user.avatar_url.startsWith("http") ? user.avatar_url : `${SERVER}${user.avatar_url}`)
     : defaultAvatar;
 
   return (

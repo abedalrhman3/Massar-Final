@@ -144,16 +144,16 @@ exports.create = async (req, res, next) => {
 
     const destination = await Destination.create({ ...req.body, slug, image });
 
-    // Auto-create a linked Location
-    // coordinates is required by the Location schema, so only create if present.
-    const locationPayload = buildLocationPayload(destination, destination._id);
-    if (locationPayload.coordinates) {
-      await Location.create(locationPayload);
-    } else {
-      // Still create the location but without coordinates — admin can fill them in later.
-      // Remove the coordinates key entirely so Mongoose doesn't validate an empty object.
-      delete locationPayload.coordinates;
-      await Location.create(locationPayload);
+    // Auto-create a linked Location only when coordinates are available.
+    // Wrap in its own try/catch so a location failure never blocks the response.
+    try {
+      const locationPayload = buildLocationPayload(destination, destination._id);
+      if (locationPayload.coordinates) {
+        await Location.create(locationPayload);
+      }
+      // else: skip — admin can add coordinates via the Locations admin page later
+    } catch (locErr) {
+      console.error('Location auto-create failed (non-fatal):', locErr);
     }
 
     res.status(201).json({ success: true, data: destination });

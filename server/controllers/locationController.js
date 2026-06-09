@@ -10,9 +10,7 @@ exports.getAll = async (req, res, next) => {
 
     if (budgetCategory && budgetCategory !== 'All') {
       let setting = await Setting.findOne();
-      if (!setting) {
-        setting = await Setting.create({});
-      }
+      if (!setting) setting = await Setting.create({});
       const lowMax = setting.budget_ranges.low_max;
       const midMax = setting.budget_ranges.mid_max;
 
@@ -30,59 +28,17 @@ exports.getAll = async (req, res, next) => {
 
     const locations = await Location.find(query).populate('badge_id');
 
-    // FILTER QUEST-BOUND LOCATIONS:
-    // Locations under a quest should NOT appear unless user has joined that quest.
-    const Quest = require('../models/Quest');
-    const allQuests = await Quest.find();
-    
-    // 1. Gather all location IDs that are part of ANY quest
-    const questBoundLocationIds = new Set();
-    allQuests.forEach(q => {
-      if (q.locations && Array.isArray(q.locations)) {
-        q.locations.forEach(locId => {
-          questBoundLocationIds.add(locId.toString());
-        });
-      }
-    });
-
-    // 2. Identify the quests joined by the current user (if logged in)
-    let joinedQuestIds = [];
-    if (req.user && req.user.userId) {
-      const User = require('../models/User');
-      const user = await User.findById(req.user.userId);
-      if (user && user.joined_quests) {
-        joinedQuestIds = user.joined_quests.map(id => id.toString());
-      }
-    }
-
-    // 3. Gather all location IDs that are part of the quests joined by the user
-    const allowedLocationIds = new Set();
-    allQuests.forEach(q => {
-      if (joinedQuestIds.includes(q._id.toString())) {
-        if (q.locations && Array.isArray(q.locations)) {
-          q.locations.forEach(locId => {
-            allowedLocationIds.add(locId.toString());
-          });
-        }
-      }
-    });
-
-    // 4. Filter locations
-    const filteredLocations = locations.filter(loc => {
-      const locIdStr = loc._id.toString();
-      // If the location belongs to a quest, show it ONLY if user has joined that quest
-      if (questBoundLocationIds.has(locIdStr)) {
-        return allowedLocationIds.has(locIdStr);
-      }
-      // Otherwise, it's a standalone location, always show it
-      return true;
-    });
-
-    res.json(filteredLocations); // Abed's client expects array directly
+    // All locations are returned regardless of quest membership.
+    // Rationale: quest-linked locations must be VISIBLE so users can discover quests
+    // and click the Join button in the QuestPanel. Hiding them creates an unbreakable
+    // deadlock (can't see location → can't join quest → location stays hidden forever).
+    // The join gate lives in the check-in / completeTask endpoint, which is the right place.
+    res.json(locations);
   } catch (err) {
     next(err);
   }
 };
+
 
 // GET /api/admin/settings/budget  — admin (direct return of ranges)
 exports.getBudgetSettings = async (req, res, next) => {

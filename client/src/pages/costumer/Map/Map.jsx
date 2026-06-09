@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, Polyline, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
@@ -7,7 +7,6 @@ import CheckInModal from "./CheckInModal";
 import LocationReviews from "./LocationReviews";
 import styles from "./Map.module.css";
 import { getLocations } from "@/api/locations";
-import { joinQuest } from "@/api/quests";
 import { useAuth } from "@/context/AuthContext";
 import { BASE_URL } from "@/api/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -61,8 +60,10 @@ const AutoLocationTracker = ({ onFound, isCelebrating, userAvatarUrl }) => {
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
+  // Only prepend BASE_URL when the URL is a relative server path.
+  // Cloudinary (and other absolute) URLs already contain "http" and must NOT be prefixed.
   const avatarSrc = userAvatarUrl
-    ? `${BASE_URL.replace(/\/$/, "")}/${userAvatarUrl.replace(/^\//, "")}`
+    ? (userAvatarUrl.startsWith("http") ? userAvatarUrl : `${BASE_URL.replace(/\/$/, "")}/${userAvatarUrl.replace(/^\//, "")}`)
     : defaultAvatar;
 
   const map = useMapEvents({
@@ -122,7 +123,6 @@ const Map = () => {
   const initialCoords = locationState.state;
 
   const [locations, setLocations] = useState([]);
-  const [quests, setQuests] = useState([]);
   const [budget, setBudget] = useState("");
   const [activeLocation, setActiveLocation] = useState(null);
   const [activeReviewsLocation, setActiveReviewsLocation] = useState(null);
@@ -131,39 +131,51 @@ const Map = () => {
   const [manualPos, setManualPos] = useState(null);
   const [autoPos, setAutoPos] = useState(null);
   const [routeCoords, setRouteCoords] = useState([]);
-  const [joiningQuestId, setJoiningQuestId] = useState(null);
+  const [joiningQuestId, setJoiningQuestId] = useState(null); // kept for QuestPanel join flow
 
   const [panelData, setPanelData] = useState({ places: [], restaurants: [], hotels: [] });
   const [panelLoading, setPanelLoading] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null); // the clicked pin's location doc
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
-  useEffect(() => {
-    setQuests([]);
-  }, [locations])
+  // Bug 6 fix: removed dead `quests` state and its useEffect — quests are loaded
+  // on pin click into QuestsPanel, not stored in a global map-level array.
 
-  const handleLocationSelect = async (loc) => {
+  // Bug 2 + 3 fix: wrap in useCallback so Leaflet eventHandlers always hold a stable
+  // reference, and fix the 4-slot destructure from a 3-item Promise.all (questsRes
+  // was always undefined and caused a crash). Also guard against null destination_id.
+  const handleLocationSelect = useCallback(async (loc) => {
     setSelectedLocation(loc);
+    if (!loc.destination_id) {
+      // Location was created manually without linking to a destination — nothing to fetch.
+      setPanelData({ places: [], restaurants: [], hotels: [] });
+      return;
+    }
     setPanelLoading(true);
     try {
-      const params = { destinationId: loc.destination_id }; // use the location's linked destination
-      const [placesRes, restaurantsRes, hotelsRes, questsRes] = await Promise.all([
+      const params = { destinationId: loc.destination_id };
+      const [placesRes, restaurantsRes, hotelsRes] = await Promise.all([
         placesApi.getAll(params),
         restaurantsApi.getAll(params),
         hotelsApi.getAll(params),
-        /*  getQuests(params), */
       ]);
       setPanelData({
         places: Array.isArray(placesRes.data?.data) ? placesRes.data.data : [],
         restaurants: Array.isArray(restaurantsRes.data?.data) ? restaurantsRes.data.data : [],
         hotels: Array.isArray(hotelsRes.data?.data) ? hotelsRes.data.data : [],
       });
-      //setQuests(questsRes.data?.data ?? []);
     } catch (err) {
       console.error("Failed to load location details:", err);
     } finally {
       setPanelLoading(false);
     }
-  };
+  }, []); // stable — only uses state setters which never change
+
+  // Reset selected location when user searches a new destination
+  useEffect(() => {
+    if (!initialCoords) return;
+    setSelectedLocation(null);
+    setPanelData({ places: [], restaurants: [], hotels: [] });
+  }, [initialCoords?.lat, initialCoords?.lng]);
 
 
   /* useEffect(() => {
@@ -213,26 +225,6 @@ const Map = () => {
     }
   };
 
-  const handleJoinQuest = async (questId) => {
-    setJoiningQuestId(questId);
-    try {
-      const res = await joinQuest(questId);
-      if (res.data.success) {
-        alert(i18n.language === "ar" ? "تم الانضمام للمسار بنجاح! تم فتح المواقع المرتبطة به." : "Successfully joined the quest! Linked locations are unlocked.");
-        setUser(res.data.user);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        const params = budget && budget !== "All" ? { budgetCategory: budget } : {};
-        getLocations(params)
-          .then((res) => setLocations(Array.isArray(res.data) ? res.data : []))
-          .catch(() => setLocations([]));
-      }
-    } catch (error) {
-      console.error("Error joining quest", error);
-      alert(i18n.language === "ar" ? "فشل الانضمام للمسار" : "Failed to join quest");
-    } finally {
-      setJoiningQuestId(null);
-    }
-  };
 
   const userPosition = manualMode ? manualPos : autoPos;
 
@@ -249,12 +241,6 @@ const Map = () => {
     // quests now load on pin click, not here
   }, [budget]);
 
-  const createQuestIcon = (url) =>
-    new L.Icon({
-      iconUrl: `${BASE_URL}${url}`,
-      iconSize: [40, 40],
-      className: "quest-map-icon",
-    });
 
   const manualIcon = new L.divIcon({
     html: `<div style="background:var(--color-accent);width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
@@ -352,7 +338,9 @@ const Map = () => {
             attribution="&copy; OpenStreetMap contributors"
           />
 
-          {initialCoords && <MapCenterSetter coords={initialCoords} />}
+          {initialCoords && (
+            <MapCenterSetter coords={initialCoords} key={`${initialCoords.lat}-${initialCoords.lng}`} />
+          )}
 
           {initialCoords && (
             <Marker position={[initialCoords.lat, initialCoords.lng]}>
@@ -411,7 +399,9 @@ const Map = () => {
             </>
           )}
 
-          {locations.map((loc) => (
+          {/* Bug 5 fix: filter out locations without valid coordinates before mapping
+              to Markers — avoids "Cannot read properties of undefined" crashes. */}
+          {locations.filter(loc => loc.coordinates?.lat != null && loc.coordinates?.lng != null).map((loc) => (
             <Marker
               key={loc._id}
               position={[loc.coordinates.lat, loc.coordinates.lng]}
@@ -454,62 +444,11 @@ const Map = () => {
             </Marker>
           ))}
 
-          {
-            quests.map((quest) => {
-              if (!quest.start_coordinates?.lat) return null;
-              return (
-                <Marker
-                  key={quest._id}
-                  position={[quest.start_coordinates.lat, quest.start_coordinates.lng]}
-                  icon={quest.icon_url ? createQuestIcon(quest.icon_url) : new L.Icon.Default()}
-                >
-                  <Popup>
-                    <div style={{ padding: "5px", fontFamily: "var(--font-ui), sans-serif" }}>
-                      <h3 style={{ color: "#D97706", fontWeight: "800", fontSize: "1.4rem", margin: "0 0 5px 0" }}>
-                        ✨ {i18n.language === "ar" ? quest.title : quest.title_en}
-                      </h3>
-                      <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
-                        <strong>Bonus XP:</strong> {quest.bonus_xp}
-                      </p>
-                      <p style={{ margin: "3px 0", fontSize: "1.2rem" }}>
-                        <strong>Title:</strong> {quest.title_reward}
-                      </p>
-                      {user && (
-                        <button
-                          onClick={() => handleJoinQuest(quest._id)}
-                          disabled={joiningQuestId === quest._id}
-                          style={{
-                            background: user.joined_quests?.map(String).includes(String(quest._id)) ? "#2E7D32" : "var(--color-accent)",
-                            color: "white",
-                            border: "none",
-                            padding: "6px 12px",
-                            borderRadius: "8px",
-                            fontWeight: "700",
-                            cursor: "pointer",
-                            fontSize: "1.1rem",
-                            width: "100%",
-                            marginTop: "8px",
-                          }}
-                        >
-                          {user.joined_quests?.map(String).includes(String(quest._id))
-                            ? (i18n.language === "ar" ? "مشارك فيه ✅" : "Joined ✅")
-                            : (i18n.language === "ar" ? "انضمام للمسار" : "Join Quest")}
-                        </button>
-                      )}
-                      {userPosition && (
-                        <button
-                          onClick={() => drawRoute(quest.start_coordinates.lat, quest.start_coordinates.lng)}
-                          style={{ background: "#4F46E5", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "1.1rem", width: "100%", marginTop: "8px" }}
-                        >
-                          🗺️ {i18n.language === "ar" ? "ارسم المسار" : "Draw Route"}
-                        </button>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })
-          }
+
+          {/* Bug 6 fix: quest markers block removed — quests are now shown in QuestsPanel
+              (loaded on pin click). The global quests fetch is commented out, so this
+              block always rendered nothing and the quests state was never populated. */}
+
         </MapContainer >
       </div >
 

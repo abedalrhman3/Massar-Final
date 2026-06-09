@@ -89,8 +89,9 @@ function UserProfile() {
   }
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  // Guard: if avatar_url is already an absolute URL (Cloudinary), don't prepend SERVER.
   const avatarSrc = user?.avatar_url
-    ? `${SERVER}${user.avatar_url}`
+    ? (user.avatar_url.startsWith("http") ? user.avatar_url : `${SERVER}${user.avatar_url}`)
     : defaultAvatar;
 
   return (
@@ -150,7 +151,9 @@ function UserProfile() {
               {user.unlocked_badges.map((badge) => (
                 <div key={badge._id} className={styles.badgeCard}>
                   <img
-                    src={badge.icon_url ? `${SERVER}${badge.icon_url}` : defaultAvatar}
+                    src={badge.icon_url
+                      ? (badge.icon_url.startsWith("http") ? badge.icon_url : `${SERVER}${badge.icon_url}`)
+                      : defaultAvatar}
                     alt={badge.name_en || badge.name}
                     className={styles.badgeIcon}
                   />

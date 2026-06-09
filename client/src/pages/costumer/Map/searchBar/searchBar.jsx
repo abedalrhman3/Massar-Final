@@ -75,6 +75,7 @@ const SearchBar = () => {
                 name: isAr ? loc.name : loc.name_en,
                 destinationId: loc.destination_id,
             },
+            replace: true,
         });
     };
 
