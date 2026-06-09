@@ -30,6 +30,11 @@ const locationSchema = new mongoose.Schema(
       ref: 'Badge',
     },
     tasks: { type: [taskSchema], default: [] },
+    destination_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Destination',
+      default: null,
+    },
   },
   { timestamps: true }
 );

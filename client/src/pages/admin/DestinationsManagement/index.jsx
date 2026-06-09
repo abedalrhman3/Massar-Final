@@ -119,19 +119,19 @@ function DestinationsManagement() {
       const detailRes = await getDestinationDetails(dest._id);
       const detail = detailRes.data.data;
       if (detail) {
-        base.location        = detail.overview?.locationText    || "";
+        base.location = detail.overview?.locationText || "";
         base.recommendedStay = detail.overview?.recommendedStay || "";
-        base.bestSeason      = detail.overview?.bestSeason      || "";
-        base.averageCost     = detail.overview?.averageCost     || "";
+        base.bestSeason = detail.overview?.bestSeason || "";
+        base.averageCost = detail.overview?.averageCost || "";
         // activities stored as [{name}], form uses flat strings
         base.activities = (detail.activities || []).map(a => a.name || "");
         // guideSections back to travelGuide
         const guide = detail.guideSections || [];
         const find = (titles) => guide.find(s => titles.includes(s.title))?.content || "";
         base.travelGuide = {
-          howToGetThere:  find(["How to Get There"]),
+          howToGetThere: find(["How to Get There"]),
           bestTimeToVisit: find(["Best Time to Visit"]),
-          whatToBring:    find(["What to Bring"]),
+          whatToBring: find(["What to Bring"]),
         };
       }
     } catch (_) {
@@ -195,6 +195,7 @@ function DestinationsManagement() {
 
   // ── Save (create / update) ─────────────────────────────────────────────────
   const handleSave = async () => {
+
     if (!newDest.name || !newDest.budget) {
       alert("Name and budget are required.");
       return;
@@ -222,9 +223,12 @@ function DestinationsManagement() {
         }));
       }
 
+
       // Image — file takes priority over URL
       if (newDest.image) {
         formData.append("image", newDest.image);
+      } else if (newDest.imageUrl) {
+        formData.append("imageUrl", newDest.imageUrl); // ← add this
       }
 
       let destinationId;
@@ -243,18 +247,18 @@ function DestinationsManagement() {
 
       await updateDestinationDetails(destinationId, {
         overview: {
-          text:            newDest.description,
-          locationText:    newDest.location,
+          text: newDest.description,
+          locationText: newDest.location,
           recommendedStay: newDest.recommendedStay,
-          bestSeason:      newDest.bestSeason,
-          averageCost:     newDest.averageCost,
+          bestSeason: newDest.bestSeason,
+          averageCost: newDest.averageCost,
         },
         // flat strings → [{name}], skip blanks
         activities: newDest.activities.filter(a => a.trim()).map(name => ({ name })),
         guideSections: [
-          { type: 'transport', title: 'How to Get There',  content: newDest.travelGuide.howToGetThere,  sortOrder: 0 },
-          { type: 'tips',     title: 'Best Time to Visit', content: newDest.travelGuide.bestTimeToVisit, sortOrder: 1 },
-          { type: 'other',    title: 'What to Bring',      content: newDest.travelGuide.whatToBring,     sortOrder: 2 },
+          { type: 'transport', title: 'How to Get There', content: newDest.travelGuide.howToGetThere, sortOrder: 0 },
+          { type: 'tips', title: 'Best Time to Visit', content: newDest.travelGuide.bestTimeToVisit, sortOrder: 1 },
+          { type: 'other', title: 'What to Bring', content: newDest.travelGuide.whatToBring, sortOrder: 2 },
         ],
       });
 
