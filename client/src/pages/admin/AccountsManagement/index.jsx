@@ -1,18 +1,138 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AccountsManagement.module.css";
-import { getAllUsers, toggleBanUser } from "@/api/auth";
+import { getAllUsers, toggleBanUser, deleteUser } from "@/api/auth";
+
+// ─── Toast system (self-contained) ───────────────────────────────────────────
+
+const TOAST_ICONS = {
+  success: "check_circle",
+  error: "error",
+  warning: "warning",
+  info: "info",
+};
+
+const TOAST_COLORS = {
+  success: "#16a34a",
+  error: "#dc2626",
+  warning: "#f59e0b",
+  info: "#1591dc",
+};
+
+function ToastContainer({ toasts, removeToast }) {
+  if (!toasts.length) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "1.5rem",
+        right: "1.5rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.6rem",
+        zIndex: 9999,
+        pointerEvents: "none",
+      }}
+      role="region"
+      aria-live="polite"
+      aria-label="Notifications"
+    >
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          role="alert"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "0.85rem 1rem",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06)",
+            minWidth: "300px",
+            maxWidth: "420px",
+            pointerEvents: "all",
+            borderLeft: `3px solid ${TOAST_COLORS[t.type]}`,
+            animation: t.exiting
+              ? "toastOut 0.25s ease-in forwards"
+              : "toastIn 0.25s cubic-bezier(0.23,1,0.32,1) forwards",
+            fontFamily: '"Geist","Satoshi","Plus Jakarta Sans",sans-serif',
+          }}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: "1.25rem", flexShrink: 0, color: TOAST_COLORS[t.type] }}
+          >
+            {TOAST_ICONS[t.type]}
+          </span>
+          <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#1d1b1b", lineHeight: 1.4, flex: 1 }}>
+            {t.message}
+          </span>
+          <button
+            onClick={() => removeToast(t.id)}
+            aria-label="Dismiss"
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "#9ca3af",
+              display: "flex",
+              alignItems: "center",
+              borderRadius: "6px",
+              padding: "0.15rem",
+              flexShrink: 0,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>close</span>
+          </button>
+        </div>
+      ))}
+      <style>{`
+        @keyframes toastIn {
+          from { opacity: 0; transform: translateY(12px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes toastOut {
+          from { opacity: 1; transform: translateY(0) scale(1); }
+          to   { opacity: 0; transform: translateY(8px) scale(0.97); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [role="alert"] { animation: none !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+  const counterRef = useRef(0);
+
+  const addToast = useCallback((message, type = "info", duration = 4000) => {
+    const id = ++counterRef.current;
+    setToasts((prev) => [...prev, { id, message, type, exiting: false }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
+      setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 300);
+    }, duration);
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 300);
+  }, []);
+
+  const toast = {
+    success: (msg, duration) => addToast(msg, "success", duration),
+    error: (msg, duration) => addToast(msg, "error", duration),
+    warning: (msg, duration) => addToast(msg, "warning", duration),
+    info: (msg, duration) => addToast(msg, "info", duration),
+  };
+
+  return { toasts, removeToast, toast };
+}
 
 // ─── Field mapping helpers ────────────────────────────────────────────────────
-//
-// Your API returns User objects shaped like:
-//   { _id, name, email, role, isBanned, createdAt, profilePicture?, ... }
-//
-// The UI expects:
-//   { id, username, email, avatar, subscription_date, status }
-//
-// normalizeUser converts one API user → UI shape.
-// status is derived: isBanned → 'banned', else 'active'
 
 function normalizeUser(user) {
   return {
@@ -22,12 +142,10 @@ function normalizeUser(user) {
     avatar: user.profilePicture || null,
     subscription_date: user.createdAt,
     status: user.isBanned ? "banned" : "active",
-    // keep original for reference
     _raw: user,
   };
 }
 
-// Derive stats from the full users array (no dedicated stats endpoint)
 function deriveStats(users) {
   return users.reduce(
     (acc, u) => {
@@ -39,7 +157,7 @@ function deriveStats(users) {
   );
 }
 
-// ─── Sub-components (unchanged from original) ────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SearchInput({ value, onChange, placeholder }) {
   return (
@@ -69,10 +187,7 @@ function formatRelativeTime(date) {
   if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days} days ago`;
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function useAnimatedNumber(targetValue, duration = 400) {
@@ -81,7 +196,6 @@ function useAnimatedNumber(targetValue, duration = 400) {
 
   useEffect(() => {
     if (targetValue === previousValue.current) return;
-
     const startValue = previousValue.current;
     const diff = targetValue - startValue;
     const startTime = performance.now();
@@ -92,7 +206,6 @@ function useAnimatedNumber(targetValue, duration = 400) {
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const current = Math.round(startValue + diff * easeOut);
       setDisplayValue(current);
-
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
@@ -111,8 +224,8 @@ function useAnimatedNumber(targetValue, duration = 400) {
 function AccountsManagement() {
   const navigate = useNavigate();
   const accountsSectionRef = useRef(null);
+  const { toasts, removeToast, toast } = useToast();
 
-  // State
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -122,29 +235,15 @@ function AccountsManagement() {
   const [showFilter, setShowFilter] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
 
-  // Stats — derived client-side from the users array
-  const [stats, setStats] = useState({
-    active: 0,
-    suspended: 0,
-    banned: 0,
-    reported: 0,
-  });
+  const [stats, setStats] = useState({ active: 0, suspended: 0, banned: 0, reported: 0 });
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [reportedPage, setReportedPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Dialogs
-  const [banDialog, setBanDialog] = useState({
-    open: false,
-    account: null,
-    reason: "",
-  });
-  const [clearDialog, setClearDialog] = useState({
-    open: false,
-    account: null,
-  });
+  const [banDialog, setBanDialog] = useState({ open: false, account: null, reason: "" });
+  const [unbanDialog, setUnbanDialog] = useState({ open: false, account: null });
+  const [removeDialog, setRemoveDialog] = useState({ open: false, account: null });
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -161,7 +260,6 @@ function AccountsManagement() {
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -171,16 +269,12 @@ function AccountsManagement() {
     loadData();
   }, [fetchAccounts]);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, debouncedSearch]);
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, debouncedSearch]);
 
   // ── Animated stat counters ────────────────────────────────────────────────
 
@@ -189,23 +283,16 @@ function AccountsManagement() {
   const animatedSuspended = useAnimatedNumber(stats.suspended);
   const animatedReported = useAnimatedNumber(stats.reported);
 
-  // ── Formatting ────────────────────────────────────────────────────────────
-
   const formatDate = (date) => {
     if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  // ── Filtering (client-side — API returns all users at once) ───────────────
+  // ── Filtering ─────────────────────────────────────────────────────────────
 
   const filteredAccounts = useMemo(() => {
     return accounts.filter((acc) => {
-      const matchesStatus =
-        statusFilter === "all" || acc.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || acc.status === statusFilter;
       const matchesSearch =
         !debouncedSearch ||
         acc.username?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
@@ -227,10 +314,7 @@ function AccountsManagement() {
   const [debouncedReportedSearch, setDebouncedReportedSearch] = useState("");
 
   useEffect(() => {
-    const timer = setTimeout(
-      () => setDebouncedReportedSearch(reportedSearchInput),
-      300,
-    );
+    const timer = setTimeout(() => setDebouncedReportedSearch(reportedSearchInput), 300);
     return () => clearTimeout(timer);
   }, [reportedSearchInput]);
 
@@ -240,18 +324,10 @@ function AccountsManagement() {
       .filter(
         (acc) =>
           !debouncedReportedSearch ||
-          acc.username
-            ?.toLowerCase()
-            .includes(debouncedReportedSearch.toLowerCase()) ||
-          acc.email
-            ?.toLowerCase()
-            .includes(debouncedReportedSearch.toLowerCase()),
+          acc.username?.toLowerCase().includes(debouncedReportedSearch.toLowerCase()) ||
+          acc.email?.toLowerCase().includes(debouncedReportedSearch.toLowerCase()),
       )
-      .map((acc) => ({
-        ...acc,
-        flags: 1,
-        last_incident: acc.subscription_date,
-      }));
+      .map((acc) => ({ ...acc, flags: 1, last_incident: acc.subscription_date }));
   }, [accounts, debouncedReportedSearch]);
 
   const paginatedReported = useMemo(() => {
@@ -263,38 +339,10 @@ function AccountsManagement() {
 
   const [lastIncidentTimes, setLastIncidentTimes] = useState([]);
   useEffect(() => {
-    setLastIncidentTimes(
-      reportedAccounts.map((rep) => formatRelativeTime(rep.last_incident)),
-    );
+    setLastIncidentTimes(reportedAccounts.map((rep) => formatRelativeTime(rep.last_incident)));
   }, [reportedAccounts]);
 
   // ── Action handlers ───────────────────────────────────────────────────────
-
-  const handleSuspend = async (account) => {
-    try {
-      await toggleBanUser(account.id);
-      await fetchAccounts();
-      setActiveMenu(null);
-    } catch (err) {
-      alert(
-        "Failed to suspend account: " +
-        (err.response?.data?.message || err.message),
-      );
-    }
-  };
-
-  const handleReactivate = async (account) => {
-    try {
-      await toggleBanUser(account.id);
-      await fetchAccounts();
-      setActiveMenu(null);
-    } catch (err) {
-      alert(
-        "Failed to reactivate account: " +
-        (err.response?.data?.message || err.message),
-      );
-    }
-  };
 
   const handleBan = (account) => {
     setBanDialog({ open: true, account, reason: "" });
@@ -303,67 +351,85 @@ function AccountsManagement() {
 
   const confirmBan = async () => {
     if (!banDialog.reason.trim()) return;
+    const username = banDialog.account?.username ?? "Account";
     try {
       await toggleBanUser(banDialog.account.id);
       setBanDialog({ open: false, account: null, reason: "" });
       await fetchAccounts();
+      toast.success(`${username} has been banned.`);
     } catch (err) {
-      alert(
-        "Failed to ban account: " +
-        (err.response?.data?.message || err.message),
-      );
+      toast.error("Failed to ban account: " + (err.response?.data?.message || err.message));
     }
   };
 
-  const handleClearFlags = (account) => {
-    setClearDialog({ open: true, account });
+  const handleSuspend = async (account) => {
+    try {
+      await toggleBanUser(account.id);
+      await fetchAccounts();
+      setActiveMenu(null);
+      toast.warning(`${account.username} has been suspended.`);
+    } catch (err) {
+      toast.error("Failed to suspend account: " + (err.response?.data?.message || err.message));
+    }
   };
 
-  const confirmClearFlags = async () => {
+  const handleReactivate = async (account) => {
     try {
-      alert(
-        `Flags cleared for ${clearDialog.account.username} (UI only — no API endpoint yet)`,
-      );
-      setClearDialog({ open: false, account: null });
+      await toggleBanUser(account.id);
+      await fetchAccounts();
+      setActiveMenu(null);
+      toast.success(`${account.username}'s account has been reactivated.`);
     } catch (err) {
-      alert(
-        "Failed to clear flags: " +
-        (err.response?.data?.message || err.message),
-      );
+      toast.error("Failed to reactivate account: " + (err.response?.data?.message || err.message));
     }
   };
 
   const handleUnban = async (account) => {
-    if (!confirm(`Are you sure you want to unban ${account.username}?`)) return;
     try {
       await toggleBanUser(account.id);
       await fetchAccounts();
+      toast.success(`Ban lifted for ${account.username}.`);
     } catch (err) {
-      alert(
-        "Failed to unban account: " +
-        (err.response?.data?.message || err.message),
-      );
+      toast.error("Failed to unban account: " + (err.response?.data?.message || err.message));
     }
   };
 
-  const handleQuickAccess = (action) => {
-    switch (action) {
-      case "guidelines":
-        alert("Opening Community Guidelines...");
-        break;
-      case "ban-history":
-        navigate("/admin/ban-history");
-        break;
-      case "appeals":
-        alert("Appeals Queue: 14 pending review");
-        break;
-      case "chat":
-        navigate("/admin/chat");
-        break;
-      default:
-        break;
+  const handleUnbanFromReported = (account) => setUnbanDialog({ open: true, account });
+
+  const confirmUnban = async () => {
+    const username = unbanDialog.account?.username;
+    try {
+      await toggleBanUser(unbanDialog.account.id);
+      setUnbanDialog({ open: false, account: null });
+      await fetchAccounts();
+      toast.success(`Ban lifted for ${username}.`);
+    } catch (err) {
+      toast.error("Failed to unban account: " + (err.response?.data?.message || err.message));
     }
   };
+
+  const handleRemoveUser = (account) => setRemoveDialog({ open: true, account });
+
+  const confirmRemoveUser = async () => {
+    const username = removeDialog.account?.username;
+    try {
+      await deleteUser(removeDialog.account.id);
+      setRemoveDialog({ open: false, account: null });
+      await fetchAccounts();
+      toast.success(`${username} has been permanently removed.`);
+    } catch (err) {
+      toast.error("Failed to remove user: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // ── Quick-access ──────────────────────────────────────────────────────────
+
+  const handleOpenGuidelines = () => toast.info("Community Guidelines are currently unavailable.");
+  const handleOpenBanHistory = () => navigate("/admin/ban-history");
+  const handleOpenAppealsQueue = () => toast.info("Appeals Queue: 14 pending review.");
+  const handleOpenModeratorChat = () => navigate("/admin/chat");
+
+  // ── Outside click closes action menu ─────────────────────────────────────
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
@@ -376,29 +442,18 @@ function AccountsManagement() {
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
     if (accountsSectionRef.current) {
-      accountsSectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      accountsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.loading}>Loading accounts...</div>
-      </div>
-    );
+    return <div className={styles.page}><div className={styles.loading}>Loading accounts...</div></div>;
   }
 
   if (error) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.error}>Error: {error}</div>
-      </div>
-    );
+    return <div className={styles.page}><div className={styles.error}>Error: {error}</div></div>;
   }
 
   return (
@@ -415,51 +470,28 @@ function AccountsManagement() {
 
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
-          <span
-            className="material-symbols-outlined"
-            style={{ color: "#1B56FD", fontSize: "2rem" }}
-          >
-            group
-          </span>
+          <span className="material-symbols-outlined" style={{ color: "#1B56FD", fontSize: "2rem" }}>group</span>
           <div>
             <p className={styles.statVal}>{animatedActive}</p>
             <p className={styles.statLabel}>Active Accounts</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
-          <span
-            className="material-symbols-outlined"
-            style={{ color: "#dc2626", fontSize: "2rem" }}
-          >
-            report
-          </span>
+          <span className="material-symbols-outlined" style={{ color: "#dc2626", fontSize: "2rem" }}>report</span>
           <div>
             <p className={styles.statVal}>{animatedReported}</p>
             <p className={styles.statLabel}>Pending Reports</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
-          <span
-            className="material-symbols-outlined"
-            style={{ color: "#dc2626", fontSize: "2rem" }}
-          >
-            block
-          </span>
+          <span className="material-symbols-outlined" style={{ color: "#dc2626", fontSize: "2rem" }}>block</span>
           <div>
             <p className={styles.statVal}>{animatedBanned}</p>
             <p className={styles.statLabel}>Banned Accounts</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
-          <span
-            className="material-symbols-outlined"
-            style={{ color: "#f59e0b", fontSize: "2rem" }}
-          >
-            pause_circle
-          </span>
+          <span className="material-symbols-outlined" style={{ color: "#f59e0b", fontSize: "2rem" }}>pause_circle</span>
           <div>
             <p className={styles.statVal}>{animatedSuspended}</p>
             <p className={styles.statLabel}>Suspended Accounts</p>
@@ -471,9 +503,7 @@ function AccountsManagement() {
         <div className={styles.sectionHeader}>
           <div className={styles.sectionTitleRow}>
             <h2 className={styles.sectionTitle}>All Accounts</h2>
-            {statusFilter !== "all" && (
-              <span className={styles.filterBadge}>Filtered</span>
-            )}
+            {statusFilter !== "all" && <span className={styles.filterBadge}>Filtered</span>}
           </div>
           <div className={styles.sectionActions}>
             <button
@@ -506,11 +536,7 @@ function AccountsManagement() {
         )}
 
         <div className={styles.searchRow}>
-          <SearchInput
-            value={searchInput}
-            onChange={setSearchInput}
-            placeholder="Search by name or email..."
-          />
+          <SearchInput value={searchInput} onChange={setSearchInput} placeholder="Search by name or email..." />
         </div>
 
         <div className={styles.tableWrapper}>
@@ -530,30 +556,21 @@ function AccountsManagement() {
                   <td>
                     <div className={styles.userCell}>
                       <div className={styles.avatar}>
-                        {acc.avatar ? (
-                          <img src={acc.avatar} alt={acc.username} />
-                        ) : (
-                          <span className="material-symbols-outlined">
-                            account_circle
-                          </span>
-                        )}
+                        {acc.avatar
+                          ? <img src={acc.avatar} alt={acc.username} />
+                          : <span className="material-symbols-outlined">account_circle</span>
+                        }
                       </div>
                       <div>
                         <p className={styles.userName}>{acc.username}</p>
-                        <p className={styles.userId}>
-                          ID: {acc.id?.slice(0, 8) || "N/A"}
-                        </p>
+                        <p className={styles.userId}>ID: {acc.id?.slice(0, 8) || "N/A"}</p>
                       </div>
                     </div>
                   </td>
                   <td className={styles.email}>{acc.email}</td>
-                  <td className={styles.date}>
-                    {formatDate(acc.subscription_date)}
-                  </td>
+                  <td className={styles.date}>{formatDate(acc.subscription_date)}</td>
                   <td>
-                    <span
-                      className={`${styles.statusDot} ${styles[acc.status]}`}
-                    ></span>
+                    <span className={`${styles.statusDot} ${styles[acc.status]}`}></span>
                     <span className={styles.statusText}>{acc.status}</span>
                   </td>
                   <td>
@@ -562,53 +579,27 @@ function AccountsManagement() {
                         className={styles.actionBtn}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActiveMenu(
-                            activeMenu === acc.email ? null : acc.email,
-                          );
+                          setActiveMenu(activeMenu === acc.email ? null : acc.email);
                         }}
                       >
-                        <span className="material-symbols-outlined">
-                          more_horiz
-                        </span>
+                        <span className="material-symbols-outlined">more_horiz</span>
                       </button>
                       {activeMenu === acc.email && (
                         <div className={styles.actionMenu}>
                           {acc.status === "active" && (
                             <>
-                              <button onClick={() => handleSuspend(acc)}>
-                                Suspend Account
-                              </button>
-                              <button
-                                onClick={() => handleBan(acc)}
-                                className={styles.destructive}
-                              >
-                                Ban Account
-                              </button>
+                              <button onClick={() => handleSuspend(acc)}>Suspend Account</button>
+                              <button onClick={() => handleBan(acc)} className={styles.destructive}>Ban Account</button>
                             </>
                           )}
                           {acc.status === "suspended" && (
                             <>
-                              <button onClick={() => handleReactivate(acc)}>
-                                Reactivate Account
-                              </button>
-                              <button
-                                onClick={() => handleBan(acc)}
-                                className={styles.destructive}
-                              >
-                                Ban Account
-                              </button>
+                              <button onClick={() => handleReactivate(acc)}>Reactivate Account</button>
+                              <button onClick={() => handleBan(acc)} className={styles.destructive}>Ban Account</button>
                             </>
                           )}
                           {acc.status === "banned" && (
-                            <button
-                              onClick={() =>
-                                navigate("/admin/ban-history", {
-                                  state: { highlightId: acc.email },
-                                })
-                              }
-                            >
-                              Remove Ban
-                            </button>
+                            <button onClick={() => handleUnban(acc)}>Remove Ban</button>
                           )}
                         </div>
                       )}
@@ -621,24 +612,12 @@ function AccountsManagement() {
         </div>
 
         <div className={styles.pagination}>
-          <button
-            className={styles.pageBtn}
-            disabled={currentPage === 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-          >
-            <span className="material-symbols-outlined">chevron_left</span>
-            Previous
+          <button className={styles.pageBtn} disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
+            <span className="material-symbols-outlined">chevron_left</span>Previous
           </button>
-          <span className={styles.pageInfo}>
-            Page {currentPage} of {totalPages || 1}
-          </span>
-          <button
-            className={styles.pageBtn}
-            disabled={currentPage >= totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-          >
-            Next
-            <span className="material-symbols-outlined">chevron_right</span>
+          <span className={styles.pageInfo}>Page {currentPage} of {totalPages || 1}</span>
+          <button className={styles.pageBtn} disabled={currentPage >= totalPages} onClick={() => handlePageChange(currentPage + 1)}>
+            Next<span className="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
         <p className={styles.showing}>
@@ -649,19 +628,11 @@ function AccountsManagement() {
       </div>
 
       <div className={styles.section}>
-        <h2 className={`${styles.sectionTitle} ${styles.red}`}>
-          Reported Accounts
-        </h2>
-        <p className={styles.subtitle}>
-          Review flagged behavior and enforce community standards.
-        </p>
+        <h2 className={`${styles.sectionTitle} ${styles.red}`}>Reported Accounts</h2>
+        <p className={styles.subtitle}>Review flagged behavior and enforce community standards.</p>
 
         <div className={styles.searchRow}>
-          <SearchInput
-            value={reportedSearchInput}
-            onChange={setReportedSearchInput}
-            placeholder="Search reported accounts..."
-          />
+          <SearchInput value={reportedSearchInput} onChange={setReportedSearchInput} placeholder="Search reported accounts..." />
         </div>
 
         <div className={styles.tableWrapper}>
@@ -681,51 +652,28 @@ function AccountsManagement() {
                   <td>
                     <div className={styles.userCell}>
                       <div className={`${styles.avatar} ${styles.avatarWarn}`}>
-                        {rep.avatar ? (
-                          <img src={rep.avatar} alt={rep.username} />
-                        ) : (
-                          <span className="material-symbols-outlined">
-                            warning
-                          </span>
-                        )}
+                        {rep.avatar
+                          ? <img src={rep.avatar} alt={rep.username} />
+                          : <span className="material-symbols-outlined">warning</span>
+                        }
                       </div>
                       <div>
                         <p className={styles.userName}>{rep.username}</p>
-                        <p className={styles.userSubtitle}>
-                          {rep.flags > 5
-                            ? "Multiple Violations"
-                            : "Flagged Account"}
-                        </p>
+                        <p className={styles.userSubtitle}>{rep.flags > 5 ? "Multiple Violations" : "Flagged Account"}</p>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <span className={styles.flagCount}>{rep.flags}</span>
-                  </td>
+                  <td><span className={styles.flagCount}>{rep.flags}</span></td>
                   <td>
                     <span className={styles.reasonBadge}>
-                      {rep.flags >= 7
-                        ? "SPAM ACTIVITY"
-                        : rep.flags >= 4
-                          ? "INAPPROPRIATE CONTENT"
-                          : "MINOR VIOLATION"}
+                      {rep.flags >= 7 ? "SPAM ACTIVITY" : rep.flags >= 4 ? "INAPPROPRIATE CONTENT" : "MINOR VIOLATION"}
                     </span>
                   </td>
                   <td className={styles.date}>{lastIncidentTimes[i]}</td>
                   <td>
                     <div className={styles.reportActions}>
-                      <button
-                        className={styles.clearBtn}
-                        onClick={() => handleClearFlags(rep)}
-                      >
-                        Clear
-                      </button>
-                      <button
-                        className={styles.banBtn}
-                        onClick={() => handleBan(rep)}
-                      >
-                        Ban Account
-                      </button>
+                      <button className={styles.clearBtn} onClick={() => handleUnbanFromReported(rep)}>Unban</button>
+                      <button className={styles.removeBtn} onClick={() => handleRemoveUser(rep)}>Remove User</button>
                     </div>
                   </td>
                 </tr>
@@ -735,24 +683,12 @@ function AccountsManagement() {
         </div>
 
         <div className={styles.pagination}>
-          <button
-            className={styles.pageBtn}
-            disabled={reportedPage === 1}
-            onClick={() => setReportedPage((p) => p - 1)}
-          >
-            <span className="material-symbols-outlined">chevron_left</span>
-            Previous
+          <button className={styles.pageBtn} disabled={reportedPage === 1} onClick={() => setReportedPage((p) => p - 1)}>
+            <span className="material-symbols-outlined">chevron_left</span>Previous
           </button>
-          <span className={styles.pageInfo}>
-            Page {reportedPage} of {reportedTotalPages || 1}
-          </span>
-          <button
-            className={styles.pageBtn}
-            disabled={reportedPage >= reportedTotalPages}
-            onClick={() => setReportedPage((p) => p + 1)}
-          >
-            Next
-            <span className="material-symbols-outlined">chevron_right</span>
+          <span className={styles.pageInfo}>Page {reportedPage} of {reportedTotalPages || 1}</span>
+          <button className={styles.pageBtn} disabled={reportedPage >= reportedTotalPages} onClick={() => setReportedPage((p) => p + 1)}>
+            Next<span className="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
       </div>
@@ -761,93 +697,36 @@ function AccountsManagement() {
         <div className={styles.quickAccess}>
           <h3 className={styles.quickTitle}>Moderator Quick-Access</h3>
           <div className={styles.quickGrid}>
-            <button
-              className={`${styles.quickBtn} ${styles.quickBtnDisabled}`}
-              onClick={() => handleQuickAccess("guidelines")}
-              disabled
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.2rem" }}
-              >
-                gavel
-              </span>
-              <div>
-                <p>Guidelines</p>
-                <span>Updated 2 days ago</span>
-              </div>
+            <button className={`${styles.quickBtn} ${styles.quickBtnDisabled}`} onClick={handleOpenGuidelines} disabled>
+              <span className="material-symbols-outlined" style={{ fontSize: "2.2rem" }}>gavel</span>
+              <div><p>Guidelines</p><span>Updated 2 days ago</span></div>
             </button>
-            <button
-              className={styles.quickBtn}
-              onClick={() => handleQuickAccess("ban-history")}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.2rem" }}
-              >
-                block
-              </span>
-              <div>
-                <p>Ban History</p>
-                <span>Full archival access</span>
-              </div>
+            <button className={styles.quickBtn} onClick={handleOpenBanHistory}>
+              <span className="material-symbols-outlined" style={{ fontSize: "2.2rem" }}>block</span>
+              <div><p>Ban History</p><span>Full archival access</span></div>
             </button>
-            <button
-              className={`${styles.quickBtn} ${styles.quickBtnDisabled}`}
-              onClick={() => handleQuickAccess("appeals")}
-              disabled
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.2rem" }}
-              >
-                pending_actions
-              </span>
-              <div>
-                <p>Appeals Queue</p>
-                <span>14 pending review</span>
-              </div>
+            <button className={`${styles.quickBtn} ${styles.quickBtnDisabled}`} onClick={handleOpenAppealsQueue} disabled>
+              <span className="material-symbols-outlined" style={{ fontSize: "2.2rem" }}>pending_actions</span>
+              <div><p>Appeals Queue</p><span>14 pending review</span></div>
             </button>
-            <button
-              className={styles.quickBtn}
-              onClick={() => handleQuickAccess("chat")}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "2.2rem" }}
-              >
-                forum
-              </span>
-              <div>
-                <p>Moderator Chat</p>
-                <span>8 online now</span>
-              </div>
+            <button className={styles.quickBtn} onClick={handleOpenModeratorChat}>
+              <span className="material-symbols-outlined" style={{ fontSize: "2.2rem" }}>forum</span>
+              <div><p>Moderator Chat</p><span>8 online now</span></div>
             </button>
           </div>
         </div>
       </div>
 
+      {/* ── Ban dialog ── */}
       {banDialog.open && (
-        <div
-          className={styles.dialogBackdrop}
-          onClick={() =>
-            setBanDialog({ open: false, account: null, reason: "" })
-          }
-        >
+        <div className={styles.dialogBackdrop} onClick={() => setBanDialog({ open: false, account: null, reason: "" })}>
           <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "3rem", color: "#dc2626" }}
-            >
-              block
-            </span>
+            <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#dc2626" }}>block</span>
             <h3 className={styles.dialogTitle}>Ban this account?</h3>
             <p className={styles.dialogBody}>
-              This account will be banned and removed from active users. You can
-              remove the ban from Ban History or via Actions in the All Accounts
-              section.
+              This account will be banned and removed from active users. You can remove the ban from
+              Ban History or via Actions in the All Accounts section.
             </p>
-
             <div className={styles.reasonInput}>
               <label htmlFor="ban-reason">Reason for ban</label>
               <input
@@ -855,27 +734,15 @@ function AccountsManagement() {
                 type="text"
                 placeholder="e.g. Repeated harassment, Spam activity..."
                 value={banDialog.reason}
-                onChange={(e) =>
-                  setBanDialog({ ...banDialog, reason: e.target.value })
-                }
+                onChange={(e) => setBanDialog({ ...banDialog, reason: e.target.value })}
                 autoFocus
               />
             </div>
-
             <div className={styles.dialogActions}>
-              <button
-                className={styles.dialogCancel}
-                onClick={() =>
-                  setBanDialog({ open: false, account: null, reason: "" })
-                }
-              >
+              <button className={styles.dialogCancel} onClick={() => setBanDialog({ open: false, account: null, reason: "" })}>
                 Cancel
               </button>
-              <button
-                className={styles.dialogConfirm}
-                onClick={confirmBan}
-                disabled={!banDialog.reason.trim()}
-              >
+              <button className={styles.dialogConfirm} onClick={confirmBan} disabled={!banDialog.reason.trim()}>
                 Ban Account
               </button>
             </div>
@@ -883,41 +750,51 @@ function AccountsManagement() {
         </div>
       )}
 
-      {clearDialog.open && (
-        <div
-          className={styles.dialogBackdrop}
-          onClick={() => setClearDialog({ open: false, account: null })}
-        >
+      {/* ── Unban dialog ── */}
+      {unbanDialog.open && (
+        <div className={styles.dialogBackdrop} onClick={() => setUnbanDialog({ open: false, account: null })}>
           <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "3rem", color: "#22c55e" }}
-            >
-              check_circle
-            </span>
-            <h3 className={styles.dialogTitle}>Clear all flags?</h3>
+            <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#1591dc" }}>lock_open</span>
+            <h3 className={styles.dialogTitle}>Unban this account?</h3>
             <p className={styles.dialogBody}>
-              This will clear all flags and reports for this account. The user
-              will be restored to good standing.
+              <strong>{unbanDialog.account?.username}</strong> will be reinstated and regain full access to the platform.
             </p>
             <div className={styles.dialogActions}>
-              <button
-                className={styles.dialogCancel}
-                onClick={() => setClearDialog({ open: false, account: null })}
-              >
+              <button className={styles.dialogCancel} onClick={() => setUnbanDialog({ open: false, account: null })}>
                 Cancel
               </button>
-              <button
-                className={styles.dialogConfirm}
-                onClick={confirmClearFlags}
-                style={{ backgroundColor: "#22c55e" }}
-              >
-                Clear Flags
+              <button className={styles.dialogConfirm} onClick={confirmUnban} style={{ backgroundColor: "#1591dc" }}>
+                Unban
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ── Remove user dialog ── */}
+      {removeDialog.open && (
+        <div className={styles.dialogBackdrop} onClick={() => setRemoveDialog({ open: false, account: null })}>
+          <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
+            <span className="material-symbols-outlined" style={{ fontSize: "3rem", color: "#dc2626" }}>delete_forever</span>
+            <h3 className={styles.dialogTitle}>Permanently remove user?</h3>
+            <p className={styles.dialogBody}>
+              This will permanently delete <strong>{removeDialog.account?.username}</strong> and all of their
+              data. This action cannot be undone.
+            </p>
+            <div className={styles.dialogActions}>
+              <button className={styles.dialogCancel} onClick={() => setRemoveDialog({ open: false, account: null })}>
+                Cancel
+              </button>
+              <button className={styles.dialogConfirm} onClick={confirmRemoveUser} style={{ backgroundColor: "#dc2626" }}>
+                Remove User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast notifications ── */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

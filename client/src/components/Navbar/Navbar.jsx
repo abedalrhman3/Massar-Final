@@ -49,7 +49,9 @@ function Navbar() {
       <h2>Massar</h2>
 
       <div className={styles.navLinks}>
-        <Link to="/">Home</Link>
+        <Link
+          to="/"
+        >Home</Link>
         <Link to="/about">About</Link>
         <Link to="/destinations">Destinations</Link>
         <Link to="/map">Map</Link>

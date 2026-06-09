@@ -1,5 +1,6 @@
 import React from "react";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Home from "./pages/costumer/Home/Home";
 import About from "./pages/costumer/About/About";
@@ -9,6 +10,7 @@ import Map from "./pages/costumer/Map/Map";
 import Support from "./pages/costumer/Support";
 import SaveList from "./pages/costumer/SaveList/SaveList";
 import Gallery from "./pages/costumer/Gallery/Gallery";
+import Banned from "./pages/costumer/Banned/Banned"
 
 // Register-Login Pages
 import RegisterLogin, {
@@ -48,7 +50,8 @@ import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 
 // ── Private Route Guard — requires logged-in user ────────────────
 const PrivateRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isBanned } = useAuth();
+
   if (loading) return null; // AuthProvider already blocks render until resolved
   return user ? children : <Navigate to="/login" replace />;
 };
@@ -56,7 +59,7 @@ const PrivateRoute = ({ children }) => {
 
 // ── Admin Route Guard — requires admin role ───────────────────────
 const AdminGuard = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, isBanned } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -69,10 +72,29 @@ const CustomerLayout = () => (
     <Navbar />
     <Outlet />
     <Footer />
+    <Chatbot />
   </>
 );
 
 function App() {
+  const { user, isBanned, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      navigate("/banned");
+    }
+  };
+  useEffect(() => {
+    if (user) {
+      if (isBanned) {
+        handleLogout();
+      }
+    }
+  }, [user])
   return (
     <>
       <Routes>
@@ -151,6 +173,7 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route path="/banned" element={<Banned />} />
 
 
 
@@ -207,7 +230,7 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Chatbot />
+
     </>
   );
 }

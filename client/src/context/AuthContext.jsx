@@ -17,8 +17,8 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await apiLogout();
-    } catch (_) {
-      // ignore server errors
+    } catch (e) {
+      console.log(e);
     } finally {
       setUser(null);
       //window.location.href = '/'; // force full reload to clear all states
@@ -30,9 +30,10 @@ export function AuthProvider({ children }) {
   };
 
   const isAdmin = user?.role === 'admin';
+  const isBanned = user?.isBanned;
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loginSuccess, logout, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, setUser, loginSuccess, logout, loading, isAdmin, isBanned }}>
       {!loading && children}
     </AuthContext.Provider>
   );

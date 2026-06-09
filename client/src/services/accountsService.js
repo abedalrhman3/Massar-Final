@@ -1,103 +1,120 @@
-// Use relative URL when running through Vite proxy, or full URL if VITE_API_URL is set
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// accountsService.js — rewritten to use real API endpoints from @/api/auth
 
-async function fetchAPI(endpoint, options = {}) {
-  const url = API_BASE_URL ? `${API_BASE_URL}${endpoint}` : endpoint;
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || 'Request failed');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error);
-    throw error;
-  }
-}
+import client from '@/api/client';
 
 // ==================== STATS ====================
+// Derived client-side from /api/auth/users — no dedicated stats endpoints exist
 
 export async function getAccountStats() {
-  return fetchAPI('/api/accounts/stats');
+  const res = await client.get('/auth/users');
+  const users = res.data.data ?? res.data.users ?? res.data ?? [];
+  const active = users.filter(u => !u.isBanned).length;
+  const banned = users.filter(u => u.isBanned).length;
+  return { active, suspended: 0, banned, reported: banned };
 }
 
 export async function getBanHistoryStats() {
-  return fetchAPI('/api/ban-history/stats');
+  const res = await client.get('/auth/users');
+  const users = res.data.data ?? res.data.users ?? res.data ?? [];
+  const banned = users.filter(u => u.isBanned);
+  return {
+    total: banned.length,
+    thisWeek: banned.length,
+    active: banned.length,
+  };
 }
 
 // ==================== ACCOUNTS ====================
 
 export async function getAccounts(filters = {}) {
-  const params = new URLSearchParams();
-  if (filters.status && filters.status !== 'all') params.append('status', filters.status);
-  if (filters.tier && filters.tier !== 'all') params.append('tier', filters.tier);
-  if (filters.search) params.append('search', filters.search);
+  const res = await client.get('/auth/users');
+  let users = res.data.data ?? res.data.users ?? res.data ?? [];
 
-  const queryString = params.toString();
-  return fetchAPI(`/api/accounts${queryString ? `?${queryString}` : ''}`);
+  if (filters.status && filters.status !== 'all') {
+    users = users.filter(u =>
+      filters.status === 'banned' ? u.isBanned : !u.isBanned
+    );
+  }
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    users = users.filter(u =>
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q)
+    );
+  }
+
+  return { data: users };
 }
 
 export async function getReportedAccounts(search = '') {
-  const params = new URLSearchParams();
-  if (search) params.append('search', search);
+  const res = await client.get('/auth/users');
+  let users = res.data.data ?? res.data.users ?? res.data ?? [];
+  // Reported = banned users (no separate reports collection yet)
+  users = users.filter(u => u.isBanned);
 
-  const queryString = params.toString();
-  return fetchAPI(`/api/accounts/reported${queryString ? `?${queryString}` : ''}`);
+  if (search) {
+    const q = search.toLowerCase();
+    users = users.filter(u =>
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q)
+    );
+  }
+
+  return { data: users };
 }
 
 // ==================== BAN HISTORY ====================
 
 export async function getBanHistory(search = '') {
-  const params = new URLSearchParams();
-  if (search) params.append('search', search);
+  const res = await client.get('/auth/users');
+  let users = res.data.data ?? res.data.users ?? res.data ?? [];
+  users = users.filter(u => u.isBanned);
 
-  const queryString = params.toString();
-  return fetchAPI(`/api/ban-history${queryString ? `?${queryString}` : ''}`);
+  if (search) {
+    const q = search.toLowerCase();
+    users = users.filter(u =>
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q)
+    );
+  }
+
+  // Shape each record as a ban-history entry
+  return {
+    data: users.map(u => ({
+      id: u._id,
+      username: u.name,
+      email: u.email,
+      avatar: u.profilePicture || null,
+      bannedAt: u.updatedAt ?? u.createdAt,
+      reason: 'N/A',   // no reason field stored yet
+    }))
+  };
 }
 
 // ==================== ACTIONS ====================
+// All routed through the real toggleBanUser / deleteUser endpoints
 
-export async function suspendAccount(email) {
-  return fetchAPI(`/api/accounts/${encodeURIComponent(email)}/suspend`, {
-    method: 'POST',
-  });
+export async function suspendAccount(id) {
+  return client.put(`/auth/users/${id}/ban`);
 }
 
-export async function reactivateAccount(email) {
-  return fetchAPI(`/api/accounts/${encodeURIComponent(email)}/reactivate`, {
-    method: 'POST',
-  });
+export async function reactivateAccount(id) {
+  return client.put(`/auth/users/${id}/ban`);
 }
 
-export async function banAccount(email, reason) {
-  return fetchAPI(`/api/accounts/${encodeURIComponent(email)}/ban`, {
-    method: 'POST',
-    body: JSON.stringify({ reason }),
-  });
+export async function banAccount(id) {
+  return client.put(`/auth/users/${id}/ban`);
 }
 
-export async function unbanAccount(email) {
-  return fetchAPI(`/api/ban-history/${encodeURIComponent(email)}/unban`, {
-    method: 'POST',
-  });
+export async function unbanAccount(id) {
+  return client.put(`/auth/users/${id}/ban`);
 }
 
-export async function clearAccountFlags(email) {
-  return fetchAPI(`/api/accounts/${encodeURIComponent(email)}/clear-flags`, {
-    method: 'POST',
-  });
+export async function deleteAccount(id) {
+  return client.delete(`/auth/users/${id}`);
 }
 
-// ==================== HEALTH CHECK ====================
-
-export async function checkApiHealth() {
-  return fetchAPI('/api/health');
+// clearAccountFlags has no backend endpoint yet — no-op that resolves cleanly
+export async function clearAccountFlags() {
+  return Promise.resolve({ success: true });
 }
