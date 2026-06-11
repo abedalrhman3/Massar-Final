@@ -159,11 +159,17 @@ const Map = () => {
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
         const coords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-        setRouteCoords(coords);
+        const fullCoords = [
+          [userLat, userLng],   // real user position
+          ...coords,
+          [destLat, destLng],   // real destination pin
+        ];
+        setRouteCoords(fullCoords);
         // distance in metres → km; duration in seconds → minutes
         return {
           distanceKm: route.distance / 1000,
           durationMin: route.duration / 60,
+          annotations: true,
         };
       } else {
         setRouteCoords([[userLat, userLng], [destLat, destLng]]);
@@ -252,10 +258,17 @@ const Map = () => {
   const toggleLeft = () => setOpenPanel(p => p === "left" ? null : "left");
   const toggleQuest = () => setOpenPanel(p => p === "quest" ? null : "quest");
 
+  useEffect(() => {
+    if (!initialCoords?.loc) return;
+    handleLocationSelect(initialCoords.loc);
+  }, [initialCoords?.lat, initialCoords?.lng]);
+
   return (
     <div className={styles.container} style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", justifyContent: "flex-start", alignItems: "stretch" }}>
 
-      <SearchBar />
+      <SearchBar
+        onLocationSelect={handleLocationSelect}
+      />
 
       <LeftPanel
         destination={selectedLocation
