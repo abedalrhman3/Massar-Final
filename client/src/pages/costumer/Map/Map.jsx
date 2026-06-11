@@ -280,6 +280,7 @@ const Map = () => {
 
           <button
             onClick={() => {
+              handleLocationSelect(null);
               setManualMode(!manualMode);
               setManualPos(null);
             }}
