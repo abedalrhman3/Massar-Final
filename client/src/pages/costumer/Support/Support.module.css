@@ -539,3 +539,12 @@
   background: color-mix(in srgb, var(--color-accent) 6%, transparent);
   text-align: center;
 }
+
+.osamaAvatar img {
+  width: 15rem !important;
+  height: 15rem !important;
+  object-fit: cover !important;
+  object-position: top !important;
+  zoom: 1.55;
+
+}

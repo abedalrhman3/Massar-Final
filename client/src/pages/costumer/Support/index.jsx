@@ -245,7 +245,7 @@ function Support() {
           <div className={styles.teamGrid}>
             {team.map((member, i) => (
               <div key={i} className={styles.teamCard}>
-                <div className={styles.memberAvatar}>
+                <div className={`${styles.memberAvatar} ${member.name === "Osama Alazab" ? styles.osamaAvatar : ""}`}>
                   <img src={member.img} alt={member.name} />
                 </div>
                 <h4 className={styles.memberName}>{member.name}</h4>
