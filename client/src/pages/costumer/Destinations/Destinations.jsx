@@ -99,9 +99,7 @@ function Tours() {
         const q = query.trim().toLowerCase();
         if (!q) return all;
         return all.filter((d) =>
-            d.name?.toLowerCase().includes(q) ||
-            d.tagline?.toLowerCase().includes(q) ||
-            d.description?.toLowerCase().includes(q)
+            d.name?.toLowerCase().includes(q)
         );
     }, [all, query]);
 
