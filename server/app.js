@@ -38,6 +38,33 @@ app.use('/api/photos', require('./routes/photos'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/game', require('./routes/game'));
 
+app.use('/api/chat', express.json(), (req, res) => {
+  const http = require('http');
+  const postData = JSON.stringify(req.body);
+  const options = {
+    hostname: 'localhost',
+    port: 5002,
+    path: '/api/chat',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData)
+    }
+  };
+  const proxyReq = http.request(options, (proxyRes) => {
+    let data = '';
+    proxyRes.on('data', chunk => data += chunk);
+    proxyRes.on('end', () => {
+      res.status(proxyRes.statusCode).setHeader('Content-Type', 'application/json').send(data);
+    });
+  });
+  proxyReq.on('error', () => {
+    res.status(500).json({ reply: 'Chat service unavailable' });
+  });
+  proxyReq.write(postData);
+  proxyReq.end();
+});
+
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 app.use(require('./middleware/errorHandler'));
