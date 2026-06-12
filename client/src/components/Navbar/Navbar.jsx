@@ -57,12 +57,25 @@ function Navbar() {
       <div className={styles.navLinks}>
         <Link
           to="/"
+          onClick={() => setTimeout(window.scrollTo({ top: 0, behavior: "smooth" }), 500)}
         >Home</Link>
-        <Link to="/about">About</Link>
-        <Link to="/destinations">Destinations</Link>
-        <Link to="/map">Map</Link>
-        <Link to="/support">Support</Link>
-        {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
+        <Link to="/about"
+          onClick={() => setTimeout(window.scrollTo({ top: 0, behavior: "smooth" }), 500)}
+        >About</Link>
+        <Link
+          to="/destinations"
+          id="nav-destinations"
+          onClick={() => setTimeout(window.scrollTo({ top: 0, behavior: "smooth" }), 500)}
+        >Destinations</Link>
+        <Link
+          to="/map"
+          id="nav-map"
+          onClick={() => setTimeout(window.scrollTo({ top: 0, behavior: "smooth" }), 500)}
+        >Map</Link>
+        <Link to="/support"
+          onClick={() => setTimeout(window.scrollTo({ top: 0, behavior: "smooth" }), 500)}
+        >Support</Link>
+        {user?.role === 'admin' && <Link to="/admin" onClick={() => setTimeout(window.scrollTo({ top: 0, behavior: "smooth" }), 500)}>Admin</Link>}
       </div>
 
       {loading

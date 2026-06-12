@@ -31,25 +31,29 @@
   max-height: 90vh;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f3f4f6;
+  scrollbar-color: transparent transparent;
 }
 
-.modalContent::-webkit-scrollbar {
-  width: 8px;
+.modalBody {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) transparent;
 }
 
-.modalContent::-webkit-scrollbar-track {
-  background: #f3f4f6;
-  border-radius: 4px;
+.modalBody::-webkit-scrollbar {
+  width: 6px;
 }
 
-.modalContent::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
+.modalBody::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.modalContent::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+.modalBody::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 10px;
+}
+
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background: #0261af;
 }
 
 .modalOverlayVisible .modalContent {

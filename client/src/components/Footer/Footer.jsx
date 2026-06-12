@@ -1,13 +1,22 @@
+import { useState } from 'react';
 import styles from "./Footer.module.css";
 import { useNavigate } from 'react-router-dom';
 import Logo from "/massar-logo.png";
 
 function Footer() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
 
   const navTo = (path) => {
     navigate(path);
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
+  };
+
+  const handleSubscribe = () => {
+    if (!email.trim()) return;
+    setSubscribed(true);
+    setEmail('');
   };
 
   return (
@@ -48,19 +57,31 @@ function Footer() {
         {/* Col 3: Newsletter */}
         <div className={styles.footerSection}>
           <p className={styles.colLabel}>Stay updated</p>
-          <div className={styles.newsletter}>
-            <input
-              type="email"
-              placeholder="email@gmail.com"
-              className={styles.newsletterInput}
-            />
-            <button type="button" className={styles.newsletterBtn} aria-label="Subscribe">
-              <i className="fa-solid fa-arrow-right"></i>
-            </button>
-          </div>
-          <p className={styles.newsletterNote}>
-            Subscribe for new trips, destinations, and travel inspiration.
-          </p>
+          {subscribed ? (
+            <p className={styles.newsletterNote} style={{ color: 'rgba(255,255,255,0.85)' }}>
+              <i className="fa-solid fa-circle-check" style={{ marginRight: 6 }}></i>
+              You're in! We'll keep you posted on new trips and destinations.
+            </p>
+          ) : (
+            <>
+              <div className={styles.newsletter}>
+                <input
+                  type="email"
+                  placeholder="email@gmail.com"
+                  className={styles.newsletterInput}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
+                />
+                <button type="button" className={styles.newsletterBtn} aria-label="Subscribe" onClick={handleSubscribe}>
+                  <i className="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+              <p className={styles.newsletterNote}>
+                Subscribe for new trips, destinations, and travel inspiration.
+              </p>
+            </>
+          )}
         </div>
 
       </div>

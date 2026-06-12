@@ -4,37 +4,49 @@ import { ADMIN_AVATARS } from "../../admin/AdminChat";
 import emailjs from "@emailjs/browser";
 
 import HussamImage from "/team/hussam.jpeg";
+import RawadiahImage from "/team/rawadiah.jpeg";
+import ShalabyImage from "/team/shalaby.jpeg";
+import AbedImage from "/team/abed.jpg";
+import osamaImage from "/team/osama.jpeg";
+
 
 const team = [
+  {
+    name: "Abedalrahman Al-Zoabi",
+    phone: "0798512338",
+    img: AbedImage,
+    role: "Team Leader · Backend",
+  },
 
-  {
-    name: "Osama Alazab",
-    phone: "+1(555)438-2910",
-    img: ADMIN_AVATARS["Osama Alazab"],
-  },
-  {
-    name: "Mr. Shelby",
-    phone: "+1(555)762-8812",
-    img: ADMIN_AVATARS["Mr. Shelby"],
-  },
   {
     name: "Hussam Azzam",
     phone: "0781090881",
     img: HussamImage,
+    role: "Frontend · Backend",
   },
   {
-    name: "Mr. Cash",
-    phone: "+1(555)321-0094",
-    img: ADMIN_AVATARS["Mr. Cash"],
+    name: "Mohammad Alshalby",
+    phone: "07802869797",
+    img: ShalabyImage,
+    role: "Documentation",
   },
   {
-    name: "Mohammad Alrawadyah",
-    phone: "+1(555)554-1290",
-    img: ADMIN_AVATARS["Mohammad Alrawadyah"],
+    name: "Mohmmad Alrawadyah",
+    phone: "0775235262",
+    img: RawadiahImage,
+    role: "Frontend · AI",
+  },
+  {
+    name: "Osama Alazab",
+    phone: "0799356821",
+    img: osamaImage,
+    role: "Documentation",
   },
 ];
 
 function Support() {
+  // add to your existing useState imports area
+  const [hoveredMember, setHoveredMember] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -87,6 +99,8 @@ function Support() {
       setLoading(false);
     }
   };
+
+  const [showSkills, setShowSkills] = useState(false);
 
   return (
     <div className={styles.page}>
@@ -236,19 +250,37 @@ function Support() {
                 </div>
                 <h4 className={styles.memberName}>{member.name}</h4>
                 <p className={styles.memberPhone}>{member.phone}</p>
-                <div className={styles.memberActions}>
-                  <button
-                    className={styles.memberBtn}
-                    title="Email"
-                    onClick={() => handleEmail(member.name)}
-                  >
-                    <span className="material-symbols-outlined">
-                      alternate_email
-                    </span>
-                  </button>
-                </div>
+
+                {member.name === "Hussam Azzam" ? (
+                  <div className={styles.hussamRole} onClick={() => setShowSkills(true)}>
+                    <span className={styles.memberRole}>{member.role}</span>
+                    <span className={styles.showMoreLabel}>show more</span>
+                  </div>
+                ) : (
+                  <span className={styles.memberRole}>{member.role}</span>
+                )}
               </div>
             ))}
+
+            {/* Skills Modal */}
+            {showSkills && (
+              <div className={styles.modalOverlay} onClick={() => setShowSkills(false)}>
+                <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+                  <button className={styles.modalClose} onClick={() => setShowSkills(false)}>
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                  <div className={styles.modalAvatar}>
+                    <img src={HussamImage} alt="Hussam Azzam" />
+                  </div>
+                  <h3 className={styles.modalName}>Hussam Azzam</h3>
+                  <ul className={styles.modalSkills}>
+                    {["Frontend", "Backend", "UI/UX Designer", "Tester (RestFull API & K6)", "Quality Assurance", "Prompt Engineer", "Git Hub Supervisor"].map((skill) => (
+                      <li key={skill} className={styles.modalSkillPill}>{skill}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

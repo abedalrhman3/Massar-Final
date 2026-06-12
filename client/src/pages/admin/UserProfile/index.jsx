@@ -99,6 +99,7 @@ function SlideModal({ open, onClose, title, children }) {
 function UserProfile() {
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
+  const [showAvatarPopup, setShowAvatarPopup] = useState(false);
 
   const currentProfileData = {
     name: user?.name || "User",
@@ -232,7 +233,11 @@ function UserProfile() {
       <section className={styles.heroSection}>
         <div className={styles.heroMain}>
           <div className={styles.avatarWrapper}>
-            <div className={styles.avatarLarge}>
+            <div
+              className={styles.avatarLarge}
+              onClick={() => currentProfileData.avatar && setShowAvatarPopup(true)}
+              style={{ cursor: currentProfileData.avatar ? "pointer" : "default" }}
+            >
               {currentProfileData.avatar ? (
                 <img src={currentProfileData.avatar} alt="Avatar" />
               ) : (
@@ -244,12 +249,33 @@ function UserProfile() {
               <input type="file" accept="image/*" onChange={handleAvatarUpload} hidden />
             </label>
           </div>
+
+          {/* Avatar Full-Size Popup */}
+          {showAvatarPopup && (
+            <div className={styles.avatarPopupOverlay} onClick={() => setShowAvatarPopup(false)}>
+              <div className={styles.avatarPopup} onClick={(e) => e.stopPropagation()}>
+                <button className={styles.avatarPopupClose} onClick={() => setShowAvatarPopup(false)}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+                <div className={styles.avatarPopupImgWrap}>
+                  <img src={currentProfileData.avatar} alt="Avatar full size" className={styles.avatarPopupImg} />
+                </div>
+                <div className={styles.avatarPopupActions}>
+                  <label className={styles.avatarPopupEditBtn}>
+                    <span className="material-symbols-outlined">edit</span>
+                    Change Photo
+                    <input type="file" accept="image/*" onChange={(e) => { handleAvatarUpload(e); setShowAvatarPopup(false); }} hidden />
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
           <div className={styles.heroInfo}>
             <h1 className={styles.userName}>{currentProfileData.name}</h1>
             <p className={styles.userEmail}>{currentProfileData.email}</p>
             <div className={styles.badgeRow}>
               <span className={styles.roleBadge}>{currentProfileData.role}</span>
-              <span className={styles.locationBadge}>{currentProfileData.location}</span>
+              {/* <span className={styles.locationBadge}>{currentProfileData.location}</span> */}
             </div>
           </div>
         </div>

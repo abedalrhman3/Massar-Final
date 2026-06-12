@@ -476,13 +476,13 @@ function AccountsManagement() {
             <p className={styles.statLabel}>Active Accounts</p>
           </div>
         </div>
-        <div className={styles.statCard}>
+        {/* <div className={styles.statCard}>
           <span className="material-symbols-outlined" style={{ color: "#dc2626", fontSize: "2rem" }}>report</span>
           <div>
             <p className={styles.statVal}>{animatedReported}</p>
             <p className={styles.statLabel}>Pending Reports</p>
           </div>
-        </div>
+        </div> */}
         <div className={styles.statCard}>
           <span className="material-symbols-outlined" style={{ color: "#dc2626", fontSize: "2rem" }}>block</span>
           <div>
@@ -490,13 +490,13 @@ function AccountsManagement() {
             <p className={styles.statLabel}>Banned Accounts</p>
           </div>
         </div>
-        <div className={styles.statCard}>
+        {/* <div className={styles.statCard}>
           <span className="material-symbols-outlined" style={{ color: "#f59e0b", fontSize: "2rem" }}>pause_circle</span>
           <div>
             <p className={styles.statVal}>{animatedSuspended}</p>
             <p className={styles.statLabel}>Suspended Accounts</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className={styles.section} ref={accountsSectionRef}>
@@ -588,7 +588,7 @@ function AccountsManagement() {
                         <div className={styles.actionMenu}>
                           {acc.status === "active" && (
                             <>
-                              <button onClick={() => handleSuspend(acc)}>Suspend Account</button>
+                              {/* <button onClick={() => handleSuspend(acc)}>Suspend Account</button> */}
                               <button onClick={() => handleBan(acc)} className={styles.destructive}>Ban Account</button>
                             </>
                           )}

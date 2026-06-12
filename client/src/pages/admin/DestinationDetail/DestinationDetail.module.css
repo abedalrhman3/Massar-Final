@@ -689,6 +689,28 @@
   animation: modalSlideIn 0.2s ease;
 }
 
+.modalBody {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) transparent;
+}
+
+.modalBody::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modalBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modalBody::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 10px;
+}
+
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background: #0261af;
+}
+
 @keyframes modalSlideIn {
   from {
     opacity: 0;
