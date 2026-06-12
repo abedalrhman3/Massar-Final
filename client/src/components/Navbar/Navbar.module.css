@@ -10,7 +10,6 @@
   padding: 15px 40px;
   font-family: var(--font-ui);
   background: transparent;
-
   transition:
     transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.3s ease,
@@ -47,11 +46,29 @@
   color: white;
   font-weight: 500;
   font-size: 17px;
+  display: inline-block;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.navLinks a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.7);
+  transition: width 0.22s ease;
 }
 
 .navLinks a:hover {
-  text-decoration: underline;
-  font-weight: bold;
+  text-decoration: none;
+
+}
+
+.navLinks a:hover::after {
+  width: 100%;
 }
 
 .getStartedBtn {
@@ -74,7 +91,6 @@
   color: white;
 }
 
-/* ── Hamburger — hidden on desktop, visible on mobile ── */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -182,7 +198,6 @@
   color: white;
 }
 
-/* ── Mobile breakpoint ── */
 @media (max-width: 768px) {
   .topnav {
     padding: 1rem 1.5rem;

@@ -113,6 +113,14 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
 
     const { sections } = data
 
+    const handleBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate('/');
+        }
+    };
+
     return (
         <div className={styles["left-panel-wrapper"]}>
             <div
@@ -365,9 +373,8 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
             }} aria-label="Scroll to top">
                 <ArrowUp size={24} />
             </button>
-            <button className={styles.backBtn} onClick={() => {
-                navigate("/destinations")
-            }} aria-label="Back to destinations">
+            <button className={styles.backBtn} onClick={handleBack
+            } aria-label="Back to destinations">
                 <ArrowLeft size={24} />
             </button>
 
@@ -387,7 +394,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
             }} aria-label="Open Map">
                 <Map size={18} /> Open Map
             </button>
-        </div>
+        </div >
     )
 }
 

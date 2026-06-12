@@ -5,10 +5,12 @@ import styles from "./About.module.css";
 import star from "../../../assets/images/icons/star.png";
 import shine from "../../../assets/images/icons/shine.png";
 import play from "../../../assets/images/icons/play.png";
-import tourGuide from "../../../assets/images/icons/tour-guide.png";
+/* import tourGuide from "../../../assets/images/icons/tour-guide.png";
 import location from "../../../assets/images/icons/location.png";
-import walk from "../../../assets/images/icons/walk.png";
-
+import walk from "../../../assets/images/icons/walk.png"; */
+import Ai from "/images/ai.png";
+import Game from "/images/game.png";
+import Event from "/images/event.png";
 // Decor
 import about1 from "../../../assets/images/decor/about-1.png";
 import about2 from "../../../assets/images/decor/about-2.png";
@@ -97,33 +99,29 @@ export default function AboutPage() {
         <div className={styles.aboutFeatures}>
           <div className={styles.aboutFeature}>
             <div className={styles.aboutFeatureIcon}>
-              <img src={tourGuide} alt="Local Expertise" />
+              <img src={Game} alt="Local Expertise" />
             </div>
-            <h3>Local Expertise</h3>
+            <h3>Gamification</h3>
             <p>
-              Our guides are born and raised in Jordan, with firsthand knowledge
-              of every trail, landmark, and hidden gem worth discovering.
+              Complete quests, earn XP, and level up from Explorer to Legend as you discover Jordan's hidden gems.
             </p>
           </div>
           <div className={styles.aboutFeature}>
             <div className={styles.aboutFeatureIcon}>
-              <img src={location} alt="Real-Time Tracking" />
+              <img src={Ai} alt="AI-Powered Guide" />
             </div>
-            <h3>Real-Time Tracking</h3>
+            <h3>AI-Powered Guide</h3>
             <p>
-              Stay connected with live route tracking that lets you and your
-              loved ones follow every step of your journey.
+              Chat with our smart assistant anytime to get personalized recommendations, travel tips, and answers about Jordan.
             </p>
           </div>
           <div className={styles.aboutFeature}>
             <div className={styles.aboutFeatureIcon}>
-              <img src={walk} alt="Curated Adventures" />
+              <img src={Event} alt="Curated Adventures" />
             </div>
-            <h3>Curated Adventures</h3>
+            <h3>Events</h3>
             <p>
-              Every tour is carefully selected and tested by our team to make
-              sure you get the most authentic and memorable experience Jordan
-              has to offer.
+              Stay up to date with local festivals, cultural events, and seasonal experiences happening across Jordan.
             </p>
           </div>
         </div>

@@ -46,7 +46,13 @@ function Navbar() {
 
   return (
     <div className={`${styles.topnav} ${scrolled ? styles.scrolled : ""} ${visible ? styles.navVisible : styles.navHidden}`}>
-      <h2>Massar</h2>
+      <h2
+        onClick={() => navigate("/")}
+        style={{
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+      >Massar</h2>
 
       <div className={styles.navLinks}>
         <Link
