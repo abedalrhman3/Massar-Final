@@ -86,6 +86,7 @@ function Chatbot() {
   return (
     // Add showChatbot class to container to trigger CSS visibility
     <div
+
       className={`${styles.container} ${showChatbot ? styles.showChatbot : ""}`}
     >
       {/* Floating avatar toggle button — opens/closes the chatbot */}
@@ -95,6 +96,7 @@ function Chatbot() {
             <span>How can I help you?</span>
           </div>
           <img
+            id="nav-chatbot"
             className={`${styles.avatarImg} ${showChatbot ? styles.avatarOpen : ""}`}
             src={chatbot}
             alt="avatar"

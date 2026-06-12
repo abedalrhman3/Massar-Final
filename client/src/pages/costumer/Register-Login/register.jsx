@@ -17,13 +17,7 @@ const Dropdown = ({ options, placeholder, value, setValue }) => {
       {open && (
         <ul className={styles.dropdownList}>
           {options.map((opt, idx) => (
-            <li
-              key={idx}
-              onClick={() => {
-                setValue(opt);
-                setOpen(false);
-              }}
-            >
+            <li key={idx} onClick={() => { setValue(opt); setOpen(false); }}>
               {opt}
             </li>
           ))}
@@ -49,9 +43,9 @@ const Register = ({
   const [isEmailValid, setEmailValid] = useState(false);
   const [isPasswordValid, setPasswordValid] = useState(false);
   const [isConfirmValid, setConfirmValid] = useState(false);
-  const [serverMessage, setServerMessage] = useState("");
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [registered, setRegistered] = useState(false); // ← success state
 
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const months = [
@@ -75,25 +69,16 @@ const Register = ({
     e.preventDefault();
     if (!isFormValid) return;
 
-    setServerMessage("");
     setServerError("");
     setIsLoading(true);
 
-    // Your API expects: { name, email, password }
-    // Birthdate fields: include them if your backend model has them,
-    // otherwise only the three required fields are sent.
-    const body = {
-      name: fields.username,          // API field is "name"
-      email: fields.email,
-      password: fields.password,
-    };
-
     try {
-      const res = await register(body);
-      // res.data = { success, token, user }
-      setServerMessage(
-        `Account created! Please check your email (${fields.email}) to verify your account before logging in.`
-      );
+      await register({
+        name: fields.username,
+        email: fields.email,
+        password: fields.password,
+      });
+      setRegistered(true);
     } catch (err) {
       setServerError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -105,15 +90,49 @@ const Register = ({
     window.location.href = `${BASE_URL}/api/auth/${provider}`;
   };
 
+  // ── Success screen ──────────────────────────────────────────────────────────
+  if (registered) {
+    return (
+      <div className={`${styles.formBox} ${styles.register}`}>
+        <div style={{ textAlign: "center", padding: "32px 16px" }}>
+          <div style={{ fontSize: "52px", marginBottom: "16px" }}>✉️</div>
+          <h2 style={{ marginBottom: "12px" }}>Check your email</h2>
+          <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "24px" }}>
+            We sent a verification link to <strong>{fields.email}</strong>.
+            <br />
+            Click the link in the email to activate your account.
+          </p>
+          <p style={{ color: "#999", fontSize: "13px", marginBottom: "24px" }}>
+            Didn't receive it? Check your spam folder. The link expires in 24 hours.
+          </p>
+          <Link
+            to="/"
+            style={{
+              display: "inline-block",
+              padding: "12px 28px",
+              background: "#7494ec",
+              color: "#fff",
+              borderRadius: "30px",
+              textDecoration: "none",
+              fontWeight: "600",
+              fontSize: "15px",
+            }}
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Registration form ───────────────────────────────────────────────────────
   return (
     <div className={`${styles.formBox} ${styles.register}`}>
       <form onSubmit={handleSubmit}>
         <h1>Registration</h1>
 
         <div className={styles.fieldGroup}>
-          <label>
-            Username <span>*</span>
-          </label>
+          <label>Username <span>*</span></label>
           <Input
             type="text"
             placeholder="Username"
@@ -125,9 +144,7 @@ const Register = ({
         </div>
 
         <div className={styles.fieldGroup}>
-          <label>
-            Email <span>*</span>
-          </label>
+          <label>Email <span>*</span></label>
           <Input
             type="email"
             placeholder="Email"
@@ -140,9 +157,7 @@ const Register = ({
         </div>
 
         <div className={styles.fieldGroup}>
-          <label>
-            Password <span>*</span>
-          </label>
+          <label>Password <span>*</span></label>
           <Input
             type="password"
             placeholder="Password"
@@ -154,9 +169,7 @@ const Register = ({
         </div>
 
         <div className={styles.fieldGroup}>
-          <label>
-            Confirm Password <span>*</span>
-          </label>
+          <label>Confirm Password <span>*</span></label>
           <Input
             type="password"
             placeholder="Confirm Password"
@@ -168,9 +181,7 @@ const Register = ({
         </div>
 
         <div className={styles.fieldGroup}>
-          <label>
-            Birthdate <span>*</span>
-          </label>
+          <label>Birthdate <span>*</span></label>
           <div className={styles.birthdateGroup}>
             <Dropdown options={days} placeholder="Day" value={birthDay} setValue={setBirthDay} />
             <Dropdown options={months} placeholder="Month" value={birthMonth} setValue={setBirthMonth} />
@@ -194,7 +205,6 @@ const Register = ({
         </div>
 
         {serverError && <p className={styles.errorMsg}>{serverError}</p>}
-        {serverMessage && <p className={styles.successMsg}>{serverMessage}</p>}
 
         <button type="submit" className={styles.btn} disabled={!isFormValid || isLoading}>
           <div className={styles.btnLayer}></div>
@@ -206,7 +216,11 @@ const Register = ({
         </div>
 
         <div className={styles.socialBtns}>
-          <button type="button" className={`${styles.socialBtn} ${styles.google}`} onClick={() => handleOAuth("google")}>
+          <button
+            type="button"
+            className={`${styles.socialBtn} ${styles.google}`}
+            onClick={() => handleOAuth("google")}
+          >
             <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z" />
               <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z" />
@@ -215,8 +229,6 @@ const Register = ({
             </svg>
             Google
           </button>
-
-
         </div>
       </form>
     </div>

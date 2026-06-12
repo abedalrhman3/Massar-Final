@@ -355,25 +355,24 @@
   max-height: 90vh;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f3f4f6;
+  scrollbar-color: transparent transparent;
 }
 
 .modalContent::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .modalContent::-webkit-scrollbar-track {
-  background: #f3f4f6;
-  border-radius: 4px;
+  background: transparent;
 }
 
 .modalContent::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
+  background: transparent;
+  border-radius: 10px;
 }
 
 .modalContent::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: transparent;
 }
 
 .modalOverlayVisible .modalContent {

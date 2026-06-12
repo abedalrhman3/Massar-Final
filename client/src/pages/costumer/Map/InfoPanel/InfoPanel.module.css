@@ -1,0 +1,180 @@
+/* InfoPanel.module.css
+   Matches the project's design tokens:
+   --color-accent, --color-border, --font-ui
+   Floats over the map, bottom-left corner, above the Leaflet controls. */
+
+.panel {
+    position: fixed;
+    bottom: 32px;
+    left: 24px;
+    z-index: 1000;
+
+    width: 260px;
+    background: #ffffff;
+    border: 1px solid var(--color-border, #e8e8e8);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    font-family: var(--font-ui, sans-serif);
+    overflow: hidden;
+
+    /* Slide up on mount */
+    animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px 10px;
+    background: var(--color-accent, #4f46e5);
+    color: #fff;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+.closeBtn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    font-size: 0.75rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.closeBtn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Body ── */
+.body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ── Single stat row ── */
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.statIcon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.statBody {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.statLabel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+}
+
+.statValue {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.2;
+}
+
+/* ── Divider ── */
+.divider {
+    height: 1px;
+    background: var(--color-border, #e8e8e8);
+    margin: 4px 0;
+}
+
+/* ── Loading state ── */
+.loadingRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--color-border, #e8e8e8);
+    border-top-color: var(--color-accent, #4f46e5);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingText {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* ── No-route fallback ── */
+.noRoute {
+    font-size: 0.82rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0;
+    padding: 4px 0;
+}
+
+/* RTL tweaks */
+[dir="rtl"] .panel {
+    left: auto;
+    right: 24px;
+}

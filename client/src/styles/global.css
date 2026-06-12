@@ -1,6 +1,7 @@
 html {
     /* 1ren = 10px */
     font-size: 62.5%;
+    /*  background-color: var(--color-accent); */
 }
 
 body {

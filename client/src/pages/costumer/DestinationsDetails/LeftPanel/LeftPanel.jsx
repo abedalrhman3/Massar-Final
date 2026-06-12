@@ -4,7 +4,7 @@ import Card from "./Card/Card"
 import CommentSection from "./CommentSection/Comment"
 import { toggleLikeDestination } from "@/api/destination";
 import { saveItem, removeSavedItem } from "@/api/index";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 
 //Icons
@@ -16,6 +16,23 @@ const INITIAL_SHOW = 3
 
 const LeftPanel = ({ data, onCardClick, onShareClick }) => {
     const navigate = useNavigate()
+    const location = useLocation()
+
+    // ── Scroll to section when navigated from SaveList ────────────
+    useEffect(() => {
+        const anchor = location.state?.scrollTo;
+        if (!anchor) return;
+        // Wait for panel to render, then scroll
+        const timer = setTimeout(() => {
+            const panel = leftPanelRef.current;
+            const target = document.getElementById(anchor);
+            if (!panel || !target) return;
+            const panelTop = panel.getBoundingClientRect().top;
+            const targetTop = target.getBoundingClientRect().top;
+            panel.scrollTo({ top: panel.scrollTop + (targetTop - panelTop), behavior: "smooth" });
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [location.state]);
 
     // ── Save state for the destination itself ──────────────────────
     // data.savedId can be pre-populated by the parent if the destination
@@ -95,6 +112,14 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
     }
 
     const { sections } = data
+
+    const handleBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate('/');
+        }
+    };
 
     return (
         <div className={styles["left-panel-wrapper"]}>
@@ -204,8 +229,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </div>
                     </section>
 
-                    {/* ── PLACES TO VISIT ── */}
-                    <section className={styles.section}>
+                    <section id="places-to-visit" className={styles.section}>
                         <h2 className={styles["section-title"]}>
                             {sections.placesToVisit.title}
                         </h2>
@@ -236,8 +260,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </>
                     </section>
 
-                    {/* ── FOOD AND DINING ── */}
-                    <section className={styles.section}>
+                    <section id="food-and-dining" className={styles.section}>
                         <h2 className={styles["section-title"]}>Food and Dining</h2>
                         <>
                             {sections.foodAndDining.restaurants.isAvailable && (
@@ -273,8 +296,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </>
                     </section>
 
-                    {/* ── HOTELS ── */}
-                    <section className={styles.section}>
+                    <section id="hotels" className={styles.section}>
                         <h2 className={styles["section-title"]}>
                             {sections.hotels.title || "Hotels"}
                         </h2>
@@ -305,8 +327,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </>
                     </section>
 
-                    {/* ── EVENTS ── */}
-                    <section className={styles.section}>
+                    <section id="events" className={styles.section}>
                         <h2 className={styles["section-title"]}>
                             {sections.events.title || "Events"}
                         </h2>
@@ -352,9 +373,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
             }} aria-label="Scroll to top">
                 <ArrowUp size={24} />
             </button>
-            <button className={styles.backBtn} onClick={() => {
-                navigate("/destinations")
-            }} aria-label="Back to destinations">
+            <button className={styles.backBtn} onClick={handleBack} aria-label="Back to destinations">
                 <ArrowLeft size={24} />
             </button>
 
@@ -374,7 +393,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
             }} aria-label="Open Map">
                 <Map size={18} /> Open Map
             </button>
-        </div>
+        </div >
     )
 }
 

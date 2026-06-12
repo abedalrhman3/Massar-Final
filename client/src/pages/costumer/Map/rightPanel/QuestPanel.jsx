@@ -22,11 +22,11 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
         ? (isAr ? destination.name : destination.name_en)
         : "Explore";
 
-    //Seed already-joined quests from user context on mount
+    //Seed already-completed quests from user context on mount
     useEffect(() => {
-        if (user?.joined_quests?.length) {
+        if (user?.completed_quests?.length) {
             const map = {};
-            user.joined_quests.forEach((id) => {
+            user.completed_quests.forEach((id) => {
                 map[String(id)] = true;
             });
             setClaimed(map);
@@ -78,7 +78,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                     setUser(res.data.user);
                     localStorage.setItem("user", JSON.stringify(res.data.user));
                 }
-                alert(isAr ? "تم الانضمام للمسار بنجاح!..." : "Successfully joined the quest!...");
+
             }
         } catch (err) {
             alert(err.response?.data?.message || "Failed to join quest.");

@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { destinations } from "@/data/destinations";
 import styles from "./UserProfile.module.css";
 import { useAuth } from "@/context/AuthContext";
 import AdminSidebar from "../AdminSidebar";
-
-// ─── SWAP AXIOS FOR YOUR CUSTOM INSTANCE ─────────────────────────────────────
-import api from "@/api/client"; // This already targets '${BASE_URL}/api' automatically[cite: 7]
+import api from "@/api/client";
 
 function PasswordStrengthInput({ value, onChange, placeholder }) {
   const [show, setShow] = useState(false);
@@ -102,6 +99,7 @@ function SlideModal({ open, onClose, title, children }) {
 function UserProfile() {
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
+  const [showAvatarPopup, setShowAvatarPopup] = useState(false);
 
   const currentProfileData = {
     name: user?.name || "User",
@@ -114,11 +112,9 @@ function UserProfile() {
   const handleLogout = async () => {
     try {
       await logout();
-    }
-    catch (err) {
+    } catch (err) {
       console.error("Logout failed:", err);
-    }
-    finally {
+    } finally {
       navigate("/");
     }
   };
@@ -146,7 +142,6 @@ function UserProfile() {
 
   const closeModal = () => setActiveModal(null);
 
-  // ─── FIXED ENDPOINTS (REMOVED BASE_URL/API PREFIXES) ───────────────────────
   const handleSaveName = async () => {
     if (!draftName.trim()) return;
     try {
@@ -173,7 +168,6 @@ function UserProfile() {
       setPwError("New passwords do not match.");
       return;
     }
-
     try {
       await api.put("/auth/update-password", {
         currentPassword: currentPw,
@@ -191,7 +185,6 @@ function UserProfile() {
     if (file) {
       const formData = new FormData();
       formData.append("avatar", file);
-
       try {
         const res = await api.post("/auth/upload-avatar", formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -214,73 +207,15 @@ function UserProfile() {
     navigate(`/admin/settings?tab=${encodeURIComponent(targetTab)}`);
   };
 
-  // ─── Live badges from API ────────────────────────────────────────────────────
-  const [badges, setBadges] = useState([]);
-  const [badgesLoading, setBadgesLoading] = useState(true);
+  // ─── Badges from user context (no API call needed) ───────────────────────────
+  const badges = user?.earned_quest_badges ?? [];
   const [showAllBadges, setShowAllBadges] = useState(false);
 
-  useEffect(() => {
-    if (!user?._id) return;
-    const fetchBadges = async () => {
-      try {
-        setBadgesLoading(true);
-        const res = await api.get(`/game/users/${user._id}/profile`);
-        setBadges(res.data.data?.unlocked_badges ?? []);
-      } catch (err) {
-        console.error("Failed to fetch badges:", err);
-        setBadges([]);
-      } finally {
-        setBadgesLoading(false);
-      }
-    };
-    fetchBadges();
-  }, [user?._id]);
-
-  // ─── Live stats from API ─────────────────────────────────────────────────────
-  const [photoCount, setPhotoCount] = useState(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user?._id) return;
-
-    const fetchPhotoCount = async () => {
-      try {
-        setStatsLoading(true);
-        // GET /api/photos returns all public photos; count those belonging to this user
-        const res = await api.get("/photos");
-        const photos = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
-        const myPhotos = photos.filter(
-          (p) => String(p.user_id?._id ?? p.user_id) === String(user._id)
-        );
-        setPhotoCount(myPhotos.length);
-      } catch (err) {
-        console.error("Failed to fetch photo count:", err);
-        setPhotoCount(0);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    fetchPhotoCount();
-  }, [user?._id]);
-
+  // ─── Stats from user context (no API call needed) ────────────────────────────
   const stats = {
     xp: user?.total_xp ?? 0,
-    photosNumber: photoCount ?? 0,
-    badgesNumber: user?.unlocked_badges?.length ?? 0,
-  };
-
-  const settingsCards = [
-    { id: "security", icon: "security", title: "Login & Security", description: "Update password, enable 2FA, and monitor active sessions.", disabled: false },
-    { id: "notifications", icon: "notifications_active", title: "Notifications", description: "Customize alerts for new submissions, mentions, and system updates.", disabled: false },
-    { id: "personal", icon: "person", title: "Personal Details", description: "Edit public profile info, bio, and editorial social links.", disabled: false },
-    { id: "display", icon: "visibility", title: "Workspace Display", description: "Toggle dark mode, adjust typography scales, and UI density.", disabled: true },
-    { id: "billing", icon: "payments", title: "Billing & Plan", description: "Manage your Pro Contributor subscription and invoice history.", disabled: false },
-    { id: "apps", icon: "extension", title: "Connected Apps", description: "Integrate with Slack, Adobe Creative Cloud, and Notion.", disabled: true },
-  ];
-
-  const handleSave = () => {
-    alert("Profile configurations updated!");
+    photosNumber: user?.uploaded_photos ?? 0,
+    badgesNumber: (user?.earned_quest_badges ?? []).length,
   };
 
   const pwRules = [
@@ -292,15 +227,17 @@ function UserProfile() {
   ];
   const isNewPwValid = pwRules.every((r) => r.test(newPw));
 
-
-
   return (
     <div className={styles.page}>
       <AdminSidebar type={user.role} />
       <section className={styles.heroSection}>
         <div className={styles.heroMain}>
           <div className={styles.avatarWrapper}>
-            <div className={styles.avatarLarge}>
+            <div
+              className={styles.avatarLarge}
+              onClick={() => currentProfileData.avatar && setShowAvatarPopup(true)}
+              style={{ cursor: currentProfileData.avatar ? "pointer" : "default" }}
+            >
               {currentProfileData.avatar ? (
                 <img src={currentProfileData.avatar} alt="Avatar" />
               ) : (
@@ -312,28 +249,48 @@ function UserProfile() {
               <input type="file" accept="image/*" onChange={handleAvatarUpload} hidden />
             </label>
           </div>
+
+          {/* Avatar Full-Size Popup */}
+          {showAvatarPopup && (
+            <div className={styles.avatarPopupOverlay} onClick={() => setShowAvatarPopup(false)}>
+              <div className={styles.avatarPopup} onClick={(e) => e.stopPropagation()}>
+                <button className={styles.avatarPopupClose} onClick={() => setShowAvatarPopup(false)}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+                <div className={styles.avatarPopupImgWrap}>
+                  <img src={currentProfileData.avatar} alt="Avatar full size" className={styles.avatarPopupImg} />
+                </div>
+                <div className={styles.avatarPopupActions}>
+                  <label className={styles.avatarPopupEditBtn}>
+                    <span className="material-symbols-outlined">edit</span>
+                    Change Photo
+                    <input type="file" accept="image/*" onChange={(e) => { handleAvatarUpload(e); setShowAvatarPopup(false); }} hidden />
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
           <div className={styles.heroInfo}>
             <h1 className={styles.userName}>{currentProfileData.name}</h1>
             <p className={styles.userEmail}>{currentProfileData.email}</p>
             <div className={styles.badgeRow}>
               <span className={styles.roleBadge}>{currentProfileData.role}</span>
-              <span className={styles.locationBadge}>{currentProfileData.location}</span>
+              {/* <span className={styles.locationBadge}>{currentProfileData.location}</span> */}
             </div>
           </div>
         </div>
+
         <div className={styles.achievementsCard}>
           <h3 className={styles.achievementsTitle}>Verified Achievements</h3>
 
-          {badgesLoading ? (
-            <p className={styles.achievementsEmpty}>Loading badges…</p>
-          ) : badges.length === 0 ? (
+          {badges.length === 0 ? (
             <p className={styles.achievementsEmpty}>No badges earned yet.</p>
           ) : (
             <>
               <div className={styles.achievementsGrid}>
                 {(showAllBadges ? badges : badges.slice(0, 4)).map((badge) => (
                   <div
-                    key={badge._id}
+                    key={badge._id ?? badge.quest_id}
                     className={`${styles.achievementItem} ${badge.is_rare ? styles.achievementRare : ""}`}
                   >
                     <div className={`${styles.achievementIcon} ${badge.is_rare ? styles.achievementVeteran : styles.achievementVerified}`}>
@@ -358,7 +315,6 @@ function UserProfile() {
                     {`Show ${badges.length - 4} more`}
                   </button>
 
-                  {/* Popup overlay */}
                   {showAllBadges && (
                     <div className={styles.badgePopupOverlay} onClick={() => setShowAllBadges(false)}>
                       <div className={styles.badgePopup} onClick={(e) => e.stopPropagation()}>
@@ -371,7 +327,7 @@ function UserProfile() {
                         <div className={styles.badgePopupList}>
                           {badges.map((badge) => (
                             <div
-                              key={badge._id}
+                              key={badge._id ?? badge.quest_id}
                               className={`${styles.badgePopupItem} ${badge.is_rare ? styles.achievementRare : ""}`}
                             >
                               <div className={`${styles.achievementIcon} ${badge.is_rare ? styles.achievementVeteran : styles.achievementVerified}`}>
@@ -392,7 +348,6 @@ function UserProfile() {
             </>
           )}
         </div>
-
       </section>
 
       <section className={styles.bentoGrid}>
@@ -432,20 +387,20 @@ function UserProfile() {
             <div className={styles.statLabel}>XP</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValueSmall}>
-              {statsLoading ? "—" : stats.photosNumber}
-            </div>
+            <div className={styles.statValueSmall}>{stats.photosNumber}</div>
             <div className={styles.statLabelSmall}>Uploaded Photos</div>
             <div className={styles.progressBar}>
               <div
                 className={styles.progressFill}
-                style={{ width: statsLoading ? "0%" : `${Math.min(stats.photosNumber, 100)}%` }}
+                style={{ width: `${Math.min(stats.photosNumber, 100)}%` }}
               />
             </div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.authorsRow}>
-              <div className={styles.authorsIcon}><span className="material-symbols-outlined">stars</span></div>
+              <div className={styles.authorsIcon}>
+                <span className="material-symbols-outlined">stars</span>
+              </div>
               <div>
                 <div className={styles.statValueSmall}>{stats.badgesNumber}</div>
                 <div className={styles.statLabelSmall}>Badges Earned</div>
@@ -454,8 +409,6 @@ function UserProfile() {
           </div>
         </div>
       </section>
-
-
 
       <SlideModal open={activeModal === "name"} onClose={closeModal} title="Change Name">
         <p className={styles.modalHint}>Update your display name across the platform.</p>
@@ -482,9 +435,12 @@ function UserProfile() {
 
       <SlideModal open={activeModal === "email"} onClose={closeModal} title="Change Email">
         <div className={styles.emailVerifyBox}>
-          <div className={styles.emailVerifyIcon}><span className="material-symbols-outlined">mark_email_unread</span></div>
+          <div className={styles.emailVerifyIcon}>
+            <span className="material-symbols-outlined">mark_email_unread</span>
+          </div>
           <p className={styles.emailVerifyText}>
-            We'll send a verification email to your current address <strong>{currentProfileData.email}</strong> to confirm it's you.
+            We'll send a verification email to your current address{" "}
+            <strong>{currentProfileData.email}</strong> to confirm it's you.
           </p>
         </div>
         <div className={styles.modalActions}>

@@ -74,9 +74,12 @@ const SearchBar = () => {
                 lng: loc.coordinates.lng,
                 name: isAr ? loc.name : loc.name_en,
                 destinationId: loc.destination_id,
+                loc,
             },
             replace: true,
         });
+
+        onLocationSelect(loc);
     };
 
     const handleSubmit = (e) => {

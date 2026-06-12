@@ -42,12 +42,12 @@ const VerifyEmail = () => {
             <h1 style={{ color: "#18e605" }}>✅ Email Verified!</h1>
             <p style={{ color: "#444", marginTop: "12px" }}>{message}</p>
             <Link
-              to="/"
+              to="/login"
               style={{
                 display: "inline-block",
                 marginTop: "20px",
                 padding: "12px 28px",
-                background: "#7494ec",
+                background: "var(--color-accent)",
                 color: "#fff",
                 borderRadius: "30px",
                 textDecoration: "none",
@@ -70,7 +70,7 @@ const VerifyEmail = () => {
                 display: "inline-block",
                 marginTop: "20px",
                 padding: "12px 28px",
-                background: "#7494ec",
+                background: "var(--color-accent)",
                 color: "#fff",
                 borderRadius: "30px",
                 textDecoration: "none",
