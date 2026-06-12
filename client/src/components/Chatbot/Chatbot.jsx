@@ -54,8 +54,7 @@ function Chatbot() {
     };
 
     try {
-      const backendUrl =
-        import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api/chat";
+      const backendUrl = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:5002"}/api/chat`;
       const response = await fetch(backendUrl, requestOptions);
 
       const textData = await response.text();
@@ -68,10 +67,11 @@ function Chatbot() {
       updateHistory(data.reply.trim());
     } catch (error) {
       console.error("Chatbot Fetch Error:", error);
-      updateHistory(
-        "Couldn't connect to Masar Server. Make sure your Python backend is running on port 5000!",
-        true,
-      );
+      // Show the actual error message from server if available, otherwise show generic error
+      const errorMessage = error.message && !error.message.includes('Server returned')
+        ? error.message
+        : "Couldn't connect to Massar Server. Please make sure the backend is running on port 5000!";
+      updateHistory(errorMessage, true);
     }
   };
 

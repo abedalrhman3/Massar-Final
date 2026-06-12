@@ -4,9 +4,9 @@ const Location = require('./models/Location');
 const Badge = require('./models/Badge');
 const bcrypt = require('bcryptjs');
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/massair');
+async function main() {
+  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/massar');
 
-async function seed() {
   const force = process.argv.includes('--force');
 
   if (force) {
@@ -52,9 +52,10 @@ async function seed() {
   if (!ahmadUser) {
     const hashedUserPassword = await bcrypt.hash('password123', 10);
     await User.create({
+      name: 'Ahmad Test',
       username: 'ahmad',
       email: 'ahmad@example.com',
-      password: hashedUserPassword,
+      passwordHash: hashedUserPassword,
       current_level: 'Explorer',
       total_xp: 0,
       active_frame_slug: 'default-frame',
@@ -66,7 +67,8 @@ async function seed() {
   }
 
   console.log("Database seeded successfully!");
+  await mongoose.disconnect();
   process.exit();
 }
 
-seed();
+main().catch(console.error);
