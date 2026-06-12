@@ -25,7 +25,7 @@ const ResetPassword = () => {
       await client.post(`/auth/reset-password/${token}`, { password });
       setIsError(false);
       setMessage("Password updated successfully! Redirecting to login...");
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/login"), 1000);
     } catch (err) {
       setIsError(true);
       setMessage(err.response?.data?.message || "Reset failed. The link may have expired.");

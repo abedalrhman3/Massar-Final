@@ -181,7 +181,7 @@ function App() {
         <Route path="/login" element={<RegisterLogin />} />
         <Route path="/register" element={<RegisterLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset/:token" element={<ResetPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* ── User Account Pages ────────────────────────────────── */}

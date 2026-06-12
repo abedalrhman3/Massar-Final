@@ -9,39 +9,21 @@ const AppError = require('../utils/AppError');
 // -------------------------------------------------------
 exports.register = async (req, res, next) => {
   try {
-    // Dynamically bridge differences between Web and Mobile registration payloads
     const { username, is_admin } = req.body;
-    if (username && !req.body.name) {
-      req.body.name = username; // Map username to name for web compatibility
-    }
+    if (username && !req.body.name) req.body.name = username;
     if (is_admin !== undefined && !req.body.role) {
-      req.body.role = is_admin ? 'admin' : 'user'; // Map boolean to backend role
+      req.body.role = is_admin ? 'admin' : 'user';
     }
 
     const user = await authService.register(req.body);
 
-    // Generate JWT token so they are logged in immediately on mobile/web
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await UserSession.findOneAndUpdate(
-      { userId: user._id },
-      { token, expiresAt },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    // NOTE: user is NOT logged in automatically until they verify their email.
+    // Return a success message instead of a JWT cookie.
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful. Please check your email to verify your account.',
+      user,
     });
-
-    res.status(201).json({ success: true, token, user: { ...user, token } });
   } catch (err) {
     next(err);
   }
@@ -58,7 +40,7 @@ exports.login = async (req, res, next) => {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.json({ success: true, token, user: { ...user, token } });
@@ -73,9 +55,48 @@ exports.login = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   try {
     await authService.logout(req.token);
-    // Clear httpOnly cookie
     res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// -------------------------------------------------------
+// GET /api/auth/verify-email/:token
+// -------------------------------------------------------
+exports.verifyEmail = async (req, res, next) => {
+  try {
+    await authService.verifyEmail(req.params.token);
+    res.json({ success: true, message: 'Email verified successfully. You can now log in.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// -------------------------------------------------------
+// POST /api/auth/forgot-password
+// -------------------------------------------------------
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    await authService.forgotPassword(req.body.email);
+    // Always return the same response to prevent email enumeration
+    res.json({
+      success: true,
+      message: 'If that email is registered, a reset link has been sent.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// -------------------------------------------------------
+// POST /api/auth/reset-password/:token
+// -------------------------------------------------------
+exports.resetPassword = async (req, res, next) => {
+  try {
+    await authService.resetPassword(req.params.token, req.body.password);
+    res.json({ success: true, message: 'Password updated successfully.' });
   } catch (err) {
     next(err);
   }
@@ -122,11 +143,7 @@ exports.deleteUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return next(new AppError('User not found', 404));
-
-    // Also delete any active sessions for this user so they are instantly logged out
-    const UserSession = require('../models/UserSession');
     await UserSession.deleteMany({ userId: user._id });
-
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (err) {
     next(err);
@@ -135,14 +152,12 @@ exports.deleteUser = async (req, res, next) => {
 
 // -------------------------------------------------------
 // PUT /api/auth/users/:id/ban  — admin
-// Toggles the ban status of a user
 // -------------------------------------------------------
 exports.toggleBanUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return next(new AppError('User not found', 404));
 
-    // Prevent admin from banning themselves
     if (user._id.toString() === req.user.userId) {
       return next(new AppError('You cannot ban yourself', 400));
     }
@@ -150,22 +165,19 @@ exports.toggleBanUser = async (req, res, next) => {
     user.isBanned = !user.isBanned;
     await user.save();
 
-    // If banned, destroy their active sessions so they are instantly logged out
     if (user.isBanned) {
-      const UserSession = require('../models/UserSession');
       await UserSession.deleteMany({ userId: user._id });
     }
 
     res.json({
       success: true,
       message: user.isBanned ? 'User has been banned' : 'User ban removed',
-      isBanned: user.isBanned
+      isBanned: user.isBanned,
     });
   } catch (err) {
     next(err);
   }
 };
-// Add these exports at the bottom of your authController.js file
 
 // PUT /api/auth/update-profile
 exports.updateProfile = async (req, res, next) => {
@@ -204,23 +216,14 @@ exports.updatePassword = async (req, res, next) => {
   }
 };
 
-
-
 // POST /api/auth/upload-avatar
 exports.uploadAvatar = async (req, res, next) => {
   try {
-    // 1. Ensure multer parsed the file stream from the frontend request successfully[cite: 3]
-    if (!req.file) {
-      return next(new AppError('Please provide an image file', 400));
-    }
+    if (!req.file) return next(new AppError('Please provide an image file', 400));
 
-    // 2. CORRECT SERVICE PATH: Pull the Cloudinary upload execution function[cite: 5]
     const { uploadPhoto } = require('../services/uploadService');
-
-    // Pass the memory buffer directly to Cloudinary[cite: 3, 5]
     const secureUrl = await uploadPhoto(req.file.buffer);
 
-    // 3. Save the returned Cloudinary URL string into MongoDB
     const user = await User.findByIdAndUpdate(
       req.user.userId,
       { $set: { avatar_url: secureUrl } },

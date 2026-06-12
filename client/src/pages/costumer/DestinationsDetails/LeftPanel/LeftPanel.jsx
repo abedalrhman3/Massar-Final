@@ -373,8 +373,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
             }} aria-label="Scroll to top">
                 <ArrowUp size={24} />
             </button>
-            <button className={styles.backBtn} onClick={handleBack
-            } aria-label="Back to destinations">
+            <button className={styles.backBtn} onClick={handleBack} aria-label="Back to destinations">
                 <ArrowLeft size={24} />
             </button>
 

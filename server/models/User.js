@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
-    // ── Core fields (your part) ─────────────────────────
+    // ── Core fields ─────────────────────────────────────
     name: {
       type: String,
       required: [true, 'Name is required'],
@@ -28,63 +28,37 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    googleId: {
-      type: String,
-      sparse: true,
-    },
-    facebookId: {
-      type: String,
-      sparse: true,
-    },
-    discordId: {
-      type: String,
-      sparse: true,
-    },
-    instagramId: {
-      type: String,
-      sparse: true,
-    },
-    avatar: {
-      type: String,
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    isBanned: {
-      type: Boolean,
-      default: false,
-    },
+    googleId: { type: String, sparse: true },
+    facebookId: { type: String, sparse: true },
+    discordId: { type: String, sparse: true },
+    instagramId: { type: String, sparse: true },
+    avatar: { type: String },
 
-    // ── Gamification fields (teammate's part) ───────────
+    isVerified: { type: Boolean, default: false },
+    isBanned: { type: Boolean, default: false },
+
+    // ── Email verification ───────────────────────────────
+    emailVerificationToken: { type: String, default: null },
+    emailVerificationExpires: { type: Date, default: null },
+
+    // ── Password reset ───────────────────────────────────
+    passwordResetToken: { type: String, default: null },
+    passwordResetExpires: { type: Date, default: null },
+
+    // ── Gamification fields ──────────────────────────────
     username: {
       type: String,
       unique: true,
-      sparse: true, // allows null while keeping unique constraint
+      sparse: true,
       trim: true,
     },
-    current_level: {
-      type: String,
-      default: 'Explorer',
-    },
-    total_xp: {
-      type: Number,
-      default: 0,
-    },
-    uploaded_photos: {
-      type: Number,
-      default: 0,
-    },
-    active_frame_slug: {
-      type: String,
-      default: 'default-frame',
-    },
-    unlocked_badges: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Badge',
-      },
-    ],
+    current_level: { type: String, default: 'Explorer' },
+    total_xp: { type: Number, default: 0 },
+    uploaded_photos: { type: Number, default: 0 },
+    active_frame_slug: { type: String, default: 'default-frame' },
+
+    unlocked_badges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Badge' }],
+
     earned_quest_badges: [
       {
         quest_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Quest' },
@@ -92,40 +66,16 @@ const userSchema = new mongoose.Schema(
         title_en: { type: String },
         icon_url: { type: String },
         earned_at: { type: Date, default: Date.now },
-      }
-    ],
-    unlocked_frames: {
-      type: [String],
-      default: ['default-frame'],
-    },
-    unlocked_titles: {
-      type: [String],
-      default: [],
-    },
-    completed_quests: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Quest',
       },
     ],
-    completed_locations: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Location',
-      },
-    ],
-    joined_quests: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Quest',
-      },
-    ],
-    likedDestinations: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Destination',
-      },
-    ],
+
+    unlocked_frames: { type: [String], default: ['default-frame'] },
+    unlocked_titles: { type: [String], default: [] },
+
+    completed_quests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quest' }],
+    completed_locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
+    joined_quests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quest' }],
+    likedDestinations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Destination' }],
   },
   { timestamps: true }
 );

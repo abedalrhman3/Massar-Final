@@ -3,12 +3,10 @@ import styles from "./Support.module.css";
 import { ADMIN_AVATARS } from "../../admin/AdminChat";
 import emailjs from "@emailjs/browser";
 
+import HussamImage from "/team/hussam.jpeg";
+
 const team = [
-  {
-    name: "Hussam Azzam",
-    phone: "+1(555)902-1143",
-    img: ADMIN_AVATARS["Hussam Azzam"],
-  },
+
   {
     name: "Osama Alazab",
     phone: "+1(555)438-2910",
@@ -18,6 +16,11 @@ const team = [
     name: "Mr. Shelby",
     phone: "+1(555)762-8812",
     img: ADMIN_AVATARS["Mr. Shelby"],
+  },
+  {
+    name: "Hussam Azzam",
+    phone: "0781090881",
+    img: HussamImage,
   },
   {
     name: "Mr. Cash",
@@ -212,11 +215,11 @@ function Support() {
               </p>
               <div className={styles.contactItem}>
                 <span className="material-symbols-outlined">call</span>
-                <span>+1 (888) 555-ARCHIVE</span>
+                <span>+962781668565</span>
               </div>
               <div className={styles.contactItem}>
                 <span className="material-symbols-outlined">mail</span>
-                <span>concierge@editorialarchive.com</span>
+                <span>abedalrhmanabood12@gmail.com</span>
               </div>
             </div>
           </div>

@@ -67,7 +67,7 @@ const ForgotPassword = () => {
               Not a member? <Link to="/register">Sign Up</Link>
             </h5>
             <h5>
-              Already have an account? <Link to="/">Sign In</Link>
+              Already have an account? <Link to="/login">Sign In</Link>
             </h5>
           </div>
         </form>
