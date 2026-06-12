@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: function() { return !(this.googleId || this.facebookId || this.discordId || this.instagramId); },
+      required: function () { return !(this.googleId || this.facebookId || this.discordId || this.instagramId); },
     },
     role: {
       type: String,
@@ -71,6 +71,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    uploaded_photos: {
+      type: Number,
+      default: 0,
+    },
     active_frame_slug: {
       type: String,
       default: 'default-frame',
@@ -80,6 +84,15 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Badge',
       },
+    ],
+    earned_quest_badges: [
+      {
+        quest_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Quest' },
+        title: { type: String },
+        title_en: { type: String },
+        icon_url: { type: String },
+        earned_at: { type: Date, default: Date.now },
+      }
     ],
     unlocked_frames: {
       type: [String],
