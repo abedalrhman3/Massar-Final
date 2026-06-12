@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./SaveList.module.css";
 import AdminSidebar from "@/pages/admin/AdminSidebar";
 import { getSavedItems, removeSavedItem } from "@/api/saved";
+import { getDestinations } from "@/api/destination";
 
 // ── Stars ─────────────────────────────────────────────────────────
 const Stars = ({ rating = 0 }) => (
@@ -48,8 +50,16 @@ function getImage(entity) {
   return entity.image || entity.coverImage || entity.img || "";
 }
 
+const SECTION_ANCHOR = {
+  place: "places-to-visit",
+  restaurant: "food-and-dining",
+  hotel: "hotels",
+  event: "events",
+};
+
 // ── PAGE ──────────────────────────────────────────────────────────
 export default function SavedLists() {
+  const navigate = useNavigate();
   const [activeEventIndex, setActiveEventIndex] = useState(0);
   const [saved, setSaved] = useState({
     destination: [],
@@ -66,14 +76,29 @@ export default function SavedLists() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getSavedItems();
-      // Backend now returns: [{ _id, entityType, entity, savedAt }]
-      const items = res.data?.data ?? [];
+      const [savedRes, destsRes] = await Promise.all([
+        getSavedItems(),
+        getDestinations(),
+      ]);
+
+      const items = savedRes.data?.data ?? [];
+      const allDests = destsRes.data?.data ?? [];
+
+      // Build _id → slug lookup
+      const destSlugMap = {};
+      for (const d of allDests) {
+        destSlugMap[String(d._id)] = d.slug;
+      }
 
       const grouped = { destination: [], place: [], restaurant: [], hotel: [], event: [] };
       for (const item of items) {
         if (item.entity && grouped[item.entityType] !== undefined) {
-          grouped[item.entityType].push({ savedId: item._id, entity: item.entity });
+          const entry = { savedId: item._id, entity: item.entity };
+          if (item.entityType !== "destination") {
+            const destId = String(item.entity.destinationId);
+            entry.destinationSlug = destSlugMap[destId] ?? null;
+          }
+          grouped[item.entityType].push(entry);
         }
       }
       setSaved(grouped);
@@ -98,7 +123,16 @@ export default function SavedLists() {
     });
   }, []);
 
-  // ── Event carousel ────────────────────────────────────────────
+  // ── Navigate helpers ──────────────────────────────────────────
+  const goToDestination = useCallback((slug) => {
+    if (slug) navigate(`/destinations/${slug}`);
+  }, [navigate]);
+
+  const goToSection = useCallback((slug, entityType) => {
+    if (!slug) return;
+    const anchor = SECTION_ANCHOR[entityType];
+    navigate(`/destinations/${slug}`, { state: { scrollTo: anchor } });
+  }, [navigate]);
   const events = saved.event;
   useEffect(() => {
     if (events.length <= 1) return;
@@ -164,7 +198,7 @@ export default function SavedLists() {
         ) : (
           <div className={styles.destGrid}>
             {destItems.slice(0, 6).map(({ savedId, entity: d }) => (
-              <div key={savedId} className={styles.destCard}>
+              <div key={savedId} className={styles.destCard} onClick={() => goToDestination(d.slug)} style={{ cursor: "pointer" }}>
                 <div className={styles.destImgWrap}>
                   <img src={getImage(d)} alt={d.name} className={styles.destImg} />
                   <RemoveButton savedId={savedId} onRemove={handleRemove} />
@@ -198,8 +232,8 @@ export default function SavedLists() {
           <p className={styles.emptyMsg}>No saved places yet.</p>
         ) : (
           <div className={styles.destGrid}>
-            {saved.place.slice(0, 6).map(({ savedId, entity: p }) => (
-              <div key={savedId} className={styles.destCard}>
+            {saved.place.slice(0, 6).map(({ savedId, entity: p, destinationSlug }) => (
+              <div key={savedId} className={styles.destCard} onClick={() => goToSection(destinationSlug, "place")} style={{ cursor: "pointer" }}>
                 <div className={styles.destImgWrap}>
                   <img src={getImage(p)} alt={p.name} className={styles.destImg} />
                   <RemoveButton savedId={savedId} onRemove={handleRemove} />
@@ -229,8 +263,8 @@ export default function SavedLists() {
             <p className={styles.emptyMsg}>No saved restaurants yet.</p>
           ) : (
             <div className={styles.listCards}>
-              {saved.restaurant.map(({ savedId, entity: r }) => (
-                <div key={savedId} className={styles.listCard}>
+              {saved.restaurant.map(({ savedId, entity: r, destinationSlug }) => (
+                <div key={savedId} className={styles.listCard} onClick={() => goToSection(destinationSlug, "restaurant")} style={{ cursor: "pointer" }}>
                   <div className={styles.listCardImgWrap}>
                     <img src={getImage(r)} alt={r.name} className={styles.listCardImg} />
                     <RemoveButton savedId={savedId} onRemove={handleRemove} />
@@ -257,8 +291,8 @@ export default function SavedLists() {
             <p className={styles.emptyMsg}>No saved hotels yet.</p>
           ) : (
             <div className={styles.listCards}>
-              {saved.hotel.map(({ savedId, entity: h }) => (
-                <div key={savedId} className={styles.listCard}>
+              {saved.hotel.map(({ savedId, entity: h, destinationSlug }) => (
+                <div key={savedId} className={styles.listCard} onClick={() => goToSection(destinationSlug, "hotel")} style={{ cursor: "pointer" }}>
                   <div className={styles.listCardImgWrap}>
                     <img src={getImage(h)} alt={h.name} className={styles.listCardImg} />
                     <RemoveButton savedId={savedId} onRemove={handleRemove} />
@@ -290,7 +324,7 @@ export default function SavedLists() {
           <p className={styles.emptyMsg}>No saved events yet.</p>
         ) : (
           <div className={styles.eventsLayout}>
-            <div className={styles.eventFeatured}>
+            <div className={styles.eventFeatured} onClick={() => goToSection(events[activeEventIndex]?.destinationSlug, "event")} style={{ cursor: "pointer" }}>
               <img src={getImage(currentEvent)} alt={currentEvent.name} className={styles.eventFeaturedImg} />
               <div className={styles.eventFeaturedOverlay}>
                 <h3 className={styles.eventFeaturedTitle}>{currentEvent.name}</h3>
@@ -321,7 +355,7 @@ export default function SavedLists() {
                 {currentEvent.date && getLocationLabel(currentEvent) && <span className={styles.eventSideDot}>•</span>}
                 {getLocationLabel(currentEvent) && <span className={styles.eventSideLocation}>{getLocationLabel(currentEvent)}</span>}
               </div>
-              <button className={styles.eventDetailsBtn}>DETAILS</button>
+              <button className={styles.eventDetailsBtn} onClick={() => goToSection(events[activeEventIndex]?.destinationSlug, "event")}>DETAILS</button>
             </div>
           </div>
         )}
