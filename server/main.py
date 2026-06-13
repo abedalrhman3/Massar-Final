@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="Masar Chatbot API")
+app = FastAPI(title="Massar Chatbot API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -72,6 +72,19 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[Message]
+
+class ImageScanRequest(BaseModel):
+    file_data: str
+    mime_type: str
+
+@app.post("/api/scan-image")
+@app.post("/api/chat/scan-image")
+@limiter.limit("10/minute")
+async def scan_image(request: Request, scan_req: ImageScanRequest):
+    safe, reason = await check_image_safety_helper(scan_req.file_data, scan_req.mime_type, request)
+    if not safe:
+        return JSONResponse(status_code=403, content={"safe": False, "reason": reason})
+    return {"safe": True}
 
 class ChatResponse(BaseModel):
     reply: str
@@ -202,8 +215,9 @@ def contains_swear_word(text: str) -> bool:
     if not text:
         return False
     lower = text.lower()
+    words = re.findall(r'\b[a-zA-Z]+\b', lower)
     for word in SWEAR_WORDS:
-        if word in lower:
+        if word in words:
             return True
     for word in ARABIC_PROFANITY:
         if word in text:
@@ -469,38 +483,41 @@ def format_db_results_for_gemini(results: dict) -> str:
 
     return "\n".join(lines) if lines else ""
 
-KNOWN_DESTINATIONS = {
-    "petra", "wadi rum", "jerash", "amman", "dead sea", "aqaba", "madaba",
-    "mount nebo", "mt nebo", "karak", "ajloun", "umm qais", "dana", "mujib",
-    "qasr amra", "little petra", "siq", "shelby", "the treasury", "the monastery"
-}
-
-SHORT_REPLIES = {
-    "yes", "no", "y", "n", "ok", "sure", "maybe", "yeah", "yep", "nope",
-    "yes please", "no thanks", "ok sure", "why", "how", "what",
-    "اهلا", "لا", "نعم", "okay"
-}
-
-GREETING_KEYWORDS = [
-    "hi", "hello", "hey", "مرحبا", "اهلا", "ahlan", "marhaba", "hola", "hi there"
-]
-
-def is_destination_query(text: str) -> bool:
-    if not text:
-        return False
-    extracted = extract_destination_name(text)
-    return extracted is not None and extracted != ""
-
-def extract_destination_name(text: str) -> str:
+def extract_destination_name(text: str) -> Optional[str]:
     if not text:
         return None
-    text_lower = text.lower()
+    if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
+        return None
 
-    for keyword in KNOWN_DESTINATIONS:
-        if keyword in text_lower:
-            return keyword
+    prompt = f"""Analyze this user query: "{text}"
+If the user is asking about or referring to a specific travel destination, city, historical landmark, or region in Jordan (such as Petra, Wadi Rum, Amman, Jerash, Dead Sea, Aqaba, Madaba, Ajloun, etc.), output ONLY the main English name of that destination (e.g., "Petra", "Wadi Rum", "Amman").
+If the message is NOT referring to or asking about a specific destination, or if it is just a greeting, thanking, or general chat, output "none".
+Output only the destination name or "none", with no punctuation, explanation, or extra words."""
 
+    max_attempts = len(GEMINI_MODEL_LIST)
+    for attempt in range(max_attempts):
+        current_model = get_current_model()
+        try:
+            model = genai.GenerativeModel(current_model)
+            response = model.generate_content(prompt)
+            result = response.text.strip().lower()
+            if result and result != "none":
+                clean_name = re.sub(r'["\'\.\?\!]', '', result).strip()
+                if clean_name:
+                    print(f"[GEMINI DETECT] Extracted destination name: {clean_name}")
+                    return clean_name
+            return None
+        except Exception as e:
+            print(f"[GEMINI DETECT] Error with {current_model}: {e}")
+            is_rate_limit = "429" in str(e) or "rate limit" in str(e).lower()
+            if is_rate_limit:
+                switch_to_next_model()
+                continue
+            break
     return None
+
+def is_destination_query(text: str) -> bool:
+    return extract_destination_name(text) is not None
 
 def get_available_categories(db_results: dict) -> List[str]:
     categories = []
@@ -521,6 +538,158 @@ def truncate_to_limit(text: str, max_chars: int = 400) -> str:
         return text
     return text[:max_chars-3].rsplit(' ', 1)[0] + "..."
 
+def get_db_destination_names() -> List[str]:
+    global db
+    if db is None:
+        return []
+    try:
+        return [d.get("name") for d in db.destinations.find({}, {"name": 1}) if d.get("name")]
+    except Exception as e:
+        print(f"[DB] Error fetching destination names: {e}")
+        return []
+
+def get_active_destination_from_history(history: List[Any]) -> Optional[str]:
+    names = get_db_destination_names()
+    if not names:
+        return None
+    names_lower = [n.lower() for n in names]
+    
+    for msg in reversed(history):
+        content = ""
+        if isinstance(msg, dict):
+            content = msg.get("content", "")
+        else:
+            content = getattr(msg, "content", "") or getattr(msg, "text", "") or ""
+        
+        content_lower = content.lower()
+        for name in names_lower:
+            if name in content_lower:
+                return name
+    return None
+
+def is_contextual_query(text: str) -> bool:
+    text_lower = text.lower()
+    referring_words = ["there", "it", "this", "that", "place", "destination", "here", "visit", "activities", "do", "how", "what", "fee", "cost", "price", "entrance", "hours", "when"]
+    return any(w in text_lower for w in referring_words) or len(text_lower.strip()) <= 15
+
+def get_all_serialized_db_data() -> str:
+    global db
+    if db is None:
+        return "Database not connected"
+    try:
+        destinations = list(db.destinations.find({}))
+        places = list(db.places.find({}))
+        restaurants = list(db.restaurants.find({}))
+        hotels = list(db.hotels.find({}))
+        events = list(db.events.find({}))
+        dest_details = list(db.destination_details.find({}))
+
+        dest_map = {}
+        for d in destinations:
+            d_id = str(d["_id"])
+            dest_map[d_id] = {
+                "name": d.get("name", "N/A"),
+                "tagline": d.get("tagline", ""),
+                "description": d.get("description", ""),
+                "budget": d.get("budget", ""),
+                "rating": d.get("rating", ""),
+                "location": d.get("location", {}).get("coordinates", []),
+                "places": [],
+                "restaurants": [],
+                "hotels": [],
+                "events": [],
+                "activities": [],
+                "guide_sections": []
+            }
+
+        for dd in dest_details:
+            d_id = str(dd.get("destinationId", ""))
+            if d_id in dest_map:
+                overview = dd.get("overview", {})
+                if overview:
+                    dest_map[d_id]["overview_text"] = overview.get("text", "")
+                    dest_map[d_id]["recommended_stay"] = overview.get("recommendedStay", "")
+                    dest_map[d_id]["best_season"] = overview.get("bestSeason", "")
+                    dest_map[d_id]["average_cost"] = overview.get("averageCost", "")
+
+                activities = dd.get("activities", [])
+                dest_map[d_id]["activities"] = [a.get("name", "") for a in activities if a.get("name")]
+
+                guides = dd.get("guideSections", [])
+                for g in guides:
+                    dest_map[d_id]["guide_sections"].append({
+                        "title": g.get("title", ""),
+                        "content": g.get("content", "")
+                    })
+
+        for p in places:
+            d_id = str(p.get("destinationId", ""))
+            p_info = {
+                "name": p.get("name", ""),
+                "customOverview": p.get("customOverview", ""),
+                "operatingHours": p.get("operatingHours", {}),
+                "workingDays": p.get("workingDays", []),
+                "address": ""
+            }
+            for m in p.get("contact", {}).get("methods", []):
+                if m.get("type") == "address":
+                    p_info["address"] = m.get("value", "")
+            if d_id in dest_map:
+                dest_map[d_id]["places"].append(p_info)
+
+        for r in restaurants:
+            d_id = str(r.get("destinationId", ""))
+            r_info = {
+                "name": r.get("name", ""),
+                "customOverview": r.get("customOverview", ""),
+                "operatingHours": r.get("operatingHours", {}),
+                "workingDays": r.get("workingDays", []),
+                "address": ""
+            }
+            for m in r.get("contact", {}).get("methods", []):
+                if m.get("type") == "address":
+                    r_info["address"] = m.get("value", "")
+            if d_id in dest_map:
+                dest_map[d_id]["restaurants"].append(r_info)
+
+        for h in hotels:
+            d_id = str(h.get("destinationId", ""))
+            h_info = {
+                "name": h.get("name", ""),
+                "customOverview": h.get("customOverview", ""),
+                "bookingUrl": h.get("bookingUrl", ""),
+                "address": ""
+            }
+            for m in h.get("contact", {}).get("methods", []):
+                if m.get("type") == "address":
+                    h_info["address"] = m.get("value", "")
+            if d_id in dest_map:
+                dest_map[d_id]["hotels"].append(h_info)
+
+        for e in events:
+            d_id = str(e.get("destinationId", ""))
+            e_info = {
+                "name": e.get("name", ""),
+                "customOverview": e.get("customOverview", ""),
+                "startDate": str(e.get("startDate", "")),
+                "endDate": str(e.get("endDate", "")),
+                "startingFromPrice": e.get("startingFromPrice", ""),
+                "durationText": e.get("durationText", ""),
+                "bookingUrl": e.get("bookingUrl", ""),
+                "address": ""
+            }
+            for m in e.get("contact", {}).get("methods", []):
+                if m.get("type") == "address":
+                    e_info["address"] = m.get("value", "")
+            if d_id in dest_map:
+                dest_map[d_id]["events"].append(e_info)
+
+        import json
+        return json.dumps(list(dest_map.values()), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        print(f"Error serializing DB data: {exc}")
+        return "Error loading database data"
+
 def generate_gemini_response(
     prompt: str,
     db_data: str = "",
@@ -529,10 +698,10 @@ def generate_gemini_response(
     available_categories: List[str] = None,
     offered_categories: List[str] = None,
     category_focus: str = None,
-    is_greeting: bool = False,
     destination_found_in_db: bool = True,
     previous_bot_message: str = None,
-    parent_destination: str = None
+    parent_destination: str = None,
+    history: List[Message] = None
 ) -> str:
     if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
         return "Chatbot is not configured. Please set GEMINI_API_KEY."
@@ -544,7 +713,11 @@ def generate_gemini_response(
 
     remaining_categories = [c for c in available_categories if c not in offered_categories]
 
-    system_instruction = f"""You are a warm, friendly Jordan travel assistant for Masar. Your role is to help users discover amazing destinations in Jordan.
+    serialized_db = get_all_serialized_db_data()
+    system_instruction = f"""You are a travel assistant for the Massar platform. The following is the ONLY data you have access to. Never suggest, mention, or recommend any destination, place, restaurant, hotel, or activity that does not exist in this list. If the user asks about something not in this data, tell them it is not available on the platform.
+
+DATABASE DATA:
+{serialized_db}
 
 CRITICAL RULES:
 
@@ -553,11 +726,31 @@ CRITICAL RULES:
    - If Arabic: Use "أهلاً وسهلاً!"
    - NEVER use greeting phrases for non-greeting messages (don't say "أهلاً وسهلاً" when answering "yes" or "tell me more")
 
-2. DESTINATION NOT IN DATABASE (destination_found_in_db=false):
+2. AFFIRMATIVE RESPONSES:
+   - When a user replies with 'yes', 'sure', 'ok', or any affirmative response, always refer to your last message to understand what they are confirming, and continue from that exact context.
+   - When interpreting the user's reply, always account for common typos and misspellings of affirmative words. If a word closely resembles 'yes', 'sure', 'ok', or any affirmative, treat it as a confirmation and continue from the last context in the conversation.
+
+3. DESTINATION NOT IN DATABASE (destination_found_in_db=false):
    - NEVER offer categories like "want to know about hotels?" if that destination isn't in our DB
    - Just politely say we don't have info on that place and suggest known destinations
 
-3. CHARACTER LIMIT: Your response must be MAXIMUM 400 characters.
+4. TOPIC SHIFT / INTENT PRIORITIZATION:
+   - Always prioritize the user's most recent intent over previous conversation history/context.
+   - If the user introduces a new destination or asks about a different question/topic entirely, you must immediately switch to that new topic and stop referencing the previous one. Do not ignore the topic shift.
+
+5. CLARIFYING QUESTIONS AND ANSWERS:
+   - When you ask the user a clarifying question and the user answers it, always go back and answer the original question using the clarification the user just provided. Never give a generic overview when the user has answered your follow-up question.
+
+6. ACTIVITIES, THINGS TO DO, AND EXPERIENCES:
+   - When the user asks about activities, things to do, or experiences at a destination, treat this as equivalent to events and places combined. Always look at both the events and places data for that destination and present them as things the user can do or experience there. Never tell the user there are no activities if events or places exist for that destination.
+
+7. VAGUE MESSAGES / UNCLARIFIED INTENT:
+   - If the user's message is vague and does not clearly reference a destination or a previous topic in the conversation (e.g. "do you know what is this place?", "what about that one?", "tell me more"), always ask the user to clarify what they mean. Never pick a destination on your own when the user's intent is unclear.
+
+8. DECLINING OR CLOSING CONVERSATION:
+   - When the user declines, says no, or signals they are done with a topic or the conversation entirely, do not repeat the same information or offer the same options again. Either ask if there is something else you can help them with, or respond with a polite goodbye. Never push the same destination or topic on the user after they have declined.
+
+9. CHARACTER LIMIT: Your response must be MAXIMUM 400 characters.
 
 CRITICAL - Character limit: Your response must be MAXIMUM 400 characters. This is strictly enforced - stay within the limit!
 
@@ -603,66 +796,101 @@ Style:
 - Keep responses conversational
 - ALWAYS stay under 400 characters"""
 
-    if is_off_topic:
-        user_prompt = f"""The user asked: "{prompt}"
+    gemini_messages = []
+    if history:
+        for msg in history:
+            role = "model" if msg.role in ["assistant", "model"] else "user"
+            parts = []
+            if getattr(msg, 'file_data', None) and getattr(msg, 'mime_type', None):
+                parts.append({
+                    "mime_type": msg.mime_type,
+                    "data": msg.file_data
+                })
+            content_str = msg.content or msg.text or ""
+            if content_str:
+                parts.append(content_str)
+            if parts:
+                gemini_messages.append({
+                    "role": role,
+                    "parts": parts
+                })
+    else:
+        gemini_messages.append({
+            "role": "user",
+            "parts": [prompt]
+        })
 
+    last_user_idx = -1
+    for idx in range(len(gemini_messages) - 1, -1, -1):
+        if gemini_messages[idx]["role"] == "user":
+            last_user_idx = idx
+            break
+
+    if last_user_idx != -1:
+        current_text = gemini_messages[last_user_idx]["parts"][-1] if isinstance(gemini_messages[last_user_idx]["parts"][-1], str) else ""
+
+        if len(current_text.strip().split()) == 1:
+            db_context = f"\nDatabase information:\n{db_data}" if (db_data and db_data != "NOT_FOUND") else ""
+            turn_prompt = f"""User message: "{current_text}"
+{db_context}
+Respond naturally using the conversation history context and the database information if applicable. MAX 400 characters."""
+        elif is_off_topic:
+            turn_prompt = f"""The user asked: "{current_text}"
 This is off-topic. Politely redirect them to Jordan tourism topics. MAX 400 characters."""
-    elif db_data == "NOT_FOUND":
-        user_prompt = f"""User asked about a destination not in our database: "{prompt}"
-
+        elif db_data == "NOT_FOUND":
+            turn_prompt = f"""User asked about a destination not in our database: "{current_text}"
 This destination is NOT in our database. DO NOT offer "want to know about hotels?" or similar. Politely say we don't have details on this place yet and suggest other known destinations (Petra, Wadi Rum, Amman, Jerash, Dead Sea). MAX 400 characters."""
-    elif db_data and destination_found_in_db:
-        if category_focus:
-            # Build context for affirmative replies
-            context_info = ""
-            if previous_bot_message:
-                context_info = f'\nThe user was just asked: "{previous_bot_message}"\nThe user replied: "{prompt}" (affirmative)\n'
-            elif parent_destination:
-                context_info = f'\nNote: This place is within {parent_destination}.\n'
+        elif db_data and destination_found_in_db:
+            if category_focus:
+                context_info = ""
+                if previous_bot_message:
+                    context_info = f'\nThe user was just asked: "{previous_bot_message}"\nThe user replied: "{current_text}" (affirmative)\n'
+                elif parent_destination:
+                    context_info = f'\nNote: This place is within {parent_destination}.\n'
 
-            user_prompt = f"""{context_info}User asked for more about "{category_focus}": "{prompt}"
+                turn_prompt = f"""{context_info}User asked for more about "{category_focus}": "{current_text}"
 
 Database information for {category_focus}:
 {db_data}
 
 Give a short description (max 400 chars) using ONLY this data. END by offering remaining categories: {remaining_categories} - but only if there are any left."""
-
-            print(f"[PROMPT] Category focus prompt (yes flow): category_focus={category_focus}, remaining_categories={remaining_categories}")
-            print(f"[PROMPT] Category focus prompt (yes flow): {user_prompt[:500]}...")
-        else:
-            offer_text = ""
-            if remaining_categories:
-                if "hotels" in remaining_categories:
-                    offer_text = " Want to know about hotels?"
-                elif "restaurants" in remaining_categories:
-                    offer_text = " Want to know about restaurants?"
-                elif "places" in remaining_categories:
-                    offer_text = " Want to know about places and attractions?"
-                elif "events" in remaining_categories:
-                    offer_text = " Want to know about events?"
-                elif "overview" in remaining_categories:
-                    offer_text = " Want more details?"
             else:
-                offer_text = " Ask about other Jordan destinations!"
+                offer_text = ""
+                if remaining_categories:
+                    if "hotels" in remaining_categories:
+                        offer_text = " Want to know about hotels?"
+                    elif "restaurants" in remaining_categories:
+                        offer_text = " Want to know about restaurants?"
+                    elif "places" in remaining_categories:
+                        offer_text = " Want to know about places and attractions?"
+                    elif "events" in remaining_categories:
+                        offer_text = " Want to know about events?"
+                    elif "overview" in remaining_categories:
+                        offer_text = " Want more details?"
+                else:
+                    offer_text = " Ask about other Jordan destinations!"
 
-            # Add parent destination context for sub-locations
-            parent_context = ""
-            if parent_destination:
-                parent_context = f"\nNote: This location is within {parent_destination}."
+                parent_context = ""
+                if parent_destination:
+                    parent_context = f"\nNote: This location is within {parent_destination}."
 
-            user_prompt = f"""{parent_context}User asked about a destination: "{prompt}"
+                turn_prompt = f"""{parent_context}User asked about a destination: "{current_text}"
 
 Database information:
 {db_data}
 
 Give a SHORT overview (max 400 chars).{offer_text} Only mention categories that exist in DB: {available_categories}"""
-    else:
-        user_prompt = f"""User message: "{prompt}"
-
+        else:
+            turn_prompt = f"""User message: "{current_text}"
 This is general conversation/greeting/gibberish or unrelated to Jordan. Respond naturally as a friendly chatbot would. MAX 400 characters."""
 
-    if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
-        return "Chatbot is not configured. Please set GEMINI_API_KEY."
+        reinforcement = f"""Remember: the following is the only destination data available on this platform. Never answer about any destination, place, hotel, restaurant, or activity not in this list.
+
+DATABASE DATA:
+{serialized_db}
+
+"""
+        gemini_messages[last_user_idx]["parts"][-1] = reinforcement + turn_prompt
 
     max_attempts = len(GEMINI_MODEL_LIST)
     last_error = None
@@ -671,7 +899,7 @@ This is general conversation/greeting/gibberish or unrelated to Jordan. Respond 
         try:
             print(f"[GEMINI] Attempting with model: {current_model} (attempt {attempt + 1}/{max_attempts})")
             model = genai.GenerativeModel(current_model, system_instruction=system_instruction)
-            response = model.generate_content(user_prompt)
+            response = model.generate_content(gemini_messages)
             print(f"[GEMINI] Request succeeded with model: {current_model}")
             result = response.text
             if len(result) > 400:
@@ -703,7 +931,7 @@ This is general conversation/greeting/gibberish or unrelated to Jordan. Respond 
     return "I apologize, but I couldn't generate a response right now. Please try again later."
 
 # ===== IMAGE MESSAGE HANDLER =====
-async def handle_image_message(file_data: str, mime_type: str, session_id: str, context_text: str = None) -> ChatResponse:
+async def handle_image_message(file_data: str, mime_type: str, session_id: str, context_text: str = None, request: Request = None) -> ChatResponse:
     """Handle image messages - identify place and respond from DB"""
     import base64
 
@@ -752,10 +980,11 @@ Be specific - if you see famous structures like the Treasury or Monastery, say "
                     elif "wadi rum" in identified or " desert" in identified:
                         identified = "wadi rum"
 
-                    # Check against known destinations
-                    for dest in KNOWN_DESTINATIONS:
-                        if dest in identified:
-                            identified = dest
+                    # Check against database destinations dynamically
+                    names = get_db_destination_names()
+                    for name in names:
+                        if name.lower() in identified:
+                            identified = name.lower()
                             break
 
                     # Search database for identified place
@@ -795,15 +1024,16 @@ Be specific - if you see famous structures like the Treasury or Monastery, say "
         # Generate response based on what we found
         if db_data == "NOT_FOUND":
             # Image is not a Jordan destination or not in DB
+            names = get_db_destination_names()
+            if names:
+                dest_list = "\n".join([f"• {name}" for name in names])
+                dest_section = f"I can help you discover these amazing Jordan places:\n{dest_list}\n\n"
+            else:
+                dest_section = ""
             not_found_msg = (
                 "I can see your image, but I couldn't identify a specific Jordan destination from it, "
                 "or that destination isn't in our database yet. 🏜️\n\n"
-                "I can help you discover these amazing Jordan places:\n"
-                "🏛️ Petra - The Rose City\n"
-                "🏜️ Wadi Rum - Desert landscapes\n"
-                "🏛️ Jerash - Roman ruins\n"
-                "🌊 Dead Sea - Floating wellness\n"
-                "🏰 Amman - Capital city\n\n"
+                f"{dest_section}"
                 "Would you like me to tell you about any of these destinations? 🇯🇴"
             )
             return ChatResponse(reply=not_found_msg)
@@ -818,7 +1048,6 @@ Be specific - if you see famous structures like the Treasury or Monastery, say "
             available_categories=available_categories,
             offered_categories=[],
             category_focus=None,
-            is_greeting=True,
             destination_found_in_db=True,
             parent_destination=identified_place if identified_place else None
         )
@@ -827,9 +1056,14 @@ Be specific - if you see famous structures like the Treasury or Monastery, say "
 
     except Exception as e:
         print(f"[IMAGE] Error processing image: {e}")
+        names = get_db_destination_names()
+        if names:
+            dest_list = "\n".join([f"• {name}" for name in names])
+            dest_section = f", or try one of these popular spots:\n\n{dest_list}\n\nWhich one interests you?"
+        else:
+            dest_section = "."
         return ChatResponse(
-            reply="I received your image! To help you with the place shown, please tell me the name of the destination you're asking about, or try one of these popular spots:\n\n" +
-            "🏛️ Petra - The famous Rose City\n🏜️ Wadi Rum - Stunning desert landscapes\n🏛️ Jerash - Ancient Roman ruins\n🌊 Dead Sea - The lowest point on Earth\n🏰 Amman Citadel - Historic capital views\n\nWhich one interests you?"
+            reply=f"I received your image! To help you with the place shown, please tell me the name of the destination you're asking about{dest_section}"
         )
 
 @app.on_event("startup")
@@ -867,6 +1101,92 @@ def is_affirmative_reply(text: str) -> bool:
     affirmative = {"yes", "yep", "yeah", "sure", "ok", "please", "go ahead", "tell me", "more"}
     return any(aff in text_lower for aff in affirmative)
 
+async def check_image_safety_helper(file_data: str, mime_type: str, request: Request) -> tuple[bool, str]:
+    """
+    Runs safety check on the image. If unsafe, flags the user, stores in audit, and returns (False, reason).
+    Otherwise returns (True, "").
+    """
+    if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
+        return True, ""
+
+    import json
+    from bson import ObjectId
+
+    user_id_str = request.headers.get("x-user-id") if request else None
+    safe = True
+    reason = ""
+
+    try:
+        image_parts = [{"mime_type": mime_type, "data": file_data}]
+        prompt = (
+            "You are a content moderation system. Analyze this image and respond ONLY with a valid JSON object, "
+            "no markdown, no explanation: { \"safe\": true/false, \"reason\": \"string\" }. "
+            "Flag as unsafe if the image contains nudity, explicit sexual content, violence, or any immoral material."
+        )
+
+        current_model = get_current_model()
+        model = genai.GenerativeModel(current_model)
+        response = model.generate_content([prompt, image_parts[0]])
+        
+        resp_text = response.text.strip()
+        print(f"RAW GEMINI SAFETY RESPONSE: {resp_text}")
+        if resp_text.startswith("```"):
+            lines = resp_text.splitlines()
+            if len(lines) >= 3 and lines[0].startswith("```") and lines[-1].startswith("```"):
+                resp_text = "\n".join(lines[1:-1]).strip()
+                if resp_text.startswith("json"):
+                    resp_text = resp_text[4:].strip()
+
+        try:
+            data = json.loads(resp_text)
+            safe = data.get("safe", False)
+            reason = data.get("reason", "unknown")
+        except Exception as parse_err:
+            print(f"[SAFETY CHECK] JSON parse error: {parse_err}. Response was: {resp_text}")
+            safe = False
+            reason = "parse error"
+    except Exception as e:
+        print(f"[SAFETY CHECK] Safety check call failed: {e}")
+        safe = False
+        reason = f"api error: {str(e)}"
+
+    if not safe:
+        # Flag user in MongoDB
+        if user_id_str and db is not None:
+            try:
+                db.users.update_one(
+                    {"_id": ObjectId(user_id_str)},
+                    {
+                        "$set": {"isBanned": True, "flagged": True},
+                        "$push": {
+                            "violations": {
+                                "reason": reason,
+                                "timestamp": datetime.utcnow(),
+                                "type": "unsafe_image"
+                            }
+                        }
+                    }
+                )
+                print(f"[SAFETY CHECK] Flagged user {user_id_str} in DB due to unsafe image: {reason}")
+            except Exception as db_err:
+                print(f"[SAFETY CHECK] Error flagging user: {db_err}")
+
+        # Store image in audit collection
+        if db is not None:
+            try:
+                db.audit.insert_one({
+                    "userId": user_id_str,
+                    "timestamp": datetime.utcnow(),
+                    "mimeType": mime_type,
+                    "imageData": file_data,
+                    "reason": reason
+                })
+                print("[SAFETY CHECK] Stored unsafe image in audit collection")
+            except Exception as db_err:
+                print(f"[SAFETY CHECK] Error storing in audit: {db_err}")
+
+    return safe, reason
+
 @app.post("/api/chat", response_model=ChatResponse)
 @limiter.limit("10/minute")
 async def chat(request: Request, chat_request: ChatRequest):
@@ -887,20 +1207,24 @@ async def chat(request: Request, chat_request: ChatRequest):
         print(f"[CHAT] Image received (mime: {mime_type}, size: {len(file_data)} bytes)")
         # Pass the text as context to help Gemini identify the image
         context_text = user_text if user_text else None
-        return await handle_image_message(file_data, mime_type, session_id, context_text)
-
-    if contains_swear_word(user_text):
-        return ChatResponse(reply="Please use appropriate language. I'm here to help with Jordan travel!")
+        return await handle_image_message(file_data, mime_type, session_id, context_text, request)
 
     detected_lang = detect_language(user_text)
+    is_rate_limited, rate_limit_msg, unblock_time = check_sliding_window_rate_limit(session_id, detected_lang)
+
+    if is_rate_limited:
+        return JSONResponse(
+            status_code=429,
+            content={"reply": rate_limit_msg, "unblockTime": unblock_time}
+        )
+
+    has_swear = contains_swear_word(user_text)
+    if has_swear:
+        return ChatResponse(reply="Please use appropriate language. I'm here to help with Jordan travel!")
+
     translated_text = translate_to_english(user_text, detected_lang)
 
-    is_rate_limited, rate_limit_msg, _ = check_sliding_window_rate_limit(session_id, detected_lang)
-    if is_rate_limited:
-        return ChatResponse(reply=rate_limit_msg)
-
-    is_short_reply = len(user_text.strip()) <= 4 or user_text.lower() in SHORT_REPLIES
-    is_greeting = any(greet in user_text.lower() for greet in GREETING_KEYWORDS)
+    is_short_reply = len(user_text.strip()) <= 4
     user_affirmative = is_affirmative_reply(user_text)
 
     history = get_conversation_history(session_id)
@@ -914,8 +1238,16 @@ async def chat(request: Request, chat_request: ChatRequest):
             detected_lang = last_user_lang
 
     off_topic = detect_off_topic(translated_text)
-    is_dest = is_destination_query(translated_text)
+    search_term = extract_destination_name(translated_text)
+    is_dest = search_term is not None
     category_followup = detect_category_followup(translated_text)
+
+    active_dest = get_active_destination_from_history(history)
+    if not is_dest and active_dest:
+        if off_topic is None and is_contextual_query(translated_text):
+            search_term = active_dest
+            is_dest = True
+            print(f"[FLOW] Resolved contextual query to active destination from history: {active_dest}")
 
     db_results = {}
     db_data_formatted = ""
@@ -954,15 +1286,15 @@ async def chat(request: Request, chat_request: ChatRequest):
     # Debug: show what we're parsing
     print(f"[DEBUG] Parsing messages, offered_categories={offered_categories}")
     for i, msg in enumerate(request_messages):
-        content_lower = (msg.content or "").lower()
-        print(f"[DEBUG] msg[{i}] role={msg.role}, content={(msg.content or '')[:50]}")
+        safe_content = (msg.content or '').encode('ascii', errors='replace').decode('ascii')
+        print(f"[DEBUG] msg[{i}] role={msg.role}, content={safe_content[:50]}")
 
     # Now compute last_offered_category AFTER populated
     last_offered_category = offered_categories[-1] if offered_categories else None
-    print(f"[DEBUG] After populate: user_text={user_text}, user_affirmative={user_affirmative}, last_offered_category={last_offered_category}")
+    safe_user_text = user_text.encode('ascii', errors='replace').decode('ascii')
+    print(f"[DEBUG] After populate: user_text={safe_user_text}, user_affirmative={user_affirmative}, last_offered_category={last_offered_category}")
 
     if is_dest:
-        search_term = extract_destination_name(translated_text)
         print(f"[DB] Extracted search term: {search_term}")
         db_results = search_destinations(search_term)
         available_categories = get_available_categories(db_results)
@@ -1052,24 +1384,26 @@ async def chat(request: Request, chat_request: ChatRequest):
                         print(f"[FLOW] Resolved sub-location to parent: {parent}")
                         break
 
-                # If no sub-location, check regular destinations
+                # If no sub-location, check regular destinations dynamically
                 if not destination_found:
-                    for dest in KNOWN_DESTINATIONS:
-                        if dest in content_lower:
-                            destination_found = dest
+                    names = get_db_destination_names()
+                    for name in names:
+                        if name.lower() in content_lower:
+                            destination_found = name.lower()
                             break
             if destination_found:
                 break
 
-        # Fallback: check server history if not found in request
+        # Fallback: check server history dynamically if not found in request
         if not destination_found:
             for msg in reversed(history):
                 if msg.get("role") == "user":
                     content = msg.get("content", "")
                     content_lower = content.lower()
-                    for dest in ["petra", "wadi rum", "amman", "jerash", "dead sea", "aqaba", "madaba"]:
-                        if dest in content_lower:
-                            destination_found = dest
+                    names = get_db_destination_names()
+                    for name in names:
+                        if name.lower() in content_lower:
+                            destination_found = name.lower()
                             break
                 if destination_found:
                     break
@@ -1106,8 +1440,9 @@ async def chat(request: Request, chat_request: ChatRequest):
     elif category_followup:
         for msg in history:
             content_lower = msg.get("content", "").lower()
-            if any(dest in content_lower for dest in ["petra", "wadi rum", "amman", "jerash", "dead sea"]):
-                search_term = next((d for d in ["petra", "wadi rum", "amman", "jerash", "dead sea"] if d in content_lower), None)
+            names = [n.lower() for n in get_db_destination_names()]
+            if any(dest in content_lower for dest in names):
+                search_term = next((d for d in names if d in content_lower), None)
                 if search_term:
                     db_results = search_destinations(search_term)
                     available_categories = get_available_categories(db_results)
@@ -1155,10 +1490,10 @@ async def chat(request: Request, chat_request: ChatRequest):
         available_categories=available_categories,
         offered_categories=offered_categories,
         category_focus=effective_category_focus,
-        is_greeting=is_greeting,
         destination_found_in_db=destination_found_in_db,
         previous_bot_message=last_bot_message if user_affirmative else None,
-        parent_destination=parent_destination
+        parent_destination=parent_destination,
+        history=chat_request.messages
     )
 
     add_to_history(session_id, "user", user_text)
@@ -1182,11 +1517,16 @@ async def chat_with_image(
         )
 
     contents = await file.read()
-    if len(contents) > 5 * 1024 * 1024:
+    if len(contents) > 10 * 1024 * 1024:
         raise HTTPException(
             status_code=400,
-            detail="Image size must be less than 5MB."
+            detail="Image size must be less than 10MB."
         )
+
+    file_data_base64 = base64.b64encode(contents).decode("utf-8")
+    safe, reason = await check_image_safety_helper(file_data_base64, file.content_type, request)
+    if not safe:
+        return ChatResponse(reply="This image contains inappropriate content and cannot be processed.")
 
     if contains_swear_word(message):
         return JSONResponse(
@@ -1231,9 +1571,10 @@ async def chat_with_image(
                     elif "monastery" in identified or "ad deir" in identified:
                         identified = "petra"
                     else:
-                        for dest in KNOWN_DESTINATIONS:
-                            if dest in identified:
-                                identified = dest
+                        names = get_db_destination_names()
+                        for name in names:
+                            if name.lower() in identified:
+                                identified = name.lower()
                                 break
 
                     db_results = search_destinations(identified)
@@ -1267,6 +1608,18 @@ async def chat_with_image(
                 db_data = "NOT_FOUND"
                 break
 
+        # Convert server history to Message objects
+        history_objs = []
+        for h in get_conversation_history(session_id):
+            history_objs.append(Message(role="assistant" if h["role"] == "assistant" else "user", content=h["content"]))
+        # Add current user message with image context
+        history_objs.append(Message(
+            role="user",
+            content=message or f"Tell me about {identified_place}",
+            file_data=base64.b64encode(contents).decode("utf-8"),
+            mime_type=file.content_type
+        ))
+
         detected_lang = detect_language(message or "hello")
         response_text = generate_gemini_response(
             prompt=message or f"Tell me about {identified_place}",
@@ -1275,7 +1628,8 @@ async def chat_with_image(
             detected_lang=detected_lang,
             available_categories=available_categories,
             offered_categories=[],
-            category_focus=None
+            category_focus=None,
+            history=history_objs
         )
 
         return ChatResponse(reply=response_text)

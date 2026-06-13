@@ -15,8 +15,8 @@ app.use(passport.initialize());
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
 
@@ -38,18 +38,52 @@ app.use('/api/photos', require('./routes/photos'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/game', require('./routes/game'));
 
-app.use('/api/chat', express.json(), (req, res) => {
+const { optionalAuth } = require('./middleware/auth');
+
+app.post('/api/chat/scan-image', optionalAuth, express.json({ limit: '10mb' }), (req, res) => {
   const http = require('http');
   const postData = JSON.stringify(req.body);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(postData)
+  };
+  if (req.user && req.user.userId) {
+    headers['x-user-id'] = req.user.userId;
+  }
+  const options = {
+    hostname: 'localhost',
+    port: 5002,
+    path: '/api/scan-image',
+    method: 'POST',
+    headers: headers
+  };
+  const proxyReq = http.request(options, (proxyRes) => {
+    let data = '';
+    proxyRes.on('data', chunk => data += chunk);
+    proxyRes.on('end', () => res.status(proxyRes.statusCode).send(data));
+  });
+  proxyReq.on('error', err => res.status(500).json({ reply: 'Massar python server is offline.' }));
+  proxyReq.write(postData);
+  proxyReq.end();
+});
+
+
+app.use('/api/chat', optionalAuth, express.json({ limit: '10mb' }), (req, res) => {
+  const http = require('http');
+  const postData = JSON.stringify(req.body);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(postData)
+  };
+  if (req.user && req.user.userId) {
+    headers['x-user-id'] = req.user.userId;
+  }
   const options = {
     hostname: 'localhost',
     port: 5002,
     path: '/api/chat',
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(postData)
-    }
+    headers: headers
   };
   const proxyReq = http.request(options, (proxyRes) => {
     let data = '';

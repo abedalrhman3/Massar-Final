@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import styles from "./Chatbot.module.css";
 
-function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
+function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading, setIsLoading, isRateLimited, handleSafetyViolation }) {
   // Refs for textarea and hidden file input
   const inputRef = useRef();
   const fileInputRef = useRef();
@@ -13,8 +13,12 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
   // Handles form submission — sends user message and triggers bot response
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    if (isLoading) return;
     const userMessage = inputRef.current.value.trim();
     if (!userMessage && !uploadedFile) return;
+
+    // Immediately disable input and buttons by setting isLoading to true
+    setIsLoading(true);
 
     const messageText = userMessage || `📎 ${uploadedFile?.name}`;
     inputRef.current.value = "";
@@ -52,18 +56,45 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    setIsLoading(true);
+
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const base64 = ev.target.result.split(",")[1];
-      setUploadedFile({
-        data: base64,
-        mime_type: file.type,
-        previewUrl: ev.target.result,
-        name: file.name,
-      });
+      
+      try {
+        const backendUrl = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:5002"}/api/chat/scan-image`;
+        const response = await fetch(backendUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file_data: base64, mime_type: file.type }),
+        });
+
+        if (response.status === 403) {
+           fileInputRef.current.value = "";
+           handleSafetyViolation();
+           setIsLoading(false);
+           return;
+        }
+
+        if (!response.ok) {
+           console.error("Image scan failed");
+        }
+
+        setUploadedFile({
+          data: base64,
+          mime_type: file.type,
+          previewUrl: ev.target.result,
+          name: file.name,
+        });
+      } catch (error) {
+        console.error("Scan error", error);
+      } finally {
+        fileInputRef.current.value = "";
+        setIsLoading(false);
+      }
     };
     reader.readAsDataURL(file);
-    fileInputRef.current.value = "";
   };
 
   // Submits form on Enter key (desktop only, Shift+Enter adds new line)
@@ -89,11 +120,12 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
       {/* Message input textarea */}
       <textarea
         ref={inputRef}
-        placeholder="Message..."
+        placeholder={isRateLimited ? "Rate limited" : isLoading ? "Thinking" : "type something"}
         className={styles.messageInput}
         onKeyDown={handleKeyDown}
         onInput={handleInput}
         rows={1}
+        disabled={isLoading}
       />
 
       <div className={styles.chatControls}>
@@ -104,6 +136,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
           accept="image/*"
           style={{ display: "none" }}
           onChange={handleFileChange}
+          disabled={isLoading}
         />
 
         {/* File upload wrapper — shows image preview and cancel button when file is attached */}
@@ -118,6 +151,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
                 type="button"
                 className={`${styles.fileCancelBtn} ${styles.materialSymbolsRounded}`}
                 onClick={() => setUploadedFile(null)}
+                disabled={isLoading}
               >
                 close
               </button>
@@ -130,6 +164,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
             className={`${styles.attachBtn} ${styles.materialSymbolsRounded}`}
             onClick={() => fileInputRef.current.click()}
             style={{ display: uploadedFile ? "none" : "flex" }}
+            disabled={isLoading}
           >
             attach_file
           </button>
@@ -139,6 +174,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse }) {
         <button
           type="submit"
           className={`${styles.sendBtn} ${styles.materialSymbolsRounded}`}
+          disabled={isLoading || (!inputRef.current?.value.trim() && !uploadedFile)}
         >
           arrow_upward
         </button>

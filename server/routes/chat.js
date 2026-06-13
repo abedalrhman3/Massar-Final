@@ -113,16 +113,16 @@ Which one interests you?`;
 // General responses for non-destination questions
 const GENERAL_RESPONSES = {
   greetings: [
-    "Hello! Welcome to Masar! 🇯🇴 I'm here to help you discover the beautiful destinations of Jordan. Would you like to explore places like Petra, Wadi Rum, Jerash, or the Dead Sea?",
+    "Hello! Welcome to Massar! 🇯🇴 I'm here to help you discover the beautiful destinations of Jordan. Would you like to explore places like Petra, Wadi Rum, Jerash, or the Dead Sea?",
     "Marhaba! 👋 Welcome to your Jordan travel assistant! Ask me about any destination in Jordan and I'll help you plan your trip!",
-    "Ahlan wa Sahlan! 🌟 Welcome to Masar! Jordan has amazing places to explore. What would you like to know about?"
+    "Ahlan wa Sahlan! 🌟 Welcome to Massar! Jordan has amazing places to explore. What would you like to know about?"
   ],
   help: [
     "I can help you discover amazing places in Jordan! Ask me about destinations, historical sites, restaurants, hotels, or events. Just type the name of a place you're interested in! 🏛️🏜️🌊",
     "I'm your Jordan travel guide! You can ask me about:\n🏛️ Destinations (Petra, Jerash, Wadi Rum, etc.)\n🏨 Hotels\n🍽️ Restaurants\n🎉 Events\n\nWhat would you like to know?"
   ],
   thanks: [
-    "You're welcome! 😊 Enjoy exploring Jordan with Masar! Let me know if you need anything else.",
+    "You're welcome! 😊 Enjoy exploring Jordan with Massar! Let me know if you need anything else.",
     "Glad I could help! 🇯🇴 Have a wonderful time exploring Jordan!",
     "You're welcome! Feel free to ask if you need more information about any destination! 🌟"
   ],
@@ -232,7 +232,7 @@ function formatDestinationResponse(results) {
   const { destinations, destinationDetails, places, restaurants, hotels, events } = results;
 
   let foundAny = destinations.length > 0 || places.length > 0 ||
-                 restaurants.length > 0 || hotels.length > 0 || events.length > 0;
+    restaurants.length > 0 || hotels.length > 0 || events.length > 0;
 
   if (!foundAny) return null;
 
