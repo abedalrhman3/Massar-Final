@@ -10,6 +10,7 @@ import AdminSidebar from "@/pages/admin/AdminSidebar";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 import {
     getPublicPhotos,
@@ -90,11 +91,13 @@ const normalisePhoto = (raw) => ({
     username: raw.user_id?.username || raw.user_id?.name || "",
     isPrivate: raw.is_private ?? false,
     isReported: raw.is_reported ?? false,
+    status: raw.status, // "pending_review", "approved", "rejected"
+    aiReason: raw.ai_reason || "",
 });
 
 // ── LightboxModal ──────────────────────────────────────────────────────────
 
-function LightboxModal({ photo, onClose }) {
+function LightboxModal({ photo, onClose, isAr }) {
     return (
         <div className={styles.lightboxOverlay} onClick={onClose}>
             <button className={styles.lightboxCloseBtn} onClick={onClose} aria-label="Close">
@@ -106,6 +109,19 @@ function LightboxModal({ photo, onClose }) {
                 {photo.username && (
                     <div className={styles.lightboxMeta}>@{photo.username}</div>
                 )}
+                {photo.status === 'pending_review' && (
+                    <div className={styles.lightboxWarningBox}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                        <div className={styles.lightboxWarningText}>
+                            <strong>{isAr ? "قيد المراجعة" : "Under Review"}</strong>
+                            <p>{isAr ? "هذه الصورة قيد مراجعة الإدارة لأنها قد تحتوي على محتوى غير لائق." : "This photo is under admin review because it might contain inappropriate content."}</p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -113,7 +129,7 @@ function LightboxModal({ photo, onClose }) {
 
 // ── PhotoCard ──────────────────────────────────────────────────────────────
 
-function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, actionLoading }) {
+function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, actionLoading, isAr }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const handleMenuClick = (e) => {
@@ -133,15 +149,32 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
             <div className={styles.cardOverlay} />
 
             {/* Badges */}
-            {photo.isPrivate && (
-                <span className={styles.badgePrivate} title="Private">
-                    <LockIcon />
-                </span>
-            )}
-            {photo.isReported && (
-                <span className={styles.badgeReported} title="Reported">
-                    <FlagIcon />
-                </span>
+            <div className={styles.badgesList}>
+                {photo.isPrivate && (
+                    <span className={styles.badgeItem} style={{ backgroundColor: 'rgba(21, 145, 220, 0.85)' }} title={isAr ? "خاص" : "Private"}>
+                        <LockIcon />
+                    </span>
+                )}
+                {photo.isReported && (
+                    <span className={styles.badgeItem} style={{ backgroundColor: 'rgba(226, 75, 74, 0.85)' }} title={isAr ? "مبلغ عنه" : "Reported"}>
+                        <FlagIcon />
+                    </span>
+                )}
+                {photo.status === 'pending_review' && (
+                    <span className={styles.badgeItem} style={{ backgroundColor: 'rgba(245, 158, 11, 0.85)' }} title={isAr ? "قيد المراجعة" : "Under Review"}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                    </span>
+                )}
+            </div>
+
+            {photo.status === 'pending_review' && (
+                <div className={styles.reviewBanner}>
+                    {isAr ? "قيد المراجعة" : "Under Review"}
+                </div>
             )}
 
             <div className={styles.cardLabel}>{photo.placeName}</div>
@@ -204,6 +237,8 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
 // ── Gallery ────────────────────────────────────────────────────────────────
 
 export default function Gallery() {
+    const { i18n } = useTranslation();
+    const isAr = i18n?.language === "ar";
     const navigate = useNavigate();
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -340,6 +375,7 @@ export default function Gallery() {
                             <PhotoCard
                                 key={photo.id}
                                 photo={photo}
+                                isAr={isAr}
                                 onClick={() => setLightbox(photo)}
                                 onTogglePrivacy={() => handleTogglePrivacy(photo)}
                                 onReport={() => handleReport(photo)}
@@ -353,7 +389,7 @@ export default function Gallery() {
 
             {/* ── Lightbox ── */}
             {lightbox && (
-                <LightboxModal photo={lightbox} onClose={() => setLightbox(null)} />
+                <LightboxModal photo={lightbox} onClose={() => setLightbox(null)} isAr={isAr} />
             )}
         </div>
     );
