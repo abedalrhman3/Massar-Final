@@ -19,10 +19,13 @@ export const updateBudgetSettings = (data) =>
 export const getReportedPhotos = () =>
     client.get('/admin/reported-photos');
 
-// DELETE /api/admin/photos/:id
-// returns: { success, message }
 export const deletePhoto = (id) =>
     client.delete(`/admin/photos/${id}`);
+
+// PUT /admin/photos/:id/review
+// body: { decision: 'approve' | 'reject' | 'ban', reason?: string, deletePhoto?: boolean, banUser?: boolean }
+export const reviewPhoto = (id, decision, reason, deletePhoto, banUser) =>
+    client.put(`/admin/photos/${id}/review`, { decision, reason, deletePhoto, banUser });
 
 // POST /api/admin/add-location
 // body: Location fields

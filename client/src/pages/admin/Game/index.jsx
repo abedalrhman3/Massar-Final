@@ -29,7 +29,7 @@ const sections = [
         bg: '#ede9fe',
         border: '#ddd6fe',
     },
-    /* {
+    {
         key: 'reports',
         icon: 'flag',
         label: 'Reports',
@@ -37,7 +37,7 @@ const sections = [
         accent: '#dc2626',
         bg: '#fee2e2',
         border: '#fecaca',
-    }, */
+    },
 ];
 
 const Game = () => {
