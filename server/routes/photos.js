@@ -10,7 +10,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 router.get('/reported', protect, adminOnly, getReported);
 
 // Dynamic routes after
-router.get('/:id', getPublicPhotos);
+router.get('/', getPublicPhotos);
+router.get('/:id', protect, getPublicPhotos);
 router.put('/:id/privacy', protect, togglePrivacy);
 router.post('/:id/report', protect, reportPhoto);
 router.delete('/:id', protect, remove);

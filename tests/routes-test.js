@@ -87,6 +87,8 @@ async function run() {
     if (r.body?.token) token = r.body.token;
     if (r.body?.user?._id) userId = r.body.user._id;
 
+    await request('POST', '/api/test/verify-user', { email: testEmail });
+
     r = await request('POST', '/api/auth/login', { email: testEmail, password: 'Test@1234' });
     log('POST /api/auth/login', r, 200);
     if (r.body?.token) token = r.body.token;
