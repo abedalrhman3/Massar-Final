@@ -15,7 +15,7 @@
 
 const FAIL_OPEN = true; // flip to false to block on AI service errors
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5002';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:5002';
 
 /**
  * Validate a quest photo via the Gemini AI service.
@@ -87,4 +87,79 @@ function failOpenResult(reason) {
     };
 }
 
-module.exports = { validateQuestPhoto };
+/**
+ * Generate an AI requirement based on a quest's title and description.
+ *
+ * @param {string} title - Quest title (English preferred)
+ * @param {string} description - Quest description (English preferred)
+ * @returns {Promise<string>} - The generated requirement
+ */
+async function generateAiRequirement(title, description) {
+    const fetch = globalThis.fetch ?? require('node-fetch');
+
+    try {
+        const response = await fetch(`${AI_SERVICE_URL}/api/quest/generate-requirement`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description }),
+            signal: AbortSignal.timeout(10_000),
+        });
+
+        if (!response.ok) {
+            console.error(`[AI] generateAiRequirement returned ${response.status}`);
+            return `A photo showing completion of the quest: ${title}`;
+        }
+
+        const data = await response.json();
+        return data.ai_requirement || `A photo showing completion of the quest: ${title}`;
+    } catch (err) {
+        console.error('[AI] generateAiRequirement error:', err.message);
+        return `A photo showing completion of the quest: ${title}`;
+    }
+}
+
+
+
+/**
+ * Validate a general photo for content safety via the Gemini AI service.
+ *
+ * @param {Buffer}  imageBuffer     - Raw image buffer from multer (req.file.buffer)
+ * @param {string}  mimeType        - e.g. 'image/jpeg'
+ * @returns {Promise<{ is_appropriate: boolean, reason: string }>}
+ */
+async function checkPhotoSafety(imageBuffer, mimeType) {
+    const fetch = globalThis.fetch ?? require('node-fetch');
+
+    const base64Image = imageBuffer.toString('base64');
+
+    const payload = {
+        file_data: base64Image,
+        mime_type: mimeType,
+    };
+
+    try {
+        const response = await fetch(`${AI_SERVICE_URL}/api/photo/check-safety`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(15_000),
+        });
+
+        if (!response.ok) {
+            const text = await response.text().catch(() => '');
+            console.error(`[AI] safety check returned ${response.status}: ${text.slice(0, 200)}`);
+            return { is_appropriate: true, reason: 'AI safety check error — defaulting to safe.' };
+        }
+
+        const data = await response.json();
+        return {
+            is_appropriate: data.is_appropriate,
+            reason: data.reason || '',
+        };
+    } catch (err) {
+        console.error('[AI] checkPhotoSafety error:', err.message);
+        return { is_appropriate: true, reason: `AI safety check unreachable: ${err.message}` };
+    }
+}
+
+module.exports = { validateQuestPhoto, generateAiRequirement, checkPhotoSafety };

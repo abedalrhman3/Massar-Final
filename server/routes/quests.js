@@ -6,7 +6,7 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/', getAll);
-router.get('/location/:locationId', getLocationQuests);
+router.get('/location/:locationId', protect, getLocationQuests);
 router.get('/:id', getOne);
 router.post('/:id/join', protect, upload.single('photo'), joinQuest);
 

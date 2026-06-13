@@ -13,7 +13,7 @@ router.get('/reported', protect, adminOnly, getReported);
 router.get('/:id', getPublicPhotos);
 router.put('/:id/privacy', protect, togglePrivacy);
 router.post('/:id/report', protect, reportPhoto);
-router.delete('/:id', protect, adminOnly, remove);
+router.delete('/:id', protect, remove);
 
 // ── NEW: Admin review decision for AI-flagged photos ─────────────────────
 // PUT /api/admin/photos/:id/review

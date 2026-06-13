@@ -23,6 +23,16 @@ exports.create = async (req, res, next) => {
 
     let imageUrl = req.body.image_url;
     if (req.file) {
+      // Run strict content safety moderation check
+      const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
+      console.log(`[POST] Running global safety check for user: ${req.user.userId}`);
+      const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);
+      console.log(`[POST] Safety check result:`, safetyResult);
+
+      if (!safetyResult.is_appropriate) {
+        return next(new AppError(`Inappropriate image detected in review: ${safetyResult.reason}`, 400));
+      }
+
       imageUrl = await uploadPhoto(req.file.buffer);
     }
 

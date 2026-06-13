@@ -22,6 +22,9 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
     const [loadingStatus, setLoadingStatus] = useState("");
     const [resultData, setResultData] = useState(null);
 
+    const [askingForReview, setAskingForReview] = useState(false);
+    const [isRejected, setIsRejected] = useState(false);
+
     const displayName = destination?._id
         ? (isAr ? destination.name : destination.name_en)
         : "Explore";
@@ -48,7 +51,20 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
             }
         };
         fetchQuests();
+
     }, [destination?._id]);
+
+    /*     useEffect(() => {
+            const checkStatus = () => {
+                quests.forEach(quest, () => {
+                    if (!quest.success) {
+                        setIsRejected(true);
+                        setAskingForReview(true);
+                    }
+                })
+            }
+            checkStatus();
+        }, [quests]) */
 
     // Open photo upload popup for this quest
     const handleClaimClick = (e, quest) => {
@@ -101,6 +117,9 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                     reason: res.data.reason
                 });
                 setStep("result");
+                if (res.data.scenario === "rejected") {
+                    setIsRejected(true);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -132,6 +151,23 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
         setPhotoPreview(null);
         setResultData(null);
     };
+
+    const handleAskReview = () => {
+        setResultData({
+            success: false,
+            scenario: "ask for a review",
+            message: "Admin will review you're image as soon as possible",
+            reason: "ask for a review"
+        });
+        setAskingForReview(true);
+    }
+
+    const getLabel = () => {
+        if (askingForReview || isRejected) {
+            return "Under Review";
+        }
+        return isAr ? "انضمام" : "Join Quest";
+    }
 
     return (
         <div className={`${styles.panel} ${expanded ? styles.expanded : styles.collapsed} ${isLeftOpen ? styles.pushedDown : ""}`}>
@@ -211,7 +247,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                                             disabled={done || isJoining}
                                             aria-label={done ? "Quest joined" : `Join quest for ${quest.bonus_xp ?? quest.xp} XP`}
                                         >
-                                            {isJoining ? (isAr ? "جاري..." : "Joining…") : done ? (isAr ? "مشارك ✓" : "Joined ✓") : (isAr ? "انضمام" : "Join Quest")}
+                                            {isJoining ? (isAr ? "جاري..." : "Joining…") : done ? (isAr ? "مشارك ✓" : "Joined ✓") : (isAr ? "انضمام" : getLabel())}
                                         </button>
                                     </div>
                                 </div>
@@ -295,7 +331,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                                     </div>
                                 )}
 
-                                {resultData.scenario === "inappropriate" && (
+                                {(resultData.scenario === "inappropriate" || resultData.scenario === "ask for a review") && (
                                     <div className={`${styles.resultState} ${styles.warningState}`}>
                                         <div className={styles.iconCircleWarning}>
                                             <AlertTriangle size={40} className={styles.warningIcon} />
@@ -308,13 +344,14 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                                     </div>
                                 )}
 
+
                                 {(resultData.scenario === "rejected" || resultData.scenario === "error") && (
                                     <div className={`${styles.resultState} ${styles.errorState}`}>
                                         <div className={styles.iconCircleError}>
                                             <AlertCircle size={40} className={styles.errorIcon} />
                                         </div>
                                         <h4 className={styles.resultTitle}>
-                                            {resultData.scenario === "error" 
+                                            {resultData.scenario === "error"
                                                 ? (isAr ? "فشل الاتصال" : "Connection Failed")
                                                 : (isAr ? "لم يتم قبول الصورة" : "Photo Rejected")}
                                         </h4>
@@ -327,6 +364,9 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                                         )}
                                         <button className={styles.photoSubmit} onClick={handleTryAgain}>
                                             {isAr ? "حاول مجدداً" : "Try Again"}
+                                        </button>
+                                        <button className={`${styles.photoSubmit} ${styles.reviewBtn}`} onClick={handleAskReview}>
+                                            {isAr ? "تواصل مع الدعم" : "Ask for review"}
                                         </button>
                                     </div>
                                 )}

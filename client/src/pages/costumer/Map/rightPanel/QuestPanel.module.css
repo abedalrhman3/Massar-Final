@@ -308,7 +308,7 @@
     justify-content: center;
     z-index: 20;
     backdrop-filter: blur(3px);
-    border-radius: 0 0 var(--radius-lg, 12px) var(--radius-lg, 12px);
+    border-radius: var(--radius-lg, 12px);
 }
 
 .photoPopup {
@@ -457,7 +457,9 @@
     padding: 10px 0;
 }
 
-.iconCircleSuccess, .iconCircleWarning, .iconCircleError {
+.iconCircleSuccess,
+.iconCircleWarning,
+.iconCircleError {
     width: 68px;
     height: 68px;
     border-radius: 50%;
@@ -545,4 +547,11 @@
     color: #7f1d1d;
     margin: 0;
     line-height: 1.4;
+}
+
+.reviewBtn {
+    background-color: white;
+    color: red;
+    border: 3px solid red;
+    font-weight: bold;
 }

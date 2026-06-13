@@ -38,12 +38,41 @@ exports.completeTask = async (req, res, next) => {
     let photoRecord = null;
     if (req.file) {
       const photoUrl = await uploadPhoto(req.file.buffer);
+
+      // Run strict content safety moderation check
+      const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
+      console.log(`[PHOTO] Running global safety check for location: ${locationId}`);
+      const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);
+      console.log(`[PHOTO] Safety check result:`, safetyResult);
+
+      if (!safetyResult.is_appropriate) {
+        photoRecord = await Photo.create({
+          user_id: userId,
+          location_id: locationId,
+          task_index: Number(taskIndex) || 0,
+          photo_url: photoUrl,
+          ai_appropriate: false,
+          ai_fulfills_quest: false,
+          ai_reason: safetyResult.reason || 'Inappropriate content detected.',
+          status: 'pending_review',
+          is_reported: true,
+        });
+
+        return res.status(200).json({
+          success: false,
+          scenario: 'inappropriate',
+          message: 'Your photo has been flagged for review. Our team will review it shortly. The task will not be completed until the review is resolved.',
+          photo: photoRecord,
+        });
+      }
+
       photoRecord = await Photo.create({
         user_id: userId,
         location_id: locationId,
         task_index: Number(taskIndex) || 0,
         photo_url: photoUrl,
-        // No AI fields — location check-ins bypass AI validation
+        ai_appropriate: true,
+        status: 'approved',
       });
     }
 
@@ -154,25 +183,94 @@ exports.reviewPhoto = async (req, res, next) => {
     const Quest = require('../models/Quest');
 
     const { decision } = req.body;
-    if (!['approve', 'reject'].includes(decision)) {
-      return next(new AppError('decision must be "approve" or "reject"', 400));
+    if (!['approve', 'reject', 'ban'].includes(decision)) {
+      return next(new AppError('decision must be "approve", "reject" or "ban"', 400));
     }
 
     const photo = await Photo.findById(req.params.id);
     if (!photo) return next(new AppError('Photo not found', 404));
 
-    if (photo.status !== 'pending_review') {
-      return next(new AppError(`Photo is already in status: ${photo.status}`, 400));
+    if (photo.status !== 'pending_review' && !photo.is_reported) {
+      return next(new AppError('Photo is not flagged or reported', 400));
     }
 
-    // ── REJECT: delete from Cloudinary + DB ─────────────
-    if (decision === 'reject') {
-      await deleteFromCloudinary(photo.photo_url);
+    // ── BAN: ban user and delete photo ───────────────────
+    if (decision === 'ban') {
+      const UserSession = require('../models/UserSession');
+
+      const user = await User.findById(photo.user_id);
+      if (!user) return next(new AppError('User not found for this photo', 404));
+
+      if (user._id.toString() === req.user.userId) {
+        return next(new AppError('You cannot ban yourself', 400));
+      }
+
+      user.isBanned = true;
+      await user.save();
+      await UserSession.deleteMany({ userId: user._id });
+
+      await deleteFromCloudinary(photo.photo_url).catch(err =>
+        console.warn('[CLOUDINARY] Delete failed (continuing):', err.message)
+      );
       await Photo.findByIdAndDelete(photo._id);
 
       return res.json({
         success: true,
-        message: 'Photo rejected and permanently deleted.',
+        message: 'User has been banned and the photo has been permanently deleted.',
+      });
+    }
+
+    // ── REJECT: mark status as rejected and save reason ─────
+    if (decision === 'reject') {
+      const { reason, deletePhoto, banUser } = req.body;
+
+      if (banUser) {
+        const UserSession = require('../models/UserSession');
+
+        const user = await User.findById(photo.user_id);
+        if (!user) return next(new AppError('User not found for this photo', 404));
+
+        if (user._id.toString() === req.user.userId) {
+          return next(new AppError('You cannot ban yourself', 400));
+        }
+
+        user.isBanned = true;
+        await user.save();
+        await UserSession.deleteMany({ userId: user._id });
+
+        await deleteFromCloudinary(photo.photo_url).catch(err =>
+          console.warn('[CLOUDINARY] Delete failed (continuing):', err.message)
+        );
+        await Photo.findByIdAndDelete(photo._id);
+
+        return res.json({
+          success: true,
+          message: 'User has been banned and the photo has been permanently deleted.',
+        });
+      }
+
+      if (deletePhoto) {
+        await deleteFromCloudinary(photo.photo_url).catch(err =>
+          console.warn('[CLOUDINARY] Delete failed (continuing):', err.message)
+        );
+        await Photo.findByIdAndDelete(photo._id);
+
+        return res.json({
+          success: true,
+          message: 'Photo rejected and permanently deleted.',
+        });
+      }
+
+      photo.status = 'rejected';
+      photo.is_reported = false;
+      photo.ai_appropriate = false;
+      photo.ai_reason = reason || 'Rejected by moderator';
+      await photo.save();
+
+      return res.json({
+        success: true,
+        message: 'Photo rejected and marked in database.',
+        photo,
       });
     }
 

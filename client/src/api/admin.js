@@ -23,9 +23,9 @@ export const deletePhoto = (id) =>
     client.delete(`/admin/photos/${id}`);
 
 // PUT /admin/photos/:id/review
-// body: { decision: 'approve' | 'reject' }
-export const reviewPhoto = (id, decision) =>
-    client.put(`/admin/photos/${id}/review`, { decision });
+// body: { decision: 'approve' | 'reject' | 'ban', reason?: string, deletePhoto?: boolean, banUser?: boolean }
+export const reviewPhoto = (id, decision, reason, deletePhoto, banUser) =>
+    client.put(`/admin/photos/${id}/review`, { decision, reason, deletePhoto, banUser });
 
 // POST /api/admin/add-location
 // body: Location fields
