@@ -173,11 +173,13 @@ exports.joinQuest = async (req, res, next) => {
         is_reported: true,
       });
 
+      // SCENARIO 1 (both places) — after creating photoRecord
       return res.status(200).json({
         success: false,
         scenario: 'inappropriate',
-        message: 'Your photo has been flagged for review. Our team will review it shortly. The quest will not be completed until the review is resolved.',
+        message: 'Your photo has been flagged for review...',
         photo: photoRecord,
+        pending_review_quest_ids: [String(questId)],
       });
     }
 

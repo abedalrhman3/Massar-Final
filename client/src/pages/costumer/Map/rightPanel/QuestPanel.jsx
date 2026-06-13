@@ -11,14 +11,15 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
     const { i18n } = useTranslation();
     const isAr = i18n.language === "ar";
 
-    const [quests, setQuests] = useState([])
+    const [quests, setQuests] = useState([]);
     const [claimed, setClaimed] = useState({});
+    const [pending, setPending] = useState({});
     const [joining, setJoining] = useState({});
-    const [photoQuest, setPhotoQuest] = useState(null); // quest object whose popup is open
+    const [photoQuest, setPhotoQuest] = useState(null);
     const [photo, setPhoto] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
 
-    const [step, setStep] = useState("upload"); // "upload" | "loading" | "result"
+    const [step, setStep] = useState("upload");
     const [loadingStatus, setLoadingStatus] = useState("");
     const [resultData, setResultData] = useState(null);
 
@@ -26,7 +27,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
         ? (isAr ? destination.name : destination.name_en)
         : "Explore";
 
-    //Seed already-completed quests from user context on mount
+    // Seed completed quests from user context on mount
     useEffect(() => {
         if (user?.completed_quests?.length) {
             const map = {};
@@ -36,13 +37,22 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
             setClaimed(map);
         }
     }, [user]);
+
+    // Fetch quests and seed pending state from backend
     useEffect(() => {
         if (!destination?._id) return;
         const fetchQuests = async () => {
             try {
                 const res = await getLocationQuests(destination._id);
-                console.log(res.data);
                 setQuests(res.data.data);
+
+                if (res.data.pending_review_quest_ids?.length) {
+                    const map = {};
+                    res.data.pending_review_quest_ids.forEach((id) => {
+                        map[String(id)] = true;
+                    });
+                    setPending(map);
+                }
             } catch (error) {
                 console.error(error);
             }
@@ -50,7 +60,6 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
         fetchQuests();
     }, [destination?._id]);
 
-    // Open photo upload popup for this quest
     const handleClaimClick = (e, quest) => {
         e.stopPropagation();
         setPhoto(null);
@@ -80,6 +89,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
             formData.append("photo", photo);
 
             const res = await joinQuest(photoQuest._id, formData);
+
             if (res.data.success) {
                 setClaimed((prev) => ({ ...prev, [String(photoQuest._id)]: true }));
                 if (setUser && res.data.user) {
@@ -94,9 +104,12 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                 });
                 setStep("result");
             } else {
+                if (res.data.scenario === "inappropriate") {
+                    setPending((prev) => ({ ...prev, [String(photoQuest._id)]: true }));
+                }
                 setResultData({
                     success: false,
-                    scenario: res.data.scenario, // 'inappropriate' | 'rejected'
+                    scenario: res.data.scenario,
                     message: res.data.message,
                     reason: res.data.reason
                 });
@@ -176,6 +189,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                     <div className={styles.questList}>
                         {quests.map((quest, i) => {
                             const done = !!claimed[String(quest._id)];
+                            const isPending = !!pending[String(quest._id)];
                             const isJoining = !!joining[quest._id];
                             const title = isAr ? quest.title : (quest.title_en || quest.title);
                             const description = isAr ? quest.description : (quest.description_en || quest.description);
@@ -183,7 +197,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                             return (
                                 <div
                                     key={quest._id}
-                                    className={`${styles.questCard} ${done ? styles.questDone : ""}`}
+                                    className={`${styles.questCard} ${done ? styles.questDone : isPending ? styles.questPending : ""}`}
                                 >
                                     <div className={styles.questTop}>
                                         <div className={styles.questLeft}>
@@ -202,16 +216,26 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                                         <div className={styles.xpBar}>
                                             <div
                                                 className={styles.xpBarFill}
-                                                style={{ width: done ? "100%" : "0%" }}
+                                                style={{ width: done ? "100%" : isPending ? "50%" : "0%" }}
                                             />
                                         </div>
                                         <button
-                                            className={`${styles.claimBtn} ${done ? styles.claimBtnDone : ""}`}
-                                            onClick={(e) => !done && handleClaimClick(e, quest)}
-                                            disabled={done || isJoining}
-                                            aria-label={done ? "Quest joined" : `Join quest for ${quest.bonus_xp ?? quest.xp} XP`}
+                                            className={`${styles.claimBtn} ${done ? styles.claimBtnDone : isPending ? styles.claimBtnPending : ""}`}
+                                            onClick={(e) => !done && !isPending && handleClaimClick(e, quest)}
+                                            disabled={done || isPending || isJoining}
+                                            aria-label={
+                                                done ? "Quest completed"
+                                                    : isPending ? "Under review"
+                                                        : `Join quest for ${quest.bonus_xp ?? quest.xp} XP`
+                                            }
                                         >
-                                            {isJoining ? (isAr ? "جاري..." : "Joining…") : done ? (isAr ? "مشارك ✓" : "Joined ✓") : (isAr ? "انضمام" : "Join Quest")}
+                                            {isJoining
+                                                ? (isAr ? "جاري..." : "Joining…")
+                                                : done
+                                                    ? (isAr ? "مشارك ✓" : "Completed ✓")
+                                                    : isPending
+                                                        ? (isAr ? "قيد المراجعة ⏳" : "Under Review ⏳")
+                                                        : (isAr ? "انضمام" : "Join Quest")}
                                         </button>
                                     </div>
                                 </div>
