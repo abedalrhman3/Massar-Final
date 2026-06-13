@@ -88,7 +88,7 @@ exports.joinQuest = async (req, res, next) => {
     const User = require('../models/User');
     const Photo = require('../models/Photo');
     const { uploadPhoto } = require('../services/uploadService');
-    const { validateQuestPhoto } = require('../services/aiService');
+    const { validateQuestPhoto } = require('../services/validateQuestPhotoService');
 
     const userId = req.user.userId;
     const questId = req.params.id;
