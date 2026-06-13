@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./Reports.module.css";
-import { getReportedPhotos, deletePhoto } from "@/api/admin";
+import { getReportedPhotos, deletePhoto, reviewPhoto } from "@/api/admin";
 
 function Reports() {
   const [photos, setPhotos] = useState([]);
@@ -27,6 +27,28 @@ function Reports() {
       setPhotos(prev => prev.filter(p => p._id !== deleteTarget));
     } catch {
       alert("Failed to delete photo.");
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await reviewPhoto(id, 'approve');
+      setPhotos(prev => prev.filter(p => p._id !== id));
+    } catch {
+      alert('Failed to approve photo.');
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await reviewPhoto(id, 'reject');
+      setPhotos(prev => prev.filter(p => p._id !== id));
+    } catch {
+      alert('Failed to reject photo.');
     } finally {
       setDeleteTarget(null);
     }
@@ -103,11 +125,12 @@ function Reports() {
         <div className={styles.overlay} onClick={() => setDeleteTarget(null)}>
           <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>
             <span className="material-symbols-outlined" style={{ fontSize: "2.5rem", color: "#dc2626" }}>delete_forever</span>
-            <h3 className={styles.modalTitle}>Delete this photo?</h3>
-            <p className={styles.deleteBody}>The photo will be permanently removed and cannot be recovered.</p>
+            <h3 className={styles.modalTitle}>Review reported photo</h3>
+            <p className={styles.deleteBody}>Choose an action for this reported photo.</p>
             <div className={styles.deleteActions}>
               <button className={styles.cancelBtn} onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className={styles.confirmDeleteBtn} onClick={confirmDelete}>Delete Photo</button>
+              <button className={styles.confirmDeleteBtn} onClick={() => handleApprove(deleteTarget)}>Approve</button>
+              <button className={styles.confirmDeleteBtn} onClick={() => handleReject(deleteTarget)}>Reject</button>
             </div>
           </div>
         </div>
