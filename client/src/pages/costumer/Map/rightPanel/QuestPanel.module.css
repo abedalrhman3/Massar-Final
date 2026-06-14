@@ -308,7 +308,7 @@
     justify-content: center;
     z-index: 20;
     backdrop-filter: blur(3px);
-    border-radius: 0 0 var(--radius-lg, 12px) var(--radius-lg, 12px);
+    border-radius: var(--radius-lg, 12px);
 }
 
 .photoPopup {
@@ -414,4 +414,144 @@
 
 .photoSubmit:not(:disabled):hover {
     opacity: 0.88;
+}
+
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 10px;
+    gap: 12px;
+    text-align: center;
+}
+
+.spinner {
+    color: var(--color-accent, #378add);
+    animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingText {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    margin: 0;
+}
+
+.resultContainer {
+    width: 100%;
+}
+
+.resultState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.iconCircleSuccess,
+.iconCircleWarning,
+.iconCircleError {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.iconCircleSuccess {
+    background-color: #ecfdf5;
+}
+
+.iconCircleWarning {
+    background-color: #fffbef;
+}
+
+.iconCircleError {
+    background-color: #fef2f2;
+}
+
+.successIcon {
+    color: #10b981;
+}
+
+.warningIcon {
+    color: #f59e0b;
+}
+
+.errorIcon {
+    color: #ef4444;
+}
+
+.resultTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+
+.resultMessage {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.xpBonus {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: hsla(214, 71%, 58%, 0.1);
+    color: var(--color-accent, #378add);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 4px 0;
+}
+
+.starIcon {
+    color: var(--color-accent, #378add);
+}
+
+.reasonBox {
+    background: #fdf2f2;
+    border-left: 3px solid #ef4444;
+    border-radius: 6px;
+    padding: 10px 12px;
+    width: 100%;
+    text-align: start;
+    margin-bottom: 8px;
+}
+
+.reasonBox strong {
+    font-size: 11px;
+    color: #b91c1c;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.reasonBox p {
+    font-size: 12px;
+    color: #7f1d1d;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.reviewBtn {
+    background-color: white;
+    color: red;
+    border: 3px solid red;
+    font-weight: bold;
 }

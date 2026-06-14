@@ -128,8 +128,9 @@ const Login = ({ fields, setFields }) => {
 
         </div>
 
-        <div className={styles.forgotLink}>
+        <div className={styles.forgotLink} style={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
           <Link to="/forgot-password">Forgot password?</Link>
+          <Link to="/support"> Contact support</Link>
         </div>
       </form>
     </div>

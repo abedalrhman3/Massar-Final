@@ -221,6 +221,16 @@ exports.uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) return next(new AppError('Please provide an image file', 400));
 
+    // Run strict content safety moderation check
+    const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
+    console.log(`[AVATAR] Running global safety check for user: ${req.user.userId}`);
+    const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);
+    console.log(`[AVATAR] Safety check result:`, safetyResult);
+
+    if (!safetyResult.is_appropriate) {
+      return next(new AppError(`Inappropriate avatar image detected: ${safetyResult.reason}`, 400));
+    }
+
     const { uploadPhoto } = require('../services/uploadService');
     const secureUrl = await uploadPhoto(req.file.buffer);
 

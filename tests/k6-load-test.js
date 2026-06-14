@@ -74,13 +74,14 @@ export default function () {
     // ── 1. Auth ────────────────────────────────────────────────────
     group("Auth Flow", () => {
         const id = uid();
+        const email = `load_${id}@test.com`;
 
-        // Register unique user
+        // Register
         const reg = http.post(
             `${BASE_URL}/api/auth/register`,
             JSON.stringify({
                 name: `LoadUser ${id}`,
-                email: `load_${id}@test.com`,
+                email,
                 password: "Test@1234",
                 username: `load_${id}`,
             }),
@@ -89,11 +90,21 @@ export default function () {
         const regOk = check(reg, { "register: 201": (r) => r.status === 201 });
         errorRate.add(!regOk);
 
-        // Login as that user
+        // ── Force-verify (test env only) ──────────────────────────
+        if (regOk) {
+            http.post(
+                `${BASE_URL}/api/test/verify-user`,
+                JSON.stringify({ email }),
+                jsonHeaders()
+            );
+        }
+        // ─────────────────────────────────────────────────────────
+
+        // Login
         const t0 = Date.now();
         const login = http.post(
             `${BASE_URL}/api/auth/login`,
-            JSON.stringify({ email: `load_${id}@test.com`, password: "Test@1234" }),
+            JSON.stringify({ email, password: "Test@1234" }),
             jsonHeaders()
         );
         authDuration.add(Date.now() - t0);
@@ -107,6 +118,8 @@ export default function () {
             userToken = login.json("token");
             userId = login.json("user._id") || login.json("user.id");
         }
+
+
 
         // GET /me
         if (userToken) {

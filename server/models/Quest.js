@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const questSchema = new mongoose.Schema(
   {
-    title:          { type: String, required: true },
-    title_en:       { type: String },
-    description:    { type: String },
+    title: { type: String, required: true },
+    title_en: { type: String },
+    description: { type: String },
     description_en: { type: String },
     locations: [
       {
@@ -12,14 +12,21 @@ const questSchema = new mongoose.Schema(
         ref: 'Location',
       },
     ],
-    bonus_xp:     { type: Number, default: 200 },
+    bonus_xp: { type: Number, default: 200 },
     title_reward: { type: String },
-    badge_url:    { type: String },
-    icon_url:     { type: String },
+    badge_url: { type: String },
+    icon_url: { type: String },
     start_coordinates: {
       lat: { type: Number },
       lng: { type: Number },
     },
+
+    // ── AI Quest Validation ──────────────────────────────
+    // Plain-English description of what the photo must show.
+    // Sent directly to Gemini as the quest requirement.
+    // Example: "A photo clearly showing the Treasury facade at Petra, Jordan"
+    // If omitted, AI photo validation is skipped for this quest.
+    ai_requirement: { type: String, default: null },
   },
   { timestamps: true }
 );

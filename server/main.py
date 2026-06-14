@@ -1,6 +1,7 @@
 import os
 import re
 import io
+import json
 import base64
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -927,9 +928,6 @@ DATABASE DATA:
     print(f"[GEMINI] All {max_attempts} models failed. Last error: {last_error}")
     return "I apologize, but I couldn't generate a response right now. Please try again later."
 
-    print(f"[GEMINI] All {max_attempts} models rate-limited")
-    return "I apologize, but I couldn't generate a response right now. Please try again later."
-
 # ===== IMAGE MESSAGE HANDLER =====
 async def handle_image_message(file_data: str, mime_type: str, session_id: str, context_text: str = None, request: Request = None) -> ChatResponse:
     """Handle image messages - identify place and respond from DB"""
@@ -1066,12 +1064,366 @@ Be specific - if you see famous structures like the Treasury or Monastery, say "
             reply=f"I received your image! To help you with the place shown, please tell me the name of the destination you're asking about{dest_section}"
         )
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Quest Photo Validation
+# Called by the Node.js backend (aiService.js) when a user submits a quest photo
+# ─────────────────────────────────────────────────────────────────────────────
+
+class QuestValidationRequest(BaseModel):
+    file_data:         str   # base64-encoded image (no data URI prefix)
+    mime_type:         str   # image/jpeg | image/png | image/webp
+    quest_requirement: str   # from Quest.ai_requirement field
+
+
+class QuestValidationResponse(BaseModel):
+    is_appropriate: bool
+    fulfills_quest: bool
+    reason:         str   # 1-sentence explanation shown to the user
+
+
+class QuestRequirementRequest(BaseModel):
+    title: str
+    description: str
+
+
+class QuestRequirementResponse(BaseModel):
+    ai_requirement: str
+
+
+class PhotoSafetyRequest(BaseModel):
+    file_data: str  # base64-encoded image (no data URI prefix)
+    mime_type: str  # image/jpeg | image/png | image/webp
+
+
+class PhotoSafetyResponse(BaseModel):
+    is_appropriate: bool
+    reason: str
+
+
+async def validate_quest_photo_with_gemini(
+    file_data: str,
+    mime_type: str,
+    quest_requirement: str
+) -> dict:
+    """
+    Sends the image to Gemini with a two-question prompt.
+    Returns { is_appropriate, fulfills_quest, reason }.
+
+    Falls back gracefully (is_appropriate=True, fulfills_quest=False)
+    on any error so a Gemini outage never permanently blocks users.
+    """
+    if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
+        return {
+            "is_appropriate": True,
+            "fulfills_quest": False,
+            "reason": "AI validation service is not configured."
+        }
+
+    prompt = f"""You are a strict content moderator and quest validator for a Jordan travel app called Masar.
+
+Analyze this image and answer TWO questions. Respond ONLY in valid JSON with no extra text, no markdown fences.
+
+QUESTION 1 — Content Safety:
+Is this image appropriate for all ages?
+Flag as inappropriate (is_appropriate: false) if you see:
+- Sexual or adult content of any kind
+- Graphic violence, gore, or disturbing imagery
+- Hate symbols or extremist content
+- Nudity (partial or full)
+
+QUESTION 2 — Quest Fulfillment:
+Quest requirement: "{quest_requirement}"
+Does this image clearly fulfill the quest requirement? Be strict — the image must directly and visibly show what is required. A vague or unrelated photo should fail.
+
+Respond with EXACTLY this JSON and nothing else:
+{{
+  "is_appropriate": true or false,
+  "fulfills_quest": true or false,
+  "reason": "one sentence explaining your decision"
+}}"""
+
+    max_attempts = len(GEMINI_MODEL_LIST)
+    last_error = None
+
+    for attempt in range(max_attempts):
+        current_model = get_current_model()
+        try:
+            print(f"[AI_QUEST] Attempt {attempt + 1}/{max_attempts} with model: {current_model}")
+            model = genai.GenerativeModel(current_model)
+
+            image_part = {"mime_type": mime_type, "data": file_data}
+            response = model.generate_content([prompt, image_part])
+
+            raw = response.text.strip()
+            # Strip markdown code fences if Gemini adds them despite instructions
+            raw = re.sub(r"```json|```", "", raw).strip()
+
+            result = json.loads(raw)
+
+            # Validate shape
+            if not isinstance(result.get("is_appropriate"), bool) or \
+               not isinstance(result.get("fulfills_quest"), bool):
+                raise ValueError(f"Unexpected response shape: {result}")
+
+            print(f"[AI_QUEST] Result: {result}")
+            return {
+                "is_appropriate": result["is_appropriate"],
+                "fulfills_quest": result["fulfills_quest"],
+                "reason":         result.get("reason", ""),
+            }
+
+        except json.JSONDecodeError as e:
+            last_error = f"JSON parse error: {e} | Raw: {response.text[:200]}"
+            print(f"[AI_QUEST] {last_error}")
+            # Don't switch model for parse errors — try same model once more would
+            # give the same result; break and return safe fallback
+            break
+
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = (
+                "429" in error_str or
+                "rate limit" in error_str.lower() or
+                "quota" in error_str.lower() or
+                "RESOURCE_EXHAUSTED" in error_str
+            )
+            last_error = f"{type(e).__name__}: {error_str[:150]}"
+            print(f"[AI_QUEST] Error with {current_model}: {last_error}")
+
+            if is_rate_limit:
+                switch_to_next_model()
+                continue
+
+            break  # Non-rate-limit error — stop trying
+
+    print(f"[AI_QUEST] All attempts failed. Last error: {last_error}")
+    # Safe fallback: don't flag as inappropriate on AI failure,
+    # but don't auto-complete quest either
+    return {
+        "is_appropriate": True,
+        "fulfills_quest": False,
+        "reason": "Photo validation is temporarily unavailable. Please try again shortly."
+    }
+
+
+@app.post("/api/quest/validate", response_model=QuestValidationResponse)
+@limiter.limit("20/minute")
+async def validate_quest(request: Request, body: QuestValidationRequest):
+    """
+    Called by Node.js aiService.js to validate a quest photo submission.
+    Node sends the raw base64 image (no data URI prefix).
+    """
+    valid_mime_types = {"image/jpeg", "image/png", "image/webp"}
+    if body.mime_type not in valid_mime_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPEG, PNG, and WebP images are supported."
+        )
+
+    # Rough size check — base64 of a 5MB image ≈ 6.7MB string
+    if len(body.file_data) > 7 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="Image is too large. Maximum size is 5MB."
+        )
+
+    if not body.quest_requirement or not body.quest_requirement.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="quest_requirement must not be empty."
+        )
+
+    result = await validate_quest_photo_with_gemini(
+        file_data=body.file_data,
+        mime_type=body.mime_type,
+        quest_requirement=body.quest_requirement.strip(),
+    )
+
+    return QuestValidationResponse(**result)
+
+
+async def generate_quest_requirement_with_gemini(title: str, description: str) -> str:
+    if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
+        return f"A photo showing completion of the quest: {title}"
+
+    prompt = f"""You are an expert content creator for Masar, a Jordan travel app.
+Your task is to write a clear, concise, plain-English requirement of what a user's photo must show to prove they completed a specific quest.
+
+Quest Title: {title}
+Quest Description: {description}
+
+Write a single, direct sentence in English describing what the photo MUST show.
+Start with "A photo clearly showing..."
+Example outputs:
+- "A photo clearly showing the Treasury facade at Petra, Jordan"
+- "A photo clearly showing the Roman Forum at Jerash"
+- "A photo clearly showing the visitor center or sand dunes at Wadi Rum"
+
+Respond ONLY with the generated requirement sentence. Do not include markdown, quotes, introduction, or explanation."""
+
+    max_attempts = len(GEMINI_MODEL_LIST)
+    last_error = None
+
+    for attempt in range(max_attempts):
+        current_model = get_current_model()
+        try:
+            print(f"[AI_REQ] Attempt {attempt + 1}/{max_attempts} with model: {current_model}")
+            model = genai.GenerativeModel(current_model)
+            response = model.generate_content(prompt)
+            result = response.text.strip()
+            # Clean up quotes if Gemini adds them
+            result = result.replace('"', '').replace("'", "").strip()
+            print(f"[AI_REQ] Generated requirement: {result}")
+            return result
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = (
+                "429" in error_str or
+                "rate limit" in error_str.lower() or
+                "quota" in error_str.lower() or
+                "RESOURCE_EXHAUSTED" in error_str
+            )
+            last_error = f"{type(e).__name__}: {error_str[:150]}"
+            print(f"[AI_REQ] Error with {current_model}: {last_error}")
+            if is_rate_limit:
+                switch_to_next_model()
+                continue
+            break
+
+    return f"A photo showing completion of the quest: {title}"
+
+
+@app.post("/api/quest/generate-requirement", response_model=QuestRequirementResponse)
+@limiter.limit("20/minute")
+async def generate_requirement(request: Request, body: QuestRequirementRequest):
+    result = await generate_quest_requirement_with_gemini(
+        title=body.title,
+        description=body.description
+    )
+    return QuestRequirementResponse(ai_requirement=result)
+
+
+async def check_photo_safety_with_gemini(file_data: str, mime_type: str) -> dict:
+    if not GEMINI_MODEL_LIST or not GEMINI_API_KEY:
+        return {
+            "is_appropriate": True,
+            "reason": "AI moderation service is not configured."
+        }
+
+    prompt = """You are an extremely strict content safety moderator for a family-friendly Jordan travel app called Masar.
+
+Analyze this image for any inappropriate, unsafe, or sensitive content.
+Respond ONLY in valid JSON with no extra text, no markdown fences.
+
+You must flag the image as inappropriate (is_appropriate: false) if it contains ANY of the following:
+1. Nudity, semi-nudity, or sexual content (including pornography, underwear, cleavage, suggestive poses, sexually explicit items).
+2. Violence, weapons, blood, gore, injuries, or disturbing/scary imagery.
+3. Alcohol, drugs, cigarettes, vaping, or related paraphernalia.
+4. Offensive gestures, hate speech, political symbols, or extremist content.
+5. Personal identifiable information (PII) like passports, IDs, or credit cards clearly visible.
+6. Highly low-quality, blurry, solid color, or spam/troll images (e.g. memes, unrelated screenshots).
+
+Be extremely conservative. If you are unsure or if the image is borderline, flag it as inappropriate (is_appropriate: false).
+
+Respond with EXACTLY this JSON format and nothing else:
+{
+  "is_appropriate": true or false,
+  "reason": "a very short description of why it was flagged or 'Appropriate image'"
+}"""
+
+    max_attempts = len(GEMINI_MODEL_LIST)
+    last_error = None
+
+    for attempt in range(max_attempts):
+        current_model = get_current_model()
+        try:
+            print(f"[AI_SAFETY] Attempt {attempt + 1}/{max_attempts} with model: {current_model}")
+            model = genai.GenerativeModel(current_model)
+
+            image_part = {"mime_type": mime_type, "data": file_data}
+            response = model.generate_content([prompt, image_part])
+
+            raw = response.text.strip()
+            # Strip markdown code fences if Gemini adds them
+            raw = re.sub(r"```json|```", "", raw).strip()
+
+            result = json.loads(raw)
+
+            # Validate shape
+            if not isinstance(result.get("is_appropriate"), bool):
+                raise ValueError(f"Unexpected response shape: {result}")
+
+            print(f"[AI_SAFETY] Result: {result}")
+            return {
+                "is_appropriate": result["is_appropriate"],
+                "reason":         result.get("reason", "Inappropriate content detected"),
+            }
+
+        except json.JSONDecodeError as e:
+            last_error = f"JSON parse error: {e} | Raw: {response.text[:200]}"
+            print(f"[AI_SAFETY] {last_error}")
+            break
+
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = (
+                "429" in error_str or
+                "rate limit" in error_str.lower() or
+                "quota" in error_str.lower() or
+                "RESOURCE_EXHAUSTED" in error_str
+            )
+            last_error = f"{type(e).__name__}: {error_str[:150]}"
+            print(f"[AI_SAFETY] Error with {current_model}: {last_error}")
+            if is_rate_limit:
+                switch_to_next_model()
+                continue
+            break
+
+    print(f"[AI_SAFETY] All attempts failed. Last error: {last_error}")
+    # Safe fallback: don't flag as inappropriate on AI failure, but return safe fallback
+    return {
+        "is_appropriate": True,
+        "reason": "Safety check temporarily unavailable. Defaulting to safe."
+    }
+
+
+@app.post("/api/photo/check-safety", response_model=PhotoSafetyResponse)
+@limiter.limit("20/minute")
+async def check_photo_safety(request: Request, body: PhotoSafetyRequest):
+    """
+    Called by Node.js to strictly moderation check an uploaded photo buffer.
+    """
+    valid_mime_types = {"image/jpeg", "image/png", "image/webp"}
+    if body.mime_type not in valid_mime_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPEG, PNG, and WebP images are supported."
+        )
+
+    # Rough size check — base64 of a 5MB image ≈ 6.7MB string
+    if len(body.file_data) > 7 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="Image is too large. Maximum size is 5MB."
+        )
+
+    result = await check_photo_safety_with_gemini(
+        file_data=body.file_data,
+        mime_type=body.mime_type
+    )
+
+    return PhotoSafetyResponse(**result)
+
+
 @app.on_event("startup")
 async def startup_event():
     connect_db()
     detect_gemini_model()
 
 @app.get("/")
+async def root():
+    return {"status": "Masar Chatbot API is running"}
 
 @app.get("/health")
 async def health_check():

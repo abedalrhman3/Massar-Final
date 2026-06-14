@@ -19,6 +19,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
+//test only
+if (process.env.NODE_ENV === 'test') {
+  app.use('/api/test', require('./routes/testOnly'));
+}
 
 // routes
 app.use('/api/auth', require('./routes/auth'));

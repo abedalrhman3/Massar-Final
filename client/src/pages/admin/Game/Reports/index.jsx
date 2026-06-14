@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import styles from "./Reports.module.css";
-import { getReportedPhotos, deletePhoto } from "@/api/admin";
+import { getReportedPhotos, deletePhoto, reviewPhoto } from "@/api/admin";
 
 function Reports() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [deletePhotoOpt, setDeletePhotoOpt] = useState(false);
+  const [banUserOpt, setBanUserOpt] = useState(false);
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
   const fetchPhotos = async () => {
     try {
@@ -21,14 +26,28 @@ function Reports() {
 
   useEffect(() => { fetchPhotos(); }, []);
 
-  const confirmDelete = async () => {
+  const handleApprove = async (id) => {
+    setProcessingId(id);
     try {
-      await deletePhoto(deleteTarget);
-      setPhotos(prev => prev.filter(p => p._id !== deleteTarget));
+      await reviewPhoto(id, 'approve');
+      setPhotos(prev => prev.filter(p => p._id !== id));
     } catch {
-      alert("Failed to delete photo.");
+      alert('Failed to approve photo.');
     } finally {
-      setDeleteTarget(null);
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (id, reason, deletePhoto, banUser) => {
+    setProcessingId(id);
+    setConfirmAction(null);
+    try {
+      await reviewPhoto(id, 'reject', reason, deletePhoto, banUser);
+      setPhotos(prev => prev.filter(p => p._id !== id));
+    } catch {
+      alert('Failed to reject photo.');
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -58,7 +77,12 @@ function Reports() {
         <div className={styles.grid}>
           {photos.map(photo => (
             <div key={photo._id} className={styles.card}>
-              <div className={styles.imgWrapper}>
+              <div
+                className={styles.imgWrapper}
+                onClick={() => setLightboxPhoto(photo.photo_url)}
+                style={{ cursor: "pointer" }}
+                title="Click to view full size"
+              >
                 <img
                   src={photo.photo_url}
                   alt="Reported"
@@ -88,28 +112,128 @@ function Reports() {
                 {photo.createdAt && (
                   <p className={styles.date}>{new Date(photo.createdAt).toLocaleDateString()}</p>
                 )}
-                <button className={styles.deleteBtn} onClick={() => setDeleteTarget(photo._id)}>
-                  <span className="material-symbols-outlined">delete</span>
-                  Delete Photo
-                </button>
+                <div className={styles.actionButtons}>
+                  <button
+                    className={styles.acceptBtn}
+                    onClick={() => handleApprove(photo._id)}
+                    disabled={processingId !== null}
+                  >
+                    <span className="material-symbols-outlined">
+                      {processingId === photo._id ? "hourglass_empty" : "check_circle"}
+                    </span>
+                    {processingId === photo._id ? "..." : "Accept"}
+                  </button>
+                  <button
+                    className={styles.rejectBtn}
+                    onClick={() => {
+                      setRejectionReason("");
+                      setDeletePhotoOpt(false);
+                      setBanUserOpt(false);
+                      setConfirmAction({
+                        photoId: photo._id,
+                        action: 'reject_step1',
+                        username: photo.user_id?.username || photo.user_id?.name || "Unknown User"
+                      });
+                    }}
+                    disabled={processingId !== null}
+                  >
+                    <span className="material-symbols-outlined">cancel</span>
+                    Reject
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Delete Confirm */}
-      {deleteTarget && (
-        <div className={styles.overlay} onClick={() => setDeleteTarget(null)}>
-          <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>
-            <span className="material-symbols-outlined" style={{ fontSize: "2.5rem", color: "#dc2626" }}>delete_forever</span>
-            <h3 className={styles.modalTitle}>Delete this photo?</h3>
-            <p className={styles.deleteBody}>The photo will be permanently removed and cannot be recovered.</p>
-            <div className={styles.deleteActions}>
-              <button className={styles.cancelBtn} onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className={styles.confirmDeleteBtn} onClick={confirmDelete}>Delete Photo</button>
-            </div>
+      {/* Action Confirmation Modals */}
+      {confirmAction && (
+        <div className={styles.overlay} onClick={() => setConfirmAction(null)}>
+          <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
+            {confirmAction.action === 'reject_step1' ? (
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: "2.8rem", color: "#ea580c" }}>cancel</span>
+                <h3 className={styles.modalTitle}>Reject Photo (Step 1 of 2)</h3>
+                <p className={styles.modalBody}>
+                  Please specify the reason for rejecting this photo. This message will be shown to the user in their gallery.
+                </p>
+                <textarea
+                  className={styles.reasonInput}
+                  placeholder="e.g. This photo does not depict the requested quest landmark."
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                />
+                <div className={styles.modalActions}>
+                  <button className={styles.cancelBtn} onClick={() => setConfirmAction(null)}>Cancel</button>
+                  <button
+                    className={styles.confirmRejectBtn}
+                    disabled={!rejectionReason.trim()}
+                    onClick={() => setConfirmAction(prev => ({ ...prev, action: 'reject_step2' }))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            ) : confirmAction.action === 'reject_step2' ? (
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: "2.8rem", color: "#dc2626" }}>settings</span>
+                <h3 className={styles.modalTitle}>Optional Actions (Step 2 of 2)</h3>
+                <p className={styles.modalBody}>
+                  Select additional actions to apply to this rejected photo or user.
+                </p>
+                <div className={styles.optionsList}>
+                  {/* <label className={styles.optionLabel}>
+                    <input
+                      type="checkbox"
+                      checked={deletePhotoOpt}
+                      onChange={(e) => setDeletePhotoOpt(e.target.checked)}
+                    />
+                    <span>Delete photo permanently from DB & Cloudinary</span>
+                  </label> */}
+                  <label className={styles.optionLabel}>
+                    <input
+                      type="checkbox"
+                      checked={banUserOpt}
+                      onChange={(e) => setBanUserOpt(e.target.checked)}
+                    />
+                    <span style={{ color: banUserOpt ? '#dc2626' : 'inherit', fontWeight: banUserOpt ? '600' : 'normal' }}>
+                      Ban user: {confirmAction.username}
+                    </span>
+                  </label>
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    className={styles.cancelBtn}
+                    onClick={() => setConfirmAction(prev => ({ ...prev, action: 'reject_step1' }))}
+                  >
+                    Back
+                  </button>
+                  <button
+                    className={styles.confirmRejectBtn}
+                    onClick={() => handleReject(confirmAction.photoId, rejectionReason, deletePhotoOpt, banUserOpt)}
+                  >
+                    Confirm Rejection
+                  </button>
+                </div>
+              </>
+            ) : null}
           </div>
+        </div>
+      )}
+
+      {/* Full-Size Lightbox Overlay */}
+      {lightboxPhoto && (
+        <div className={styles.lightboxOverlay} onClick={() => setLightboxPhoto(null)}>
+          <button className={styles.lightboxCloseBtn} onClick={() => setLightboxPhoto(null)}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
+          <img
+            src={lightboxPhoto}
+            alt="Full-size reported item"
+            className={styles.lightboxImage}
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
