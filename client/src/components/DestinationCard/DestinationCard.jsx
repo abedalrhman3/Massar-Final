@@ -20,7 +20,7 @@ function DestinationCard({ id, slug, image, name, description, rating, likes, is
     e.preventDefault();
     e.stopPropagation();
 
-    // Optimistic update
+    
     const newLiked = !liked;
     const newLikeCount = likeCount + (newLiked ? 1 : -1);
     setLiked(newLiked);
@@ -29,7 +29,7 @@ function DestinationCard({ id, slug, image, name, description, rating, likes, is
 
     try {
       const response = await toggleLikeDestination(id);
-      // Reconcile with server truth if it returns the new state
+      
       let finalLiked = newLiked;
       let finalLikeCount = newLikeCount;
       if (response.data && typeof response.data.isLiked === "boolean") {
@@ -42,7 +42,7 @@ function DestinationCard({ id, slug, image, name, description, rating, likes, is
       }
       onLikeToggle?.(id, finalLiked, finalLikeCount);
     } catch (err) {
-      // Rollback on failure
+      
       setLiked(liked);
       setLikeCount(likeCount);
       onLikeToggle?.(id, liked, likeCount);

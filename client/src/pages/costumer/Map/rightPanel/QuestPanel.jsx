@@ -27,7 +27,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
         ? (isAr ? destination.name : destination.name_en)
         : "Explore";
 
-    // Seed completed quests from user context on mount
+    
     useEffect(() => {
         if (user?.completed_quests?.length) {
             const map = {};
@@ -38,7 +38,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
         }
     }, [user]);
 
-    // Fetch quests and seed pending state from backend
+    
     useEffect(() => {
         if (!destination?._id) return;
         const fetchQuests = async () => {
@@ -149,7 +149,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
     return (
         <div className={`${styles.panel} ${expanded ? styles.expanded : styles.collapsed} ${isLeftOpen ? styles.pushedDown : ""}`}>
 
-            {/* Header */}
+            {}
             <div
                 className={styles.header}
                 onClick={() => onToggle?.()}
@@ -177,7 +177,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                 </div>
             </div>
 
-            {/* Body */}
+            {}
             {expanded && (
                 <div className={styles.body}>
                     {quests.length === 0 && (
@@ -245,7 +245,7 @@ const QuestsPanel = ({ isExpanded, onToggle, isLeftOpen, destination }) => {
                 </div>
             )}
 
-            {/* Photo upload popup */}
+            {}
             {photoQuest && (
                 <div className={styles.photoOverlay} onClick={handleClosePopup}>
                     <div className={styles.photoPopup} onClick={(e) => e.stopPropagation()}>

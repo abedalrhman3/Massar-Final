@@ -1,7 +1,7 @@
 const Notification = require('../models/Notification');
 const AppError = require('../utils/AppError');
 
-// GET /api/notifications  — private
+
 exports.getAll = async (req, res, next) => {
   try {
     const notifications = await Notification.find({ userId: req.user.userId })
@@ -12,7 +12,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// PUT /api/notifications/:id/read  — private
+
 exports.markRead = async (req, res, next) => {
   try {
     const notification = await Notification.findOneAndUpdate(
@@ -27,7 +27,7 @@ exports.markRead = async (req, res, next) => {
   }
 };
 
-// PUT /api/notifications/read-all  — private
+
 exports.markAllRead = async (req, res, next) => {
   try {
     await Notification.updateMany({ userId: req.user.userId }, { isRead: true });

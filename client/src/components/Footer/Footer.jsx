@@ -54,7 +54,7 @@ function Footer() {
           </ul>
         </div>
 
-        {/* Col 3: Newsletter */}
+        {}
         <div className={styles.footerSection}>
           <p className={styles.colLabel}>Stay updated</p>
           {subscribed ? (
@@ -86,7 +86,7 @@ function Footer() {
 
       </div>
 
-      {/* Bottom bar */}
+      {}
       <div className={styles.bottomBar}>
         <span>© 2026 Massar. All rights reserved.</span>
         <div className={styles.bottomLinks}>

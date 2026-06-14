@@ -1,4 +1,4 @@
-// DestinationDetails.utils.js
+
 
 function toCard(item, section) {
     return {
@@ -7,8 +7,8 @@ function toCard(item, section) {
         _rawItem: item,
         name: item.name,
         image: item.coverImage,
-        savedId: item.savedId ?? null,   // ✅ preserve savedId from enriched entity
-        isSaved: !!item.savedId,         // ✅ derive from actual data
+        savedId: item.savedId ?? null,   
+        isSaved: !!item.savedId,         
         details: {
             section,
             about: section === "events"

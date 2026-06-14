@@ -27,7 +27,7 @@ const destinationDetailSchema = new mongoose.Schema(
       unique: true,
     },
 
-    // Embedded overview object
+    
     overview: {
       text:            { type: String },
       locationText:    { type: String },
@@ -36,7 +36,7 @@ const destinationDetailSchema = new mongoose.Schema(
       averageCost:     { type: String },
     },
 
-    // Embedded arrays
+    
     activities:    { type: [activitySchema], default: [] },
     guideSections: { type: [guideSectionSchema], default: [] },
   },

@@ -74,7 +74,7 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
         </div>
 
         <div className={styles.modalBody}>
-          {/* Overview - Required */}
+          {}
           <h3 className={styles.sectionTitle}>Overview</h3>
           <ImageUpload
             value={formData.image}
@@ -113,7 +113,7 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
             error={errors.coordinates}
           />
 
-          {/* About - Required */}
+          {}
           <h3 className={styles.sectionTitle}>About</h3>
           <div className={styles.formGroup}>
             <label className={styles.label}>Location</label>
@@ -146,7 +146,7 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
             onChange={(workingDays) => setFormData({ ...formData, workingDays })}
           />
 
-          {/* Photos - Optional */}
+          {}
           <h3 className={styles.sectionTitle}>
             Photos <span className={styles.optionalLabel}>(Optional)</span>
           </h3>
@@ -157,7 +157,7 @@ function RestaurantsModal({ isOpen, onClose, onSave, destinationName, editData =
             label="Additional Photos"
           />
 
-          {/* Contact - Required */}
+          {}
           <h3 className={styles.sectionTitle}>
             Contact <span className={styles.required}>*</span>
           </h3>

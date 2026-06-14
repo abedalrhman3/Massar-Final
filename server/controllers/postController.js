@@ -1,7 +1,7 @@
 const Post = require('../models/Post');
 const AppError = require('../utils/AppError');
 
-// GET /api/locations/:locationId/posts  — public
+
 exports.getByLocation = async (req, res, next) => {
   try {
     const posts = await Post.find({ location_id: req.params.locationId })
@@ -13,7 +13,7 @@ exports.getByLocation = async (req, res, next) => {
   }
 };
 
-// POST /api/locations/:locationId/posts  — private
+
 exports.create = async (req, res, next) => {
   try {
     const { uploadPhoto } = require('../services/uploadService');
@@ -23,7 +23,7 @@ exports.create = async (req, res, next) => {
 
     let imageUrl = req.body.image_url;
     if (req.file) {
-      // Run strict content safety moderation check
+      
       const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
       console.log(`[POST] Running global safety check for user: ${req.user.userId}`);
       const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);
@@ -46,7 +46,7 @@ exports.create = async (req, res, next) => {
 
     const populated = await post.populate('user_id', 'name username active_frame_slug');
 
-    // Gamification Engine: Award 50 XP for writing a review/comment
+    
     const xpReward = 50;
     const user = await User.findById(req.user.userId);
     let xpGained = 0;
@@ -83,7 +83,7 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// DELETE /api/posts/:id  — private (owner or admin)
+
 exports.remove = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);

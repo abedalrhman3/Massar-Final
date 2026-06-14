@@ -1,23 +1,23 @@
 import { useState } from "react";
 import styles from "./TabbedDetailPanel.module.css";
 
-// Helper to detect contact type from input
+
 const detectContactType = (value) => {
   const lower = value.toLowerCase().trim();
 
-  // Phone - starts with + or digits only
+  
   if (/^\+[\d\s\-()]+$/.test(lower) || /^[\d\s\-()]+$/.test(lower)) {
     return { type: "phone", display: value };
   }
 
-  // WhatsApp - contains whatsapp or starts with + with common patterns
+  
   if (lower.includes("wa.me") || lower.includes("whatsapp")) {
     return { type: "whatsapp", display: value };
   }
 
-  // Facebook - contains facebook.com
+  
   if (lower.includes("facebook.com") || lower.includes("fb.com")) {
-    // Extract username from URL
+    
     let username = value;
     const fbMatch = value.match(/(?:facebook\.com|fb\.com)\/([^/?]+)/i);
     if (fbMatch && fbMatch[1] && !fbMatch[1].includes("=")) {
@@ -26,21 +26,21 @@ const detectContactType = (value) => {
     return { type: "facebook", display: username };
   }
 
-  // Instagram - contains instagram.com
+  
   if (lower.includes("instagram.com")) {
     const igMatch = value.match(/instagram\.com\/([^/?]+)/i);
     const username = igMatch ? igMatch[1] : value;
     return { type: "instagram", display: username };
   }
 
-  // X/Twitter - contains x.com or twitter.com
+  
   if (lower.includes("x.com") || lower.includes("twitter.com")) {
     const xMatch = value.match(/(?:x\.com|twitter\.com)\/([^/?]+)/i);
     const username = xMatch ? xMatch[1] : value;
     return { type: "x", display: username };
   }
 
-  // Discord - contains discord
+  
   if (lower.includes("discord")) {
     let username = value;
     const discordMatch = value.match(/discord(?:app\.com)?(?:[\/]=)?\/([^/?]+)/i);
@@ -50,11 +50,11 @@ const detectContactType = (value) => {
     return { type: "discord", display: username };
   }
 
-  // Default to URL
+  
   return { type: "url", display: value };
 };
 
-// Format time from 24h to 12h AM/PM
+
 const formatTime = (timeStr) => {
   if (!timeStr) return "";
   const [hours, minutes] = timeStr.split(":");
@@ -64,7 +64,7 @@ const formatTime = (timeStr) => {
   return `${hour12}:${minutes || "00"} ${ampm}`;
 };
 
-// Placeholder reviews data
+
 const PLACEHOLDER_REVIEWS = [
   { id: 1, name: "Sarah M.", rating: 5, text: "Amazing experience! The views were breathtaking and the staff was incredibly friendly. Would definitely come back.", date: "2 weeks ago" },
   { id: 2, name: "John D.", rating: 4, text: "Great place to visit. A bit crowded on weekends but still worth it.", date: "1 month ago" },
@@ -73,7 +73,7 @@ const PLACEHOLDER_REVIEWS = [
   { id: 5, name: "Lisa K.", rating: 5, text: "One of the best places I've ever visited. Highly recommend!", date: "2 months ago" },
 ];
 
-// Placeholder review stats
+
 const PLACEHOLDER_STATS = {
   rating: 4.5,
   label: "Wonderful",

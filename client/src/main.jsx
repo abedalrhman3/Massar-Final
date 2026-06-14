@@ -25,7 +25,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from './context/AuthContext';
 import App from "./App.jsx";
 
-// FIXED: Added the .jsx extension so Vite knows exactly how to parse this file
+
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 
 createRoot(document.getElementById("root")).render(

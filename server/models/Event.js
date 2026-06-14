@@ -22,12 +22,12 @@ const eventSchema = new mongoose.Schema(
       type: Date,
       required: [true, 'Start date is required'],
     },
-    startTime: { type: String }, // e.g. "8:00 AM"
+    startTime: { type: String }, 
     endDate: {
       type: Date,
       required: [true, 'End date is required'],
     },
-    endTime: { type: String }, // e.g. "5:00 PM"
+    endTime: { type: String }, 
     startingFromPrice: { type: String },
     durationText: { type: String },
     bookingUrl: { type: String },
@@ -39,7 +39,7 @@ const eventSchema = new mongoose.Schema(
         default: 'Point',
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number], 
         default: undefined,
       },
     },

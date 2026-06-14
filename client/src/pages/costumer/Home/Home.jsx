@@ -4,17 +4,17 @@ import Navbar from "../../../components/Navbar/Navbar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
-// Heroes
+
 const deadSea = "images/homepage/dead-sea.jpeg";
 const petra = "images/homepage/petra.jpeg";
 const wadiRum = "images/homepage/wadi-rum.jpeg";
 
-// Destinations
+
 const wadiRumDest = "/images/destinationCard/wadi-rum.webp";
 const petraDest = "/images/destinationCard/Petra.jpg";
 const deadSeaDest = "/images/destinationCard/dead sea.webp";
 
-// Decor
+
 const route = "/images/homepage/route2.png";
 const guide = "/images/homepage/guide.png";
 const halfPhone = "/images/homepage/half-phone.PNG";
@@ -22,12 +22,12 @@ const phone = "/images/homepage/phone.png";
 const star = "/images/homepage/star.png";
 const phoneBackground = "/images/homepage/phonePlaceholder.png";
 
-// Adventure
+
 const nature = "/images/homepage/nature.jpg";
 const hobby = "/images/homepage/hobby.jpg";
 const culture = "/images/homepage/culture.jpg";
 
-// ─── Tutorial steps ───────────────────────────────────────────────────────────
+
 const TUTORIAL_STEPS = [
   {
     navId: "nav-destinations",
@@ -52,7 +52,7 @@ const TUTORIAL_STEPS = [
   },
 ];
 
-// ─── TutorialOverlay ──────────────────────────────────────────────────────────
+
 function TutorialOverlay({ onDone }) {
   const [cur, setCur] = useState(0);
   const [hlRect, setHlRect] = useState(null);
@@ -81,7 +81,7 @@ function TutorialOverlay({ onDone }) {
     else onDone();
   };
 
-  // Tooltip placement: below navbar items, left-of for chatbot
+  
   const tipStyle = hlRect
     ? step.circle
       ? {
@@ -114,7 +114,7 @@ function TutorialOverlay({ onDone }) {
 
   return (
     <>
-      {/* Dark overlay (click to dismiss) */}
+      {}
       <div
         onClick={onDone}
         style={{
@@ -125,10 +125,10 @@ function TutorialOverlay({ onDone }) {
         }}
       />
 
-      {/* Highlight ring */}
+      {}
       {hlRect && <div style={hlStyle} />}
 
-      {/* Tooltip */}
+      {}
       <div
         style={{
           ...tipStyle,
@@ -152,7 +152,7 @@ function TutorialOverlay({ onDone }) {
           {step.desc}
         </div>
 
-        {/* Footer: dots + buttons */}
+        {}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 5 }}>
             {TUTORIAL_STEPS.map((_, i) => (
@@ -195,7 +195,7 @@ function TutorialOverlay({ onDone }) {
   );
 }
 
-// ─── Home ─────────────────────────────────────────────────────────────────────
+
 function Home() {
   const navigate = useNavigate();
   const images = [deadSea, petra, wadiRum];
@@ -203,7 +203,7 @@ function Home() {
   const { user } = useAuth();
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Hero slideshow
+  
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % images.length);
@@ -211,10 +211,10 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Show tutorial on first login
+  
   useEffect(() => {
     if (user) {
-      const key = `massar_tutorial_seen_${user.uid}`; // or user.id depending on your auth
+      const key = `massar_tutorial_seen_${user.uid}`; 
       if (!localStorage.getItem(key)) {
         const t = setTimeout(() => setShowTutorial(true), 600);
         return () => clearTimeout(t);
@@ -223,7 +223,7 @@ function Home() {
   }, [user]);
 
   const handleTutorialDone = () => {
-    const key = `massar_tutorial_seen_${user.uid}`; // or user.id
+    const key = `massar_tutorial_seen_${user.uid}`; 
     localStorage.setItem(key, "true");
     setShowTutorial(false);
   };

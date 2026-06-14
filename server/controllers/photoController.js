@@ -5,10 +5,10 @@ const { uploadPhoto, deleteFromCloudinary } = require('../services/uploadService
 const AppError = require('../utils/AppError');
 const { getDistanceInMeters } = require('../utils/distance');
 
-// -------------------------------------------------------
-// POST /api/locations/:locationId/complete-task  — private
-// (unchanged — location check-ins don't use AI validation)
-// -------------------------------------------------------
+
+
+
+
 exports.completeTask = async (req, res, next) => {
   try {
     const { locationId } = req.params;
@@ -39,7 +39,7 @@ exports.completeTask = async (req, res, next) => {
     if (req.file) {
       const photoUrl = await uploadPhoto(req.file.buffer);
 
-      // Run strict content safety moderation check
+      
       const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
       console.log(`[PHOTO] Running global safety check for location: ${locationId}`);
       const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);
@@ -89,7 +89,7 @@ exports.completeTask = async (req, res, next) => {
   }
 };
 
-// GET /api/photos  — public (community photos feed)
+
 exports.getPublicPhotos = async (req, res, next) => {
   try {
     const photos = await Photo.find({ user_id: req.params.id })
@@ -102,7 +102,7 @@ exports.getPublicPhotos = async (req, res, next) => {
   }
 };
 
-// GET /api/users/:id/photos  — private
+
 exports.getUserPhotos = async (req, res, next) => {
   try {
     const photos = await Photo.find({ user_id: req.params.id }).populate('location_id');
@@ -112,7 +112,7 @@ exports.getUserPhotos = async (req, res, next) => {
   }
 };
 
-// PUT /api/photos/:id/privacy  — private (owner only)
+
 exports.togglePrivacy = async (req, res, next) => {
   try {
     const photo = await Photo.findById(req.params.id);
@@ -128,7 +128,7 @@ exports.togglePrivacy = async (req, res, next) => {
   }
 };
 
-// POST /api/photos/:id/report  — private (user manual report)
+
 exports.reportPhoto = async (req, res, next) => {
   try {
     const photo = await Photo.findByIdAndUpdate(
@@ -143,12 +143,12 @@ exports.reportPhoto = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// GET /api/admin/reported-photos  — admin
-// Returns both:
-//   • manually reported photos (is_reported: true)
-//   • AI-flagged photos pending review (status: 'pending_review')
-// -------------------------------------------------------
+
+
+
+
+
+
 exports.getReported = async (req, res, next) => {
   try {
     const photos = await Photo.find({
@@ -167,16 +167,16 @@ exports.getReported = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// PUT /api/admin/photos/:id/review  — admin
-//
-// Admin decision on a pending_review (AI-flagged) photo.
-//
-// body: { decision: 'approve' | 'reject' }
-//
-// approve → mark photo approved, complete the quest & award XP/badge
-// reject  → delete photo from Cloudinary + DB (optionally ban user separately)
-// -------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 exports.reviewPhoto = async (req, res, next) => {
   try {
     const User = require('../models/User');
@@ -194,7 +194,7 @@ exports.reviewPhoto = async (req, res, next) => {
       return next(new AppError('Photo is not flagged or reported', 400));
     }
 
-    // ── BAN: ban user and delete photo ───────────────────
+    
     if (decision === 'ban') {
       const UserSession = require('../models/UserSession');
 
@@ -220,7 +220,7 @@ exports.reviewPhoto = async (req, res, next) => {
       });
     }
 
-    // ── REJECT: mark status as rejected and save reason ─────
+    
     if (decision === 'reject') {
       const { reason, deletePhoto, banUser } = req.body;
 
@@ -274,29 +274,29 @@ exports.reviewPhoto = async (req, res, next) => {
       });
     }
 
-    // ── APPROVE: complete the quest for this user ────────
+    
     photo.status = 'approved';
-    photo.ai_appropriate = true; // admin overrides AI flag
+    photo.ai_appropriate = true; 
     photo.is_reported = false;
     await photo.save();
 
-    // Only award quest rewards if this photo is tied to a quest
+    
     if (photo.quest_id) {
       const user = await User.findById(photo.user_id);
       const quest = await Quest.findById(photo.quest_id);
 
       if (user && quest) {
-        // Guard: don't double-award if quest was somehow already completed
+        
         const alreadyCompleted = (user.completed_quests || [])
           .map(String)
           .includes(String(quest._id));
 
         if (!alreadyCompleted) {
-          // Award XP
+          
           const bonusXp = quest.bonus_xp || 0;
           user.total_xp += bonusXp;
 
-          // Recalculate level
+          
           const newTitle = getTitleForXP(user.total_xp);
           if (newTitle !== user.current_level) {
             user.current_level = newTitle;
@@ -305,7 +305,7 @@ exports.reviewPhoto = async (req, res, next) => {
             }
           }
 
-          // Award badge
+          
           if (quest.badge_url) {
             if (!user.earned_quest_badges) user.earned_quest_badges = [];
             const alreadyHasBadge = user.earned_quest_badges
@@ -320,7 +320,7 @@ exports.reviewPhoto = async (req, res, next) => {
             }
           }
 
-          // Mark quest completed
+          
           if (!user.joined_quests) user.joined_quests = [];
           if (!user.joined_quests.map(String).includes(String(quest._id))) {
             user.joined_quests.push(quest._id);
@@ -339,7 +339,7 @@ exports.reviewPhoto = async (req, res, next) => {
       }
     }
 
-    // Photo approved but no quest rewards to give (or quest already done)
+    
     return res.json({
       success: true,
       message: 'Photo approved.',
@@ -351,13 +351,13 @@ exports.reviewPhoto = async (req, res, next) => {
   }
 };
 
-// DELETE /api/admin/photos/:id  — admin (hard delete any photo)
+
 exports.remove = async (req, res, next) => {
   try {
     const photo = await Photo.findById(req.params.id);
     if (!photo) return next(new AppError('Photo not found', 404));
 
-    // Clean up from Cloudinary too
+    
     await deleteFromCloudinary(photo.photo_url).catch(err =>
       console.warn('[CLOUDINARY] Delete failed (continuing):', err.message)
     );
@@ -369,9 +369,9 @@ exports.remove = async (req, res, next) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 function getTitleForXP(xp) {
   if (xp >= 5000) return 'Legend';
   if (xp >= 2000) return 'Pathfinder';

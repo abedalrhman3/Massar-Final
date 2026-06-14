@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const contactMethodSchema = new mongoose.Schema(
   {
-    type:  { type: String }, // e.g. "phone", "whatsapp", "facebook", "instagram", "x", "email"
-    value: { type: String }, // the actual number/handle/URL
+    type:  { type: String }, 
+    value: { type: String }, 
   },
   { _id: false }
 );

@@ -12,13 +12,13 @@ function AdminTopBar({ placeholder, user }) {
     return stored === "true";
   });
 
-  // Load user profile from localStorage
+  
   const [profileData, setProfileData] = useState(() => {
     const stored = localStorage.getItem(USER_PROFILE_KEY);
     return stored ? JSON.parse(stored) : null;
   });
 
-  // Update profile data when localStorage changes
+  
   useEffect(() => {
     const handleStorageChange = () => {
       const stored = localStorage.getItem(USER_PROFILE_KEY);
@@ -30,7 +30,7 @@ function AdminTopBar({ placeholder, user }) {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Listen for custom profile update event
+  
   useEffect(() => {
     const handleProfileUpdate = () => {
       const stored = localStorage.getItem(USER_PROFILE_KEY);
@@ -42,7 +42,7 @@ function AdminTopBar({ placeholder, user }) {
     return () => window.removeEventListener("massar-profile-updated", handleProfileUpdate);
   }, []);
 
-  // Update notification read state when marked as read
+  
   useEffect(() => {
     const handleNotificationStateChange = () => {
       const stored = localStorage.getItem("massar_notifications_read");

@@ -7,7 +7,7 @@ import { useApi } from "@/hooks/useApi";
 
 
 
-// ── Tooltip helper ────────────────────────────────────────────────
+
 function Tooltip({ text }) {
     return (
         <span className={styles.tooltipWrapper}>
@@ -17,7 +17,7 @@ function Tooltip({ text }) {
     );
 }
 
-// ── Destination grid section ──────────────────────────────────────
+
 const PAGE_SIZE = 8;
 
 function Section({ title, destinations, showTooltip, tooltipText, loading, isSearch, onLikeToggle }) {
@@ -120,7 +120,7 @@ function Tours() {
 
     return (
         <>
-            {/* ── Hero / Search Banner ── */}
+            {}
             <div className={styles.heroWrapper}>
                 <div className={styles.toursHero}>
                     <span className={styles.heroEyebrow}>Discover Jordan</span>
@@ -135,7 +135,7 @@ function Tours() {
 
             <div className={styles.toursPage}>
                 {isSearching ? (
-                    /* Search results — single flat list */
+                    
                     <div className={styles.searchWrapper}>
                         <Section
                             title={`Search results for "${query}"`}
@@ -149,7 +149,7 @@ function Tours() {
                         </div>
                     </div>
                 ) : (
-                    /* Default categorised sections */
+                    
                     <>
                         <Section title="Top Destinations" destinations={byRating.slice(0, 10)} loading={loading} onLikeToggle={handleLikeToggle} />
                         <Section title="Trending" destinations={byLikes.slice(0, 10)} loading={loading} onLikeToggle={handleLikeToggle} />

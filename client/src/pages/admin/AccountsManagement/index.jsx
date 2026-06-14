@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./AccountsManagement.module.css";
 import { getAllUsers, toggleBanUser, deleteUser } from "@/api/auth";
 
-// ─── Toast system (self-contained) ───────────────────────────────────────────
+
 
 const TOAST_ICONS = {
   success: "check_circle",
@@ -132,7 +132,7 @@ function useToast() {
   return { toasts, removeToast, toast };
 }
 
-// ─── Field mapping helpers ────────────────────────────────────────────────────
+
 
 function normalizeUser(user) {
   return {
@@ -157,7 +157,7 @@ function deriveStats(users) {
   );
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+
 
 function SearchInput({ value, onChange, placeholder }) {
   return (
@@ -219,7 +219,7 @@ function useAnimatedNumber(targetValue, duration = 400) {
   return displayValue;
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+
 
 function AccountsManagement() {
   const navigate = useNavigate();
@@ -288,7 +288,7 @@ function AccountsManagement() {
     return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  // ── Filtering ─────────────────────────────────────────────────────────────
+  
 
   const filteredAccounts = useMemo(() => {
     return accounts.filter((acc) => {
@@ -308,7 +308,7 @@ function AccountsManagement() {
 
   const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage);
 
-  // ── Reported accounts ─────────────────────────────────────────────────────
+  
 
   const [reportedSearchInput, setReportedSearchInput] = useState("");
   const [debouncedReportedSearch, setDebouncedReportedSearch] = useState("");
@@ -342,7 +342,7 @@ function AccountsManagement() {
     setLastIncidentTimes(reportedAccounts.map((rep) => formatRelativeTime(rep.last_incident)));
   }, [reportedAccounts]);
 
-  // ── Action handlers ───────────────────────────────────────────────────────
+  
 
   const handleBan = (account) => {
     setBanDialog({ open: true, account, reason: "" });
@@ -429,7 +429,7 @@ function AccountsManagement() {
   const handleOpenAppealsQueue = () => toast.info("Appeals Queue: 14 pending review.");
   const handleOpenModeratorChat = () => navigate("/admin/chat");
 
-  // ── Outside click closes action menu ─────────────────────────────────────
+  
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
@@ -446,7 +446,7 @@ function AccountsManagement() {
     }
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  
 
   if (loading) {
     return <div className={styles.page}><div className={styles.loading}>Loading accounts...</div></div>;
@@ -476,13 +476,13 @@ function AccountsManagement() {
             <p className={styles.statLabel}>Active Accounts</p>
           </div>
         </div>
-        {/* <div className={styles.statCard}>
-          <span className="material-symbols-outlined" style={{ color: "#dc2626", fontSize: "2rem" }}>report</span>
-          <div>
-            <p className={styles.statVal}>{animatedReported}</p>
-            <p className={styles.statLabel}>Pending Reports</p>
-          </div>
-        </div> */}
+        {
+
+
+
+
+
+}
         <div className={styles.statCard}>
           <span className="material-symbols-outlined" style={{ color: "#dc2626", fontSize: "2rem" }}>block</span>
           <div>
@@ -490,13 +490,13 @@ function AccountsManagement() {
             <p className={styles.statLabel}>Banned Accounts</p>
           </div>
         </div>
-        {/* <div className={styles.statCard}>
-          <span className="material-symbols-outlined" style={{ color: "#f59e0b", fontSize: "2rem" }}>pause_circle</span>
-          <div>
-            <p className={styles.statVal}>{animatedSuspended}</p>
-            <p className={styles.statLabel}>Suspended Accounts</p>
-          </div>
-        </div> */}
+        {
+
+
+
+
+
+}
       </div>
 
       <div className={styles.section} ref={accountsSectionRef}>
@@ -588,7 +588,7 @@ function AccountsManagement() {
                         <div className={styles.actionMenu}>
                           {acc.status === "active" && (
                             <>
-                              {/* <button onClick={() => handleSuspend(acc)}>Suspend Account</button> */}
+                              {}
                               <button onClick={() => handleBan(acc)} className={styles.destructive}>Ban Account</button>
                             </>
                           )}
@@ -717,7 +717,7 @@ function AccountsManagement() {
         </div>
       </div>
 
-      {/* ── Ban dialog ── */}
+      {}
       {banDialog.open && (
         <div className={styles.dialogBackdrop} onClick={() => setBanDialog({ open: false, account: null, reason: "" })}>
           <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
@@ -771,7 +771,7 @@ function AccountsManagement() {
         </div>
       )}
 
-      {/* ── Remove user dialog ── */}
+      {}
       {removeDialog.open && (
         <div className={styles.dialogBackdrop} onClick={() => setRemoveDialog({ open: false, account: null })}>
           <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
@@ -793,7 +793,7 @@ function AccountsManagement() {
         </div>
       )}
 
-      {/* ── Toast notifications ── */}
+      {}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );

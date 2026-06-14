@@ -9,7 +9,7 @@ const TABS = [
     { key: "hotels", label: "Hotels", Icon: Building2 },
 ];
 
-// API expects singular entity type
+
 const ENTITY_TYPE = {
     places: "place",
     restaurants: "restaurant",
@@ -21,7 +21,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
     const [activeTab, setActiveTab] = useState("places");
     const [savingMap, setSavingMap] = useState({});
 
-    // Seed savedMap from incoming data (items already carry savedId from the server)
+    
     const [savedMap, setSavedMap] = useState(() => {
         const map = {};
         Object.entries(data).forEach(([tab, items]) => {
@@ -32,7 +32,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
         return map;
     });
 
-    // Re-seed if data prop changes (e.g. after a fetch)
+    
     useEffect(() => {
         const map = {};
         Object.entries(data).forEach(([tab, items]) => {
@@ -70,7 +70,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
     return (
         <div className={`${styles.panel} ${expanded ? styles.expanded : styles.collapsed}`}>
 
-            {/* Header */}
+            {}
             <div
                 className={styles.header}
                 onClick={() => onToggle?.()}
@@ -91,11 +91,11 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
                 </button>
             </div>
 
-            {/* Body */}
+            {}
             {expanded && (
                 <div className={styles.body}>
 
-                    {/* Tabs */}
+                    {}
                     <div className={styles.tabsBar} role="tablist">
                         {TABS.map(({ key, label, Icon }) => (
                             <button
@@ -111,7 +111,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
                         ))}
                     </div>
 
-                    {/* Card list */}
+                    {}
                     <div className={styles.cardList}>
                         {loading ? (
                             <p className={styles.empty}>Loading...</p>
@@ -126,7 +126,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
                                 return (
                                     <div key={key} className={styles.card}>
 
-                                        {/* Left: number + text info */}
+                                        {}
                                         <div className={styles.cardLeft}>
                                             <div className={styles.cardNum}>{i + 1}</div>
                                             <div className={styles.cardInfo}>
@@ -138,7 +138,7 @@ const LeftPanel = ({ destination, data = {}, isExpanded, onToggle, loading }) =>
                                             </div>
                                         </div>
 
-                                        {/* Right: save button + image */}
+                                        {}
                                         <div className={styles.cardRight}>
                                             <button
                                                 className={`${styles.saveBtn} ${saved ? styles.saveBtnSaved : ""}`}

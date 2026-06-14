@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home/Home";
 import AboutPage from "../pages/About/About";
-//import ToursPage from "../pages/Tours/Tours";
+
 import MapPage from "../pages/Map/Map";
 
 function AppRoutes() {

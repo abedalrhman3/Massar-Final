@@ -20,9 +20,9 @@ const userSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// TTL index — MongoDB auto-deletes expired sessions
+
 
 userSessionSchema.index({ userId: 1 });
-userSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // auto-delete expired sessions
+userSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); 
 
 module.exports = mongoose.model('UserSession', userSessionSchema);

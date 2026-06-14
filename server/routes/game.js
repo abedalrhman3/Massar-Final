@@ -10,7 +10,7 @@ router.get('/leaderboard',          getLeaderboard);
 router.get('/users/:id/profile',    getProfile);
 router.post('/user/update-frame',   protect, updateFrame);
 
-// Admin
+
 router.post('/admin/upload-asset',  protect, adminOnly, upload.single('asset'), uploadAsset);
 
 module.exports = router;

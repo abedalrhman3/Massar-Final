@@ -10,8 +10,8 @@ const modelMap = {
   destination: () => require('../models/Destination'),
 };
 
-// GET /api/saved  — private
-// Returns saved items with full entity details populated
+
+
 exports.getAll = async (req, res, next) => {
   try {
     const items = await SavedItem.find({ userId: req.user.userId });
@@ -24,7 +24,7 @@ exports.getAll = async (req, res, next) => {
           const entity = await Model.findById(item.entityId).lean();
           if (!entity) return null;
           return {
-            _id: item._id,           // savedId — used for DELETE
+            _id: item._id,           
             entityType: item.entityType,
             savedAt: item.savedAt,
             entity,
@@ -37,14 +37,14 @@ exports.getAll = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: populated.filter(Boolean), // drop any that failed to fetch
+      data: populated.filter(Boolean), 
     });
   } catch (err) {
     next(err);
   }
 };
 
-// POST /api/saved  — private
+
 exports.save = async (req, res, next) => {
   try {
     const { entityType, entityId } = req.body;
@@ -70,7 +70,7 @@ exports.save = async (req, res, next) => {
   }
 };
 
-// DELETE /api/saved/:id  — private
+
 exports.remove = async (req, res, next) => {
   try {
     const item = await SavedItem.findOneAndDelete({

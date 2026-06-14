@@ -2,7 +2,7 @@ const Achievement = require('../models/Achievement');
 const UserAchievement = require('../models/UserAchievement');
 const AppError = require('../utils/AppError');
 
-// GET /api/achievements  — public
+
 exports.getAll = async (req, res, next) => {
   try {
     const achievements = await Achievement.find();
@@ -12,7 +12,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// GET /api/achievements/me  — private
+
 exports.getMyAchievements = async (req, res, next) => {
   try {
     const userAchievements = await UserAchievement.find({ userId: req.user.userId })
@@ -23,7 +23,7 @@ exports.getMyAchievements = async (req, res, next) => {
   }
 };
 
-// POST /api/achievements  — admin
+
 exports.create = async (req, res, next) => {
   try {
     const achievement = await Achievement.create(req.body);

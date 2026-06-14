@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  // Mongoose validation error → always 400
+  
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       success: false,
@@ -7,7 +7,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Mongoose duplicate key error → 400
+  
   if (err.code === 11000) {
     return res.status(400).json({
       success: false,
@@ -15,7 +15,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Mongoose bad ObjectId → 400
+  
   if (err.name === 'CastError') {
     return res.status(400).json({
       success: false,

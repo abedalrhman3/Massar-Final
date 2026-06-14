@@ -135,7 +135,7 @@ function AdminSidebar(params) {
         </div>
       </aside>
 
-      {/* Logout Confirmation Modal */}
+      {}
       {showLogoutModal && (
         <div className={styles.modalOverlay} onClick={() => setShowLogoutModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>

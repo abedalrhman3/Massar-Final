@@ -2,7 +2,7 @@ const Location = require('../models/Location');
 const Setting = require('../models/Setting');
 const AppError = require('../utils/AppError');
 
-// GET /api/locations?budgetCategory=Low  — public
+
 exports.getAll = async (req, res, next) => {
   try {
     let query = {};
@@ -22,17 +22,17 @@ exports.getAll = async (req, res, next) => {
         query = { average_cost: { $gt: midMax } };
       }
     } else if (req.query.budget) {
-      // Legacy support for direct budget value
+      
       query = { average_cost: { $lte: Number(req.query.budget) } };
     }
 
     const locations = await Location.find(query).populate('badge_id');
 
-    // All locations are returned regardless of quest membership.
-    // Rationale: quest-linked locations must be VISIBLE so users can discover quests
-    // and click the Join button in the QuestPanel. Hiding them creates an unbreakable
-    // deadlock (can't see location → can't join quest → location stays hidden forever).
-    // The join gate lives in the check-in / completeTask endpoint, which is the right place.
+    
+    
+    
+    
+    
     res.json(locations);
   } catch (err) {
     next(err);
@@ -40,7 +40,7 @@ exports.getAll = async (req, res, next) => {
 };
 
 
-// GET /api/admin/settings/budget  — admin (direct return of ranges)
+
 exports.getBudgetSettings = async (req, res, next) => {
   try {
     let setting = await Setting.findOne();
@@ -53,7 +53,7 @@ exports.getBudgetSettings = async (req, res, next) => {
   }
 };
 
-// POST /api/admin/settings/budget  — admin
+
 exports.updateBudgetSettings = async (req, res, next) => {
   try {
     let setting = await Setting.findOne();
@@ -70,7 +70,7 @@ exports.updateBudgetSettings = async (req, res, next) => {
   }
 };
 
-// GET /api/locations/:id  — public
+
 exports.getOne = async (req, res, next) => {
   try {
     const location = await Location.findById(req.params.id).populate('badge_id');
@@ -81,7 +81,7 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-// POST /api/locations  — admin
+
 exports.create = async (req, res, next) => {
   try {
     const location = await Location.create(req.body);
@@ -91,7 +91,7 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// PUT /api/locations/:id  — admin
+
 exports.update = async (req, res, next) => {
   try {
     const location = await Location.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -102,7 +102,7 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// DELETE /api/locations/:id  — admin
+
 exports.remove = async (req, res, next) => {
   try {
     const location = await Location.findByIdAndDelete(req.params.id);

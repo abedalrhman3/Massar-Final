@@ -7,22 +7,22 @@ import { saveItem, removeSavedItem } from "@/api/index";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 
-//Icons
+
 import { Share2, Heart, MessageSquareMore, MapPin, Clock, Calendar, CircleDollarSign, ArrowUp, ArrowLeft, Map } from "lucide-react";
 
 
-// how many cards to show before "show more"
+
 const INITIAL_SHOW = 3
 
 const LeftPanel = ({ data, onCardClick, onShareClick }) => {
     const navigate = useNavigate()
     const location = useLocation()
 
-    // ── Scroll to section when navigated from SaveList ────────────
+    
     useEffect(() => {
         const anchor = location.state?.scrollTo;
         if (!anchor) return;
-        // Wait for panel to render, then scroll
+        
         const timer = setTimeout(() => {
             const panel = leftPanelRef.current;
             const target = document.getElementById(anchor);
@@ -34,9 +34,9 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
         return () => clearTimeout(timer);
     }, [location.state]);
 
-    // ── Save state for the destination itself ──────────────────────
-    // data.savedId can be pre-populated by the parent if the destination
-    // is already saved (e.g. from the listing page). Falls back to null.
+    
+    
+    
     const [savedId, setSavedId] = useState(data.savedId ?? null);
     const [saving, setSaving] = useState(false);
 
@@ -61,7 +61,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
         }
     };
 
-    // ── Show more state for each card section ─────────────────────
+    
     const [showAllPlaces, setShowAllPlaces] = useState(false)
     const [showAllRestaurants, setShowAllRestaurants] = useState(false)
     const [showAllDishes, setshowAllDishes] = useState(false)
@@ -69,7 +69,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
     const [showAllEvents, setShowAllEvents] = useState(false)
     const [isLiked, setIsLiked] = useState(data.isLiked ?? false)
 
-    // Sync savedId and isLiked when destination changes
+    
     useEffect(() => {
         setIsLiked(data.isLiked ?? false);
         setSavedId(data.savedId ?? null);
@@ -86,7 +86,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
             }
         } catch (err) {
             console.error("Failed to toggle like:", err);
-            setIsLiked(isLiked); // Rollback
+            setIsLiked(isLiked); 
             if (err.response?.status === 401) {
                 alert("Please log in to like this destination.");
             }
@@ -128,7 +128,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                 ref={leftPanelRef}
             >
 
-                {/* ── HERO ── */}
+                {}
                 <div className={styles.hero}>
                     <img src={data.imageURL} alt={data.name} className={styles["hero-img"]} />
                     <div className={styles["hero-overlay"]} />
@@ -167,10 +167,10 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                     </div>
                 </div>
 
-                {/* ── SECTIONS ── */}
+                {}
                 <div className={styles["sections-container"]}>
 
-                    {/* ── OVERVIEW ── */}
+                    {}
                     <section className={styles.section}>
                         <h2 className={styles["section-title"]}>
                             {sections.overview.title}
@@ -186,7 +186,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </div>
                     </section>
 
-                    {/* ── ACTIVITIES ── */}
+                    {}
                     <section className={styles.section}>
                         <h2 className={styles["section-title"]}>
                             {sections.activities.title}
@@ -198,7 +198,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </ul>
                     </section>
 
-                    {/* ── TRAVEL GUIDE ── */}
+                    {}
                     <section className={styles.section}>
                         <h2 className={styles["section-title"]}>
                             {sections.travelGuide.subTitle}
@@ -358,7 +358,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                         </>
                     </section>
 
-                    {/* ── COMMENTS ── */}
+                    {}
                     <CommentSection
                         placeId={data.id}
                         ref={commentSectionRef}
@@ -377,7 +377,7 @@ const LeftPanel = ({ data, onCardClick, onShareClick }) => {
                 <ArrowLeft size={24} />
             </button>
 
-            {/* ── SAVE DESTINATION BUTTON ── */}
+            {}
             <button
                 className={styles.saveDestBtn}
                 onClick={handleSave}

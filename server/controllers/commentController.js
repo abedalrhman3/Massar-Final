@@ -67,7 +67,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// POST /api/comments  — private
+
 exports.create = async (req, res, next) => {
   try {
     const { placeId, text, parentId } = req.body;
@@ -92,7 +92,7 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// POST /api/comments/:id/like  — private
+
 exports.toggleLike = async (req, res, next) => {
   try {
     const comment = await Comment.findById(req.params.id);
@@ -124,7 +124,7 @@ exports.toggleLike = async (req, res, next) => {
   }
 };
 
-// POST /api/comments/:id/dislike  — private
+
 exports.toggleDislike = async (req, res, next) => {
   try {
     const comment = await Comment.findById(req.params.id);
@@ -156,7 +156,7 @@ exports.toggleDislike = async (req, res, next) => {
   }
 };
 
-// PATCH /api/comments/:id  — private
+
 exports.update = async (req, res, next) => {
   try {
     const { text } = req.body;
@@ -177,7 +177,7 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// DELETE /api/comments/:id  — private
+
 exports.remove = async (req, res, next) => {
   try {
     const comment = await Comment.findOne({ _id: req.params.id, userId: req.user.userId });

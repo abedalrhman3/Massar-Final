@@ -1,6 +1,6 @@
 const Badge = require('../models/Badge');
 
-// GET /api/badges
+
 exports.getAllBadges = async (req, res) => {
     try {
         const badges = await Badge.find().populate('location_id', 'name name_en');
@@ -10,7 +10,7 @@ exports.getAllBadges = async (req, res) => {
     }
 };
 
-// GET /api/badges/:id
+
 exports.getBadge = async (req, res) => {
     try {
         const badge = await Badge.findById(req.params.id).populate('location_id', 'name name_en');
@@ -23,7 +23,7 @@ exports.getBadge = async (req, res) => {
     }
 };
 
-// POST /api/badges
+
 exports.createBadge = async (req, res) => {
     try {
         const { title, title_en, icon_url, is_rare, location_id } = req.body;
@@ -42,7 +42,7 @@ exports.createBadge = async (req, res) => {
     }
 };
 
-// PUT /api/badges/:id
+
 exports.updateBadge = async (req, res) => {
     try {
         const { title, title_en, icon_url, is_rare, location_id } = req.body;
@@ -68,7 +68,7 @@ exports.updateBadge = async (req, res) => {
     }
 };
 
-// DELETE /api/badges/:id
+
 exports.deleteBadge = async (req, res) => {
     try {
         const badge = await Badge.findByIdAndDelete(req.params.id);

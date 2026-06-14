@@ -1,7 +1,7 @@
 const Quest = require('../models/Quest');
 const AppError = require('../utils/AppError');
 
-// GET /api/quests  — public
+
 exports.getAll = async (req, res, next) => {
   try {
     const quests = await Quest.find().populate('locations');
@@ -41,7 +41,7 @@ exports.getLocationQuests = async (req, res, next) => {
   }
 };
 
-// GET /api/quests/:id  — public
+
 exports.getOne = async (req, res, next) => {
   try {
     const quest = await Quest.findById(req.params.id).populate('locations');
@@ -52,7 +52,7 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-// POST /api/quests  — admin
+
 exports.create = async (req, res, next) => {
   try {
     const { generateAiRequirement } = require('../services/validateQuestPhotoService');
@@ -87,7 +87,7 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// DELETE /api/quests/:id  — admin
+
 exports.remove = async (req, res, next) => {
   try {
     const quest = await Quest.findByIdAndDelete(req.params.id);
@@ -98,25 +98,25 @@ exports.remove = async (req, res, next) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/quests/:id/join  — private
-//
-// SCENARIO 1 — AI flags photo as inappropriate:
-//   • Photo saved to gallery with status: 'pending_review', ai_appropriate: false
-//   • ⚠️ Warning shown to user: photo is under review, quest not completed
-//   • Admin sees it in reported photos panel
-//   • Admin decision (approve/reject) handled in photoController.reviewPhoto
-//
-// SCENARIO 2 — AI approves photo AND it fulfills the quest:
-//   • Photo saved with status: 'approved'
-//   • XP, level, and badge awarded immediately
-//   • Quest marked completed
-//
-// SCENARIO 3 — AI approves photo but it does NOT fulfill the quest:
-//   • Photo saved with status: 'rejected' (kept in gallery so user sees reason)
-//   • Reason returned to frontend to show the user
-//   • Quest NOT completed — user can try again
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 exports.joinQuest = async (req, res, next) => {
   try {
     const User = require('../models/User');
@@ -127,14 +127,14 @@ exports.joinQuest = async (req, res, next) => {
     const userId = req.user.userId;
     const questId = req.params.id;
 
-    // ── Load quest & user ────────────────────────────────
+    
     const quest = await Quest.findById(questId);
     if (!quest) return next(new AppError('Quest not found', 404));
 
     const user = await User.findById(userId);
     if (!user) return next(new AppError('User not found', 404));
 
-    // ── Idempotency guard ────────────────────────────────
+    
     if (!user.completed_quests) user.completed_quests = [];
     const alreadyCompleted = user.completed_quests
       .map(String)
@@ -145,17 +145,17 @@ exports.joinQuest = async (req, res, next) => {
       return res.json({ success: true, message: 'Quest already completed', user: updatedUser });
     }
 
-    // ── Photo is required for quest submission ───────────
+    
     if (!req.file) {
       return next(new AppError('A photo is required to complete a quest.', 400));
     }
 
-    // ── Step 1: Upload to Cloudinary (always, regardless of AI result) ───────
-    // We save the photo in all 3 scenarios so it appears in the user's gallery.
+    
+    
     const photoUrl = await uploadPhoto(req.file.buffer);
 
-    // ── Step 2: AI validation ────────────────────────────
-    // 1. Run strict global safety check first
+    
+    
     const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
     console.log(`[QUEST] Running global safety check for quest: ${questId}`);
     const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);
@@ -173,7 +173,7 @@ exports.joinQuest = async (req, res, next) => {
         is_reported: true,
       });
 
-      // SCENARIO 1 (both places) — after creating photoRecord
+      
       return res.status(200).json({
         success: false,
         scenario: 'inappropriate',
@@ -183,7 +183,7 @@ exports.joinQuest = async (req, res, next) => {
       });
     }
 
-    // 2. Safely generate requirement on-the-fly if missing
+    
     let requirement = quest.ai_requirement;
     if (!requirement) {
       console.log(`[QUEST] Quest ${questId} has no ai_requirement. Generating one on-the-fly...`);
@@ -218,7 +218,7 @@ exports.joinQuest = async (req, res, next) => {
         ai_fulfills_quest: false,
         ai_reason: aiResult.reason,
         status: 'pending_review',
-        is_reported: true, // surfaces in existing getReported admin endpoint
+        is_reported: true, 
       });
 
       return res.status(200).json({
@@ -229,7 +229,7 @@ exports.joinQuest = async (req, res, next) => {
       });
     }
 
-    // ── SCENARIO 3: Appropriate but doesn't fulfill quest ──
+    
     if (!aiResult.fulfills_quest) {
       const photoRecord = await Photo.create({
         user_id: userId,
@@ -250,7 +250,7 @@ exports.joinQuest = async (req, res, next) => {
       });
     }
 
-    // ── SCENARIO 2: Appropriate AND fulfills quest ───────
+    
     const photoRecord = await Photo.create({
       user_id: userId,
       quest_id: questId,
@@ -263,11 +263,11 @@ exports.joinQuest = async (req, res, next) => {
 
     user.uploaded_photos = (user.uploaded_photos ?? 0) + 1;
 
-    // Award XP
+    
     const bonusXp = quest.bonus_xp || 0;
     user.total_xp += bonusXp;
 
-    // Recalculate level
+    
     const newTitle = getTitleForXP(user.total_xp);
     if (newTitle !== user.current_level) {
       user.current_level = newTitle;
@@ -276,7 +276,7 @@ exports.joinQuest = async (req, res, next) => {
       }
     }
 
-    // Award quest badge
+    
     if (quest.badge_url) {
       if (!user.earned_quest_badges) user.earned_quest_badges = [];
       const alreadyHasBadge = user.earned_quest_badges
@@ -291,7 +291,7 @@ exports.joinQuest = async (req, res, next) => {
       }
     }
 
-    // Mark quest joined + completed
+    
     if (!user.joined_quests) user.joined_quests = [];
     if (!user.joined_quests.map(String).includes(String(questId))) {
       user.joined_quests.push(questId);
@@ -318,9 +318,9 @@ exports.joinQuest = async (req, res, next) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: XP → title (mirrors the logic already in your codebase)
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 function getTitleForXP(xp) {
   if (xp >= 5000) return 'Legend';
   if (xp >= 2000) return 'Pathfinder';

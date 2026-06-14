@@ -11,7 +11,7 @@ function AppWrapper() {
   const location = useLocation();
   const [isActive, setIsActive] = useState(false);
 
-  // Automatically activate register form if route is /register
+  
   useEffect(() => {
     if (location.pathname === "/register") {
       setIsActive(true);
@@ -20,7 +20,7 @@ function AppWrapper() {
     }
   }, [location.pathname]);
 
-  // Store all input values
+  
   const [loginFields, setLoginFields] = useState({
     email: "",
     password: "",

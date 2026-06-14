@@ -17,7 +17,7 @@ function Settings() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [saved, setSaved] = useState(false);
 
-  // Update tab when URL changes
+  
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam && tabs.includes(tabParam)) {
@@ -47,7 +47,7 @@ function Settings() {
         )}
       </div>
 
-      {/* Tabs */}
+      {}
       <div className={styles.tabs}>
         {tabs.map((tab) => (
           <button
@@ -60,7 +60,7 @@ function Settings() {
         ))}
       </div>
 
-      {/* Content */}
+      {}
       <div className={styles.content}>
         {activeTab === "General" && <GeneralTab onSave={handleSave} />}
         {activeTab === "Security" && <SecurityTab onSave={handleSave} />}
@@ -77,7 +77,7 @@ function Settings() {
   );
 }
 
-/* --- General Tab --- */
+
 function GeneralTab({ onSave }) {
   return (
     <div className={styles.tabContent}>
@@ -129,7 +129,7 @@ function GeneralTab({ onSave }) {
   );
 }
 
-/* --- Security Tab --- */
+
 function SecurityTab({ onSave }) {
   return (
     <div className={styles.tabContent}>
@@ -186,7 +186,7 @@ function SecurityTab({ onSave }) {
   );
 }
 
-/* --- Permissions Tab (Admin-only) --- */
+
 function PermissionsTab({ onSave }) {
   const roles = [
     {
@@ -300,7 +300,7 @@ function PermissionsTab({ onSave }) {
   );
 }
 
-/* --- System Tab (Admin-only) --- */
+
 function SystemTab({ onSave }) {
   return (
     <div className={styles.tabContent}>
@@ -350,7 +350,7 @@ function SystemTab({ onSave }) {
   );
 }
 
-/* --- Notifications Tab --- */
+
 function NotificationsTab({ onSave }) {
   return (
     <div className={styles.tabContent}>
@@ -414,7 +414,7 @@ function NotificationsTab({ onSave }) {
   );
 }
 
-/* --- Subscription Tab --- */
+
 function SubscriptionTab({ onSave }) {
   const plans = [
     {
@@ -521,7 +521,7 @@ function SubscriptionTab({ onSave }) {
   );
 }
 
-/* --- Helpers --- */
+
 function Section({ title, children }) {
   return (
     <div className={styles.section}>

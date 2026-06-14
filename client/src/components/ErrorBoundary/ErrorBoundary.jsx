@@ -2,15 +2,15 @@ import { Component } from "react";
 import "./ErrorBoundary.css";
 
 
-/**
- * ErrorBoundary
- *
- * Props:
- *  - message  {string}    — custom error message shown in the fallback
- *  - size     {string}    — "small" renders the skeleton error card instead of the full-page fallback
- *  - fallback {function}  — (error, reset) => JSX — fully custom fallback, overrides everything
- *  - children {ReactNode}
- */
+
+
+
+
+
+
+
+
+
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -22,7 +22,7 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    // Replace with your logging service (e.g. Sentry) when ready
+    
     console.error("ErrorBoundary caught:", error, info.componentStack);
   }
 
@@ -32,12 +32,12 @@ class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      // 1. Fully custom fallback
+      
       if (this.props.fallback) {
         return this.props.fallback(this.state.error, this.handleReset);
       }
 
-      // 2. Small / card-level fallback — uses a simple fallback card
+      
       if (this.props.size === "small") {
         return (
           <div className="eb-small-error" style={{ padding: "12px", border: "1px solid red", borderRadius: "8px", background: "#fff5f5", color: "#c92a2a" }}>
@@ -48,7 +48,7 @@ class ErrorBoundary extends Component {
         );
       }
 
-      // 3. Default — full-page fallback card
+      
       return (
         <div className="eb-wrapper">
           <div className="eb-card">

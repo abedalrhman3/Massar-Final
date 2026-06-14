@@ -11,7 +11,7 @@ import { getDestination } from "@/api/destination";
 import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 import { getEvents, createEvent, updateEvent, deleteEvent } from "@/api/events";
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+
 
 const formatTime = (timeStr) => {
   if (!timeStr) return "";
@@ -22,7 +22,7 @@ const formatTime = (timeStr) => {
   return `${hour12}:${minutes || "00"} ${ampm}`;
 };
 
-// Convert base64 string to File object for FormData upload
+
 const base64ToFile = (base64, filename = "image.jpg") => {
   if (!base64 || typeof base64 !== "string" || !base64.startsWith("data:")) return null;
   const [header, data] = base64.split(",");
@@ -33,7 +33,7 @@ const base64ToFile = (base64, filename = "image.jpg") => {
   return new File([array], filename, { type: mime });
 };
 
-// Build FormData for listings (places, hotels, restaurants)
+
 const buildListingFormData = (formData, destinationId) => {
   const fd = new FormData();
   fd.append("name", formData.name);
@@ -46,19 +46,19 @@ const buildListingFormData = (formData, destinationId) => {
   if (formData.workingDays) fd.append("workingDays", JSON.stringify(formData.workingDays));
   if (formData.bookingLink) fd.append("bookingUrl", formData.bookingLink);
 
-  // Parse contact array to contact object
+  
   const contactObj = {
     methods: (formData.contacts || []).filter(c => c.value).map(c => ({ type: c.type, value: c.value }))
   };
   fd.append("contact", JSON.stringify(contactObj));
 
-  // coordinates → location JSON
+  
   if (formData.coordinates) {
     const [lat, lng] = formData.coordinates.split(",").map(Number);
     fd.append("location", JSON.stringify({ type: "Point", coordinates: [lng, lat] }));
   }
 
-  // cover image — handle both File and base64
+  
   if (formData.image) {
     if (formData.image instanceof File) {
       fd.append("coverImage", formData.image);
@@ -68,7 +68,7 @@ const buildListingFormData = (formData, destinationId) => {
     }
   }
 
-  // additional photos
+  
   if (formData.photos?.length) {
     formData.photos.forEach((photo, i) => {
       if (photo instanceof File) {
@@ -83,7 +83,7 @@ const buildListingFormData = (formData, destinationId) => {
   return fd;
 };
 
-// Build FormData for events
+
 const buildEventFormData = (formData, destinationId) => {
   const fd = new FormData();
   fd.append("name", formData.name);
@@ -97,13 +97,13 @@ const buildEventFormData = (formData, destinationId) => {
     if (formData.startingFromPrice) fd.append("startingFromPrice", formData.startingFromPrice);
     if (formData.durationText) fd.append("durationText", formData.durationText);
 
-  // Parse contact array to contact object
+  
   const contactObj = {
     methods: (formData.contacts || []).filter(c => c.value).map(c => ({ type: c.type, value: c.value }))
   };
   fd.append("contact", JSON.stringify(contactObj));
 
-  // startTime / endTime — Event.js stores these as plain strings e.g. "08:00"
+  
   if (formData.startTimeFrom) fd.append("startTime", formData.startTimeFrom);
   if (formData.endTimeFrom) fd.append("endTime", formData.endTimeFrom);
 
@@ -124,7 +124,7 @@ const buildEventFormData = (formData, destinationId) => {
   return fd;
 };
 
-// ── Placeholder data ───────────────────────────────────────────────────────
+
 
 const PLACEHOLDER_REVIEWS = [
   { id: 1, name: "Sarah M.", rating: 5, text: "Amazing experience! The views were breathtaking.", date: "2 weeks ago" },
@@ -136,7 +136,7 @@ const PLACEHOLDER_STATS = {
   rating: 4.5, label: "Wonderful", totalReviews: 4439, source: "Google",
 };
 
-// ── Contact helpers ────────────────────────────────────────────────────────
+
 
 const detectContactType = (value) => {
   const lower = value.toLowerCase().trim();
@@ -165,10 +165,10 @@ const getContactIcon = (type) => {
 const mapItemToEditData = (item) => {
   if (!item) return null;
   
-  // map contact object to contacts array
+  
   const contacts = item.contact?.methods || [];
 
-  // map coordinates
+  
   let coordinates = "";
   if (item.location?.coordinates) {
     coordinates = `${item.location.coordinates[1]}, ${item.location.coordinates[0]}`;
@@ -259,7 +259,7 @@ function DestinationDetail() {
     return () => { document.body.style.overflow = "unset"; };
   }, [showPlacesModal, showEventsModal, showHotelsModal, showRestaurantsModal, editingItem, removingItem, lightboxImage]);
 
-  // ── Click outside menus ────────────────────────────────────────────────────
+  
   useEffect(() => {
     const handleClickOutside = (e) => {
       const openId = Object.keys(cardMenus).find((id) => cardMenus[id]);
@@ -274,7 +274,7 @@ function DestinationDetail() {
   const destId = destination?._id;
   const displayName = destination?.name || slug?.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") || "Destination";
 
-  // ── Save handlers ──────────────────────────────────────────────────────────
+  
   const handleSavePlace = async (formData) => {
     setSaving(true);
     try {
@@ -355,7 +355,7 @@ function DestinationDetail() {
     }
   };
 
-  // ── Delete handlers ────────────────────────────────────────────────────────
+  
   const confirmRemove = async () => {
     if (!removingItem || !removingType) return;
     try {
@@ -383,7 +383,7 @@ function DestinationDetail() {
     setRemovingItem(null); setRemovingType(null);
   };
 
-  // ── UI helpers ─────────────────────────────────────────────────────────────
+  
   const handleTabChange = (itemId, tab) => setCardTabs((prev) => ({ ...prev, [itemId]: tab }));
   const handleMenuToggle = (e, itemId) => { e.stopPropagation(); setCardMenus((prev) => ({ ...prev, [itemId]: !prev[itemId] })); };
   const handleEdit = (item, type) => { setEditingItem(mapItemToEditData(item)); setEditingType(type); setCardMenus({}); };
@@ -394,7 +394,7 @@ function DestinationDetail() {
     ? ["overview", "about", "reviews", "contact", "photos", "book"]
     : ["overview", "about", "reviews", "contact", "photos"];
 
-  // ── Card content renderer ──────────────────────────────────────────────────
+  
   const renderCardContent = (item, type, activeTab) => {
     switch (activeTab) {
       case "overview":
@@ -445,7 +445,7 @@ function DestinationDetail() {
           );
         }
 
-        // place | restaurant | hotel
+        
         const formatOperatingHours = () => {
           if (!item.operatingHours) return "Not specified";
           const { start, end } = item.operatingHours;
@@ -592,7 +592,7 @@ function DestinationDetail() {
     }
   };
 
-  // ── Card renderer ──────────────────────────────────────────────────────────
+  
   const renderCard = (item, type) => {
     const tabs = getTabs(type);
     const activeTab = cardTabs[item._id] || "overview";
@@ -635,7 +635,7 @@ function DestinationDetail() {
     return <div className={styles.cardGrid}>{items.map((item) => renderCard(item, type))}</div>;
   };
 
-  // ── Loading / error states ─────────────────────────────────────────────────
+  
   if (loading) return <div className={styles.page}><div className={styles.loading}>Loading...</div></div>;
   if (error) return <div className={styles.page}><div className={styles.loading} style={{ color: "#dc2626" }}>{error}</div></div>;
 
@@ -646,7 +646,7 @@ function DestinationDetail() {
     { label: "Events", count: events.length },
   ];
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -666,7 +666,7 @@ function DestinationDetail() {
       </div>
 
       <div className={styles.contentArea}>
-        {/* Places */}
+        {}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Places</h2>
@@ -683,7 +683,7 @@ function DestinationDetail() {
           ) : renderCards(places, "place")}
         </section>
 
-        {/* Hotels */}
+        {}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Hotels</h2>
@@ -700,7 +700,7 @@ function DestinationDetail() {
           ) : renderCards(hotels, "hotel")}
         </section>
 
-        {/* Restaurants */}
+        {}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Restaurants</h2>
@@ -717,7 +717,7 @@ function DestinationDetail() {
           ) : renderCards(restaurants, "restaurant")}
         </section>
 
-        {/* Events */}
+        {}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Events</h2>
@@ -735,19 +735,19 @@ function DestinationDetail() {
         </section>
       </div>
 
-      {/* Add Modals */}
+      {}
       <PlacesModal isOpen={showPlacesModal} onClose={() => !saving && setShowPlacesModal(false)} onSave={handleSavePlace} destinationName={displayName} saving={saving} />
       <HotelsModal isOpen={showHotelsModal} onClose={() => !saving && setShowHotelsModal(false)} onSave={handleSaveHotel} destinationName={displayName} saving={saving} />
       <RestaurantsModal isOpen={showRestaurantsModal} onClose={() => !saving && setShowRestaurantsModal(false)} onSave={handleSaveRestaurant} destinationName={displayName} saving={saving} />
       <EventsModal isOpen={showEventsModal} onClose={() => !saving && setShowEventsModal(false)} onSave={handleSaveEvent} destinationName={displayName} saving={saving} />
 
-      {/* Edit Modals */}
+      {}
       {editingItem && editingType === "place" && <PlacesModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSavePlace} destinationName={displayName} editData={editingItem} saving={saving} />}
       {editingItem && editingType === "hotel" && <HotelsModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSaveHotel} destinationName={displayName} editData={editingItem} saving={saving} />}
       {editingItem && editingType === "restaurant" && <RestaurantsModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSaveRestaurant} destinationName={displayName} editData={editingItem} saving={saving} />}
       {editingItem && editingType === "event" && <EventsModal isOpen onClose={() => !saving && closeEditModal()} onSave={handleSaveEvent} destinationName={displayName} editData={editingItem} saving={saving} />}
 
-      {/* Remove Confirmation */}
+      {}
       {removingItem && (
         <div className={styles.confirmOverlay} onClick={() => { setRemovingItem(null); setRemovingType(null); }}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
@@ -762,7 +762,7 @@ function DestinationDetail() {
         </div>
       )}
 
-      {/* Lightbox */}
+      {}
       {lightboxImage && (
         <div className={styles.lightbox} onClick={() => setLightboxImage(null)}>
           <button className={styles.lightboxClose} onClick={() => setLightboxImage(null)}>

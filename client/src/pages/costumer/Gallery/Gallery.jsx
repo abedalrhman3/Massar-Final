@@ -19,7 +19,7 @@ import {
     deletePhoto,
 } from "@/api/photos";
 
-// ── Icons ──────────────────────────────────────────────────────────────────
+
 
 const MoreIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -72,16 +72,16 @@ const SpinnerIcon = () => (
     </svg>
 );
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 
-/**
- * Normalise a raw Photo document from the API into the shape the UI needs.
- *
- * API shape (from getPublicPhotos):
- *   { _id, photo_url, is_private, is_reported,
- *     location_id: { name, name_en },
- *     user_id:     { username, name, current_level } }
- */
+
+
+
+
+
+
+
+
+
 const normalisePhoto = (raw) => ({
     id: raw._id,
     imageUrl: raw.photo_url,
@@ -140,7 +140,7 @@ function LightboxModal({ photo, onClose, isAr }) {
     );
 }
 
-// ── PhotoCard ──────────────────────────────────────────────────────────────
+
 
 function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, actionLoading, isAr }) {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -161,7 +161,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
             <img src={photo.imageUrl} alt={photo.placeName} className={styles.cardImage} />
             <div className={styles.cardOverlay} />
 
-            {/* Badges */}
+            {}
             <div className={styles.badgesList}>
                 {photo.isPrivate && (
                     <span className={styles.badgeItem} style={{ backgroundColor: 'rgba(21, 145, 220, 0.85)' }} title={isAr ? "خاص" : "Private"}>
@@ -206,7 +206,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
 
             <div className={styles.cardLabel}>{photo.placeName}</div>
 
-            {/* Options menu */}
+            {}
             <div className={styles.menuWrapper} onClick={(e) => e.stopPropagation()}>
                 <button
                     className={styles.optionsBtn}
@@ -222,7 +222,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
                         <div className={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
                         <div className={styles.menu}>
 
-                            {/* Toggle privacy — owner action */}
+                            {}
                             <button
                                 className={styles.menuItem}
                                 onClick={(e) => handleOption(e, onTogglePrivacy)}
@@ -233,7 +233,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
 
                             <div className={styles.menuDivider} />
 
-                            {/* Report */}
+                            {}
                             <button
                                 className={styles.menuItem}
                                 onClick={(e) => handleOption(e, onReport)}
@@ -245,7 +245,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
 
                             <div className={styles.menuDivider} />
 
-                            {/* Delete — admin action */}
+                            {}
                             <button
                                 className={`${styles.menuItem} ${styles.menuItemDelete}`}
                                 onClick={(e) => handleOption(e, onDelete)}
@@ -261,7 +261,7 @@ function PhotoCard({ photo, onTogglePrivacy, onReport, onDelete, onClick, action
     );
 }
 
-// ── Gallery ────────────────────────────────────────────────────────────────
+
 
 export default function Gallery() {
     const { i18n } = useTranslation();
@@ -273,10 +273,10 @@ export default function Gallery() {
     const [lightbox, setLightbox] = useState(null);
     const { user } = useAuth();
 
-    // Track which photo id is currently mid-action (shows spinner on that card)
+    
     const [actionLoading, setActionLoading] = useState(null);
 
-    // ── Fetch on mount ───────────────────────────────────────────────────────
+    
     useEffect(() => {
         const fetchPhotos = async () => {
             try {
@@ -293,13 +293,13 @@ export default function Gallery() {
             }
         };
         fetchPhotos();
-    }, [user._id]);  // ← use user._id not user to avoid refetch on unrelated user object changes
-    // ── Toggle privacy ───────────────────────────────────────────────────────
+    }, [user._id]);  
+    
     const handleTogglePrivacy = async (photo) => {
         try {
             setActionLoading(photo.id);
             const res = await togglePhotoPrivacy(photo.id);
-            // returns { success, data: Photo }
+            
             const updated = normalisePhoto(res.data.data);
             setPhotos((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
         } catch (err) {
@@ -309,13 +309,13 @@ export default function Gallery() {
         }
     };
 
-    // ── Report ───────────────────────────────────────────────────────────────
+    
     const handleReport = async (photo) => {
         if (photo.isReported) return;
         try {
             setActionLoading(photo.id);
             await reportPhoto(photo.id);
-            // Optimistically mark as reported in UI
+            
             setPhotos((prev) =>
                 prev.map((p) => (p.id === photo.id ? { ...p, isReported: true } : p))
             );
@@ -326,7 +326,7 @@ export default function Gallery() {
         }
     };
 
-    // ── Delete (admin) ───────────────────────────────────────────────────────
+    
     const handleDelete = async (photo) => {
         if (!window.confirm(`Delete this photo from "${photo.placeName}"?`)) return;
         try {
@@ -340,7 +340,7 @@ export default function Gallery() {
         }
     };
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    
     return (
         <div className={styles.page}>
             <AdminSidebar type="user" />
@@ -350,7 +350,7 @@ export default function Gallery() {
             >
                 Add Photo
             </button>
-            {/* ── Header ── */}
+            {}
             <header className={styles.header}>
                 <div className={styles.headerInner}>
                     <div className={styles.headerLeft}>
@@ -364,10 +364,10 @@ export default function Gallery() {
                 </div>
             </header>
 
-            {/* ── Body ── */}
+            {}
             <div className={styles.gridWrapper}>
 
-                {/* Loading */}
+                {}
                 {loading && (
                     <div className={styles.stateCenter}>
                         <div className={styles.loadingSpinner} />
@@ -375,7 +375,7 @@ export default function Gallery() {
                     </div>
                 )}
 
-                {/* Error */}
+                {}
                 {!loading && error && (
                     <div className={styles.stateCenter}>
                         <div className={styles.emptyIcon}>⚠️</div>
@@ -384,7 +384,7 @@ export default function Gallery() {
                     </div>
                 )}
 
-                {/* Empty */}
+                {}
                 {!loading && !error && photos.length === 0 && (
                     <div className={styles.empty}>
                         <div className={styles.emptyIcon}>🏔️</div>
@@ -395,7 +395,7 @@ export default function Gallery() {
                     </div>
                 )}
 
-                {/* Grid */}
+                {}
                 {!loading && !error && photos.length > 0 && (
                     <div className={styles.grid}>
                         {photos.map((photo) => (
@@ -414,7 +414,7 @@ export default function Gallery() {
                 )}
             </div>
 
-            {/* ── Lightbox ── */}
+            {}
             {lightbox && (
                 <LightboxModal photo={lightbox} onClose={() => setLightbox(null)} isAr={isAr} />
             )}

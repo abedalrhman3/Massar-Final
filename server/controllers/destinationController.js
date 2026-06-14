@@ -5,15 +5,15 @@ const { generateSlug } = require('../services/slugService');
 const { uploadDestinationImage, deleteFromCloudinary } = require('../services/uploadService');
 const AppError = require('../utils/AppError');
 
-// -------------------------------------------------------
-// Helper — derive a Location payload from a Destination doc
-// -------------------------------------------------------
-// Fallback thresholds used when no Setting document exists yet.
-// These match the Location model's budget_category enum.
+
+
+
+
+
 const BUDGET_THRESHOLDS = { low_max: 50, mid_max: 150 };
 
 const buildLocationPayload = (destination, destinationId) => {
-  // Derive budget_category from the numeric budget field
+  
   let budget_category;
   const cost = destination.budget;
   if (cost != null) {
@@ -22,7 +22,7 @@ const buildLocationPayload = (destination, destinationId) => {
     else budget_category = 'High';
   }
 
-  // Extract lat/lng from GeoJSON coordinates [lng, lat]
+  
   let coordinates;
   const coords = destination.location && destination.location.coordinates;
   if (coords && coords.length === 2) {
@@ -32,7 +32,7 @@ const buildLocationPayload = (destination, destinationId) => {
   return {
     destination_id: destinationId,
     name: destination.name,
-    name_en: destination.name,           // mirrors name until a separate name_en field is added
+    name_en: destination.name,           
     description: destination.description || '',
     description_en: destination.description || '',
     average_cost: cost,
@@ -52,7 +52,7 @@ exports.getAll = async (req, res, next) => {
     }
     const destinations = await Destination.find(filter);
 
-    // Enrich with isLiked when a user is logged in
+    
     let likedSet = new Set();
     if (req.user) {
       const User = require('../models/User');
@@ -73,9 +73,9 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// GET /api/destinations/:slug  — public
-// -------------------------------------------------------
+
+
+
 exports.getOne = async (req, res, next) => {
   try {
     const filter = { slug: req.params.slug };
@@ -106,9 +106,9 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// GET /api/destinations/details/:id  — public
-// -------------------------------------------------------
+
+
+
 exports.getDetails = async (req, res, next) => {
   try {
     const details = await DestinationDetail.findOne({ destinationId: req.params.id });
@@ -123,12 +123,12 @@ exports.getDetails = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// POST /api/destinations  — admin
-// Auto-creates a linked Location after saving the Destination.
-// -------------------------------------------------------
+
+
+
+
 exports.create = async (req, res, next) => {
-  // At the top of exports.create, before Destination.create(...)
+  
   if (req.body.location && typeof req.body.location === 'string') {
     try { req.body.location = JSON.parse(req.body.location); }
     catch (_) { return next(new AppError('Invalid location format', 400)); }
@@ -136,7 +136,7 @@ exports.create = async (req, res, next) => {
   try {
     const slug = await generateSlug(req.body.name, Destination);
 
-    // Upload image to Cloudinary if provided
+    
     let image;
     if (req.file) {
       image = await uploadDestinationImage(req.file.buffer);
@@ -144,14 +144,14 @@ exports.create = async (req, res, next) => {
 
     const destination = await Destination.create({ ...req.body, slug, image });
 
-    // Auto-create a linked Location only when coordinates are available.
-    // Wrap in its own try/catch so a location failure never blocks the response.
+    
+    
     try {
       const locationPayload = buildLocationPayload(destination, destination._id);
       if (locationPayload.coordinates) {
         await Location.create(locationPayload);
       }
-      // else: skip — admin can add coordinates via the Locations admin page later
+      
     } catch (locErr) {
       console.error('Location auto-create failed (non-fatal):', locErr);
     }
@@ -162,12 +162,12 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// PUT /api/destinations/:id  — admin
-// Syncs the linked Location whenever the Destination changes.
-// -------------------------------------------------------
+
+
+
+
 exports.update = async (req, res, next) => {
-  // At the top of exports.create, before Destination.create(...)
+  
   if (req.body.location && typeof req.body.location === 'string') {
     try { req.body.location = JSON.parse(req.body.location); }
     catch (_) { return next(new AppError('Invalid location format', 400)); }
@@ -177,7 +177,7 @@ exports.update = async (req, res, next) => {
       req.body.slug = await generateSlug(req.body.name, Destination);
     }
 
-    // Upload new image if provided
+    
     if (req.file) {
       const existing = await Destination.findById(req.params.id);
       if (existing && existing.image) {
@@ -191,7 +191,7 @@ exports.update = async (req, res, next) => {
     );
     if (!destination) return next(new AppError('Destination not found', 404));
 
-    // Sync the linked Location (upsert — handles destinations created before this feature)
+    
     const locationPayload = buildLocationPayload(destination, destination._id);
     if (!locationPayload.coordinates) {
       delete locationPayload.coordinates;
@@ -208,9 +208,9 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// PUT /api/destinations/details/:id  — admin
-// -------------------------------------------------------
+
+
+
 exports.updateDetails = async (req, res, next) => {
   try {
     const details = await DestinationDetail.findOneAndUpdate(
@@ -224,16 +224,16 @@ exports.updateDetails = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// DELETE /api/destinations/:id  — admin
-// Also removes the linked Location and DestinationDetail.
-// -------------------------------------------------------
+
+
+
+
 exports.remove = async (req, res, next) => {
   try {
     const destination = await Destination.findByIdAndDelete(req.params.id);
     if (!destination) return next(new AppError('Destination not found', 404));
 
-    // Don't let Cloudinary failure block the response
+    
     if (destination.image) {
       deleteFromCloudinary(destination.image).catch(err =>
         console.error('Cloudinary cleanup failed:', err)
@@ -248,9 +248,9 @@ exports.remove = async (req, res, next) => {
     next(err);
   }
 };
-// -------------------------------------------------------
-// POST /api/destinations/:id/like  — private
-// -------------------------------------------------------
+
+
+
 exports.toggleLike = async (req, res, next) => {
   try {
     const User = require('../models/User');

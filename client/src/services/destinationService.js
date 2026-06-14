@@ -1,4 +1,4 @@
-// Destination service - API calls for destinations management
+
 
 const API_URL = '/api/destinations';
 

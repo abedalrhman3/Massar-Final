@@ -1,4 +1,4 @@
-// Imports: child components, styles, React hooks, and company info for the system prompt
+
 import ChatbotIcon from "./ChatbotIcon";
 import styles from "./Chatbot.module.css";
 import ChatForm from "./ChatForm";
@@ -8,7 +8,7 @@ import { companyInfo } from "./ChatbotData";
 const chatbot = "/images/homepage/chatbot.png";
 
 function Chatbot() {
-  // Chat history state — initialized with a hidden system prompt (companyInfo)
+  
   const [chatHistory, setChatHistory] = useState([
     {
       hideInChat: true,
@@ -17,18 +17,18 @@ function Chatbot() {
     },
   ]);
 
-  // Controls whether the chatbot popup is visible
+  
   const [showChatbot, setShowChatbot] = useState(false);
 
-  // States to track API loading and rate limit countdown
+  
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitRemaining, setRateLimitRemaining] = useState(0);
-  const msgCountRef = useRef(0); // Frontend message counter for the 60s cycle
+  const msgCountRef = useRef(0); 
 
-  // Ref to the chat body for auto-scrolling
+  
   const chatBodyRef = useRef();
 
-  // Handle rate limit countdown timer
+  
   useEffect(() => {
     if (rateLimitRemaining <= 0) return;
 
@@ -36,8 +36,8 @@ function Chatbot() {
       setRateLimitRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          msgCountRef.current = 0; // reset counter when 60s are up
-          setIsLoading(false); // re-enable input automatically
+          msgCountRef.current = 0; 
+          setIsLoading(false); 
           return 0;
         }
         return prev - 1;
@@ -47,11 +47,11 @@ function Chatbot() {
     return () => clearInterval(timer);
   }, [rateLimitRemaining]);
 
-  // Sends chat history to our Python Backend safely
+  
   const generateBotResponse = async (history) => {
-    // Start or update frontend rate limit cycle
+    
     if (rateLimitRemaining === 0) {
-      setRateLimitRemaining(60); // Timer starts on first message
+      setRateLimitRemaining(60); 
       msgCountRef.current = 1;
     } else {
       msgCountRef.current += 1;
@@ -59,7 +59,7 @@ function Chatbot() {
 
     const isLimitHit = msgCountRef.current >= 5;
 
-    // Replaces "Thinking..." with the actual bot response or error message
+    
     const updateHistory = (text, isError = false) => {
       setChatHistory((prev) => [
         ...prev.filter((msg) => msg.text !== "Thinking..."),
@@ -67,10 +67,10 @@ function Chatbot() {
       ]);
     };
 
-    // FIX: Filter out the temporary "Thinking..." message so the backend never sees it
+    
     const cleanHistory = history.filter((msg) => msg.text !== "Thinking...");
 
-    // Format the clean history into standard format for our Backend
+    
     const formattedHistory = cleanHistory.map(({ role, text, file }) => ({
       role: role === "model" ? "assistant" : "user",
       content: text,
@@ -83,7 +83,7 @@ function Chatbot() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: formattedHistory, // Send only the true chat conversation
+        messages: formattedHistory, 
       }),
     };
 
@@ -106,7 +106,7 @@ function Chatbot() {
         }
         const remaining = Math.max(0, Math.ceil(data.unblockTime - (Date.now() / 1000)));
         setRateLimitRemaining(remaining);
-        msgCountRef.current = 5; // Ensure UI knows the limit is hit
+        msgCountRef.current = 5; 
         updateHistory(data.reply, true);
         return;
       }
@@ -118,7 +118,7 @@ function Chatbot() {
       const data = JSON.parse(textData);
       updateHistory(data.reply.trim());
       
-      // If limit not hit, input stays enabled / gets re-enabled
+      
       if (!isLimitHit) {
         setIsLoading(false);
       }
@@ -132,15 +132,15 @@ function Chatbot() {
           isRateLimit = true;
           const remaining = Math.max(0, Math.ceil(parsed.unblockTime - (Date.now() / 1000)));
           setRateLimitRemaining(remaining);
-          msgCountRef.current = 5; // Ensure UI knows the limit is hit
+          msgCountRef.current = 5; 
           updateHistory(parsed.reply, true);
         }
       } catch (e) {
-        // Not a JSON error
+        
       }
 
       if (!isRateLimit) {
-        // Show the actual error message from server if available, otherwise show generic error
+        
         const errorMessage = error.message && !error.message.includes('Server returned')
           ? error.message
           : "Couldn't connect to Massar Server. Please make sure the backend is running on port 5000!";
@@ -153,7 +153,7 @@ function Chatbot() {
     }
   };
 
-  // Auto-scroll to bottom whenever chat history updates
+  
   useEffect(() => {
     chatBodyRef.current.scrollTo({
       top: chatBodyRef.current.scrollHeight,
@@ -169,12 +169,12 @@ function Chatbot() {
   };
 
   return (
-    // Add showChatbot class to container to trigger CSS visibility
+    
     <div
 
       className={`${styles.container} ${showChatbot ? styles.showChatbot : ""}`}
     >
-      {/* Floating avatar toggle button — opens/closes the chatbot */}
+      {}
       <div className={styles.avatarWrapper}>
         <div className={styles.avatarContainer}>
           <div className={styles.avatarTooltip}>
@@ -191,7 +191,7 @@ function Chatbot() {
       </div>
 
       <div className={styles.chatbotPopup}>
-        {/* Header — shows bot icon, name, and close button */}
+        {}
         <div className={styles.chatHeader}>
           <div className={styles.headerInfo}>
             <ChatbotIcon />
@@ -205,9 +205,9 @@ function Chatbot() {
           </button>
         </div>
 
-        {/* Body — displays welcome message and dynamic chat history */}
+        {}
         <div ref={chatBodyRef} className={styles.chatBody}>
-          {/* Static welcome message */}
+          {}
           <div className={`${styles.message} ${styles.botMessage}`}>
             <ChatbotIcon />
             <p className={styles.messageText}>
@@ -221,13 +221,13 @@ function Chatbot() {
             </p>
           </div>
 
-          {/* Render each message in chat history */}
+          {}
           {chatHistory.map((chat, index) => (
             <ChatMessage key={index} chat={chat} />
           ))}
         </div>
 
-        {/* Footer — contains the chat input form */}
+        {}
         <div className={styles.chatFooter}>
           {(rateLimitRemaining > 0 && msgCountRef.current >= 5) && (
             <div className={styles.rateLimitWarning}>

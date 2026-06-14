@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./BanHistory.module.css";
 import * as accountsService from "@/services/accountsService";
 
-// Animation hook for number counting
+
 function useAnimatedNumber(targetValue, duration = 400) {
   const [displayValue, setDisplayValue] = useState(targetValue);
   const previousValue = useRef(targetValue);
@@ -78,7 +78,7 @@ function BanHistory() {
     }
   }, [highlightedEmail]);
 
-  // Clear highlight after animation
+  
   useEffect(() => {
     if (highlightedEmail) {
       const timer = setTimeout(() => {
@@ -88,7 +88,7 @@ function BanHistory() {
     }
   }, [highlightedEmail]);
 
-  // Fetch data from API
+  
   const fetchData = async () => {
     try {
       const [bannedData, statsData] = await Promise.all([
@@ -112,12 +112,12 @@ function BanHistory() {
     loadData();
   }, [refreshKey]);
 
-  // Filter effect
+  
   useEffect(() => {
     fetchData();
   }, [filter]);
 
-  // Animated stats
+  
   const animatedBanned = useAnimatedNumber(stats.totalBanned);
   const animatedUnbanned = useAnimatedNumber(stats.bannedThisMonth);
 
@@ -141,7 +141,7 @@ function BanHistory() {
     setUnbanModal(null);
   };
 
-  // Loading state
+  
   if (loading) {
     return (
       <div className={styles.page}>
@@ -150,7 +150,7 @@ function BanHistory() {
     );
   }
 
-  // Error state
+  
   if (error) {
     return (
       <div className={styles.page}>
@@ -205,7 +205,7 @@ function BanHistory() {
         </div>
       </div>
 
-      {/* Search */}
+      {}
       <div className={styles.searchRow}>
         <input
           className={styles.searchInput}
@@ -215,7 +215,7 @@ function BanHistory() {
         />
       </div>
 
-      {/* Table */}
+      {}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -275,7 +275,7 @@ function BanHistory() {
         Showing 1 to {filtered.length} of {filtered.length} banned accounts
       </p>
 
-      {/* Unban Confirmation Modal */}
+      {}
       {unbanModal && (
         <div className={styles.modalOverlay} onClick={() => setUnbanModal(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>

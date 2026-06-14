@@ -1,9 +1,9 @@
-// accountsService.js — rewritten to use real API endpoints from @/api/auth
+
 
 import client from '@/api/client';
 
-// ==================== STATS ====================
-// Derived client-side from /api/auth/users — no dedicated stats endpoints exist
+
+
 
 export async function getAccountStats() {
   const res = await client.get('/auth/users');
@@ -24,7 +24,7 @@ export async function getBanHistoryStats() {
   };
 }
 
-// ==================== ACCOUNTS ====================
+
 
 export async function getAccounts(filters = {}) {
   const res = await client.get('/auth/users');
@@ -49,7 +49,7 @@ export async function getAccounts(filters = {}) {
 export async function getReportedAccounts(search = '') {
   const res = await client.get('/auth/users');
   let users = res.data.data ?? res.data.users ?? res.data ?? [];
-  // Reported = banned users (no separate reports collection yet)
+  
   users = users.filter(u => u.isBanned);
 
   if (search) {
@@ -63,7 +63,7 @@ export async function getReportedAccounts(search = '') {
   return { data: users };
 }
 
-// ==================== BAN HISTORY ====================
+
 
 export async function getBanHistory(search = '') {
   const res = await client.get('/auth/users');
@@ -78,7 +78,7 @@ export async function getBanHistory(search = '') {
     );
   }
 
-  // Shape each record as a ban-history entry
+  
   return {
     data: users.map(u => ({
       id: u._id,
@@ -86,13 +86,13 @@ export async function getBanHistory(search = '') {
       email: u.email,
       avatar: u.profilePicture || null,
       bannedAt: u.updatedAt ?? u.createdAt,
-      reason: 'N/A',   // no reason field stored yet
+      reason: 'N/A',   
     }))
   };
 }
 
-// ==================== ACTIONS ====================
-// All routed through the real toggleBanUser / deleteUser endpoints
+
+
 
 export async function suspendAccount(id) {
   return client.put(`/auth/users/${id}/ban`);
@@ -114,7 +114,7 @@ export async function deleteAccount(id) {
   return client.delete(`/auth/users/${id}`);
 }
 
-// clearAccountFlags has no backend endpoint yet — no-op that resolves cleanly
+
 export async function clearAccountFlags() {
   return Promise.resolve({ success: true });
 }

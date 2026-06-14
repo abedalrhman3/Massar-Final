@@ -1,15 +1,15 @@
-/**
- * seedWadiRum.js
- *
- * Inserts sample Places, Restaurants, Hotels, and Events
- * for an EXISTING Wadi Rum destination directly into MongoDB.
- *
- * Usage:
- *   node seedWadiRum.js <destinationId>
- *
- * Example:
- *   node seedWadiRum.js 665f1a2b3c4d5e6f7a8b9c0d
- */
+
+
+
+
+
+
+
+
+
+
+
+
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -19,7 +19,7 @@ const Hotel = require('./models/Hotel');
 const Event = require('./models/Event');
 const DestinationDetail = require('./models/DestinationDetail');
 
-// ── Grab destination ID from CLI args ─────────────────────────────────────────
+
 const destId = process.argv[2];
 if (!destId) {
   console.error('❌  Please provide the destination ID as an argument.');
@@ -27,7 +27,7 @@ if (!destId) {
   process.exit(1);
 }
 
-// ── Image paths (served from Vite/static public folder) ───────────────────────
+
 const IMG = {
   jabalRum: '/images/detailPage/jabal-rum.jpg',
   aqabaFort: '/images/detailPage/aqaba-fortress.webp',
@@ -46,7 +46,7 @@ async function seed() {
 
   const id = destId.trim();
 
-  // ── 1. Upsert Destination Details ──────────────────────────────────────────
+  
   await DestinationDetail.findOneAndUpdate(
     { destinationId: id },
     {
@@ -99,7 +99,7 @@ async function seed() {
   );
   console.log('✅  Destination details upserted');
 
-  // ── 2. Places ──────────────────────────────────────────────────────────────
+  
   await Place.deleteMany({ destinationId: id });
 
   await Place.insertMany([
@@ -157,7 +157,7 @@ async function seed() {
   ]);
   console.log('✅  3 Places inserted');
 
-  // ── 3. Restaurants ─────────────────────────────────────────────────────────
+  
   await Restaurant.deleteMany({ destinationId: id });
 
   await Restaurant.insertMany([
@@ -215,7 +215,7 @@ async function seed() {
   ]);
   console.log('✅  3 Restaurants inserted');
 
-  // ── 4. Hotels ──────────────────────────────────────────────────────────────
+  
   await Hotel.deleteMany({ destinationId: id });
 
   await Hotel.insertMany([
@@ -276,7 +276,7 @@ async function seed() {
   ]);
   console.log('✅  3 Hotels inserted');
 
-  // ── 5. Events ──────────────────────────────────────────────────────────────
+  
   await Event.deleteMany({ destinationId: id });
 
   await Event.insertMany([
@@ -355,7 +355,7 @@ async function seed() {
   ]);
   console.log('✅  3 Events inserted');
 
-  // ── Done ───────────────────────────────────────────────────────────────────
+  
   console.log('\n🎉  All seed data inserted successfully!');
   await mongoose.disconnect();
   process.exit(0);

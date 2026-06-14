@@ -207,11 +207,11 @@ function UserProfile() {
     navigate(`/admin/settings?tab=${encodeURIComponent(targetTab)}`);
   };
 
-  // ─── Badges from user context (no API call needed) ───────────────────────────
+  
   const badges = user?.earned_quest_badges ?? [];
   const [showAllBadges, setShowAllBadges] = useState(false);
 
-  // ─── Stats from user context (no API call needed) ────────────────────────────
+  
   const stats = {
     xp: user?.total_xp ?? 0,
     photosNumber: user?.uploaded_photos ?? 0,
@@ -250,7 +250,7 @@ function UserProfile() {
             </label>
           </div>
 
-          {/* Avatar Full-Size Popup */}
+          {}
           {showAvatarPopup && (
             <div className={styles.avatarPopupOverlay} onClick={() => setShowAvatarPopup(false)}>
               <div className={styles.avatarPopup} onClick={(e) => e.stopPropagation()}>
@@ -275,7 +275,7 @@ function UserProfile() {
             <p className={styles.userEmail}>{currentProfileData.email}</p>
             <div className={styles.badgeRow}>
               <span className={styles.roleBadge}>{currentProfileData.role}</span>
-              {/* <span className={styles.locationBadge}>{currentProfileData.location}</span> */}
+              {}
             </div>
           </div>
         </div>

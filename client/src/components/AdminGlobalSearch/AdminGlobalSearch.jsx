@@ -7,7 +7,7 @@ import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 import { getEvents } from "@/api/events";
 import { getAllUsers } from "@/api/auth";
 
-// ── Icon map per category ────────────────────────────────────────────────────
+
 const CATEGORY_META = {
   Destinations: { icon: "travel_explore", color: "#6366f1" },
   Restaurants:  { icon: "restaurant",     color: "#f59e0b" },
@@ -17,7 +17,7 @@ const CATEGORY_META = {
   Users:        { icon: "person",         color: "#8b5cf6" },
 };
 
-// ── Slug helper (mirrors server) ─────────────────────────────────────────────
+
 const toSlug = (name = "") =>
   name.toLowerCase().trim()
     .replace(/[^a-z0-9\s-]/g, "")
@@ -47,7 +47,7 @@ function AdminGlobalSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ── Fetch all data once (lazy, on first focus) ──────────────────────────────
+  
   const fetchAllData = useCallback(async () => {
     if (allData || dataLoading) return;
     setDataLoading(true);
@@ -66,7 +66,7 @@ function AdminGlobalSearch() {
         if (res.status === "fulfilled") {
           const d = res.value?.data;
           if (!d) return [];
-          // Handle both { data: [] } and { users: [] } shapes
+          
           return d[path] ?? d.data ?? [];
         }
         return [];
@@ -87,7 +87,7 @@ function AdminGlobalSearch() {
     }
   }, [allData, dataLoading]);
 
-  // ── Filter results whenever query changes ────────────────────────────────────
+  
   useEffect(() => {
     if (!query.trim() || !allData) {
       setResults([]);
@@ -98,7 +98,7 @@ function AdminGlobalSearch() {
     const q = query.toLowerCase().trim();
     const matched = [];
 
-    // Helper: push up to 5 matches per category
+    
     const addMatches = (items, category, labelFn, sublabelFn, pathFn) => {
       let count = 0;
       for (const item of items) {

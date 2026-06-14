@@ -2,12 +2,12 @@ import http from "k6/http";
 import { check, group, sleep } from "k6";
 import { Rate, Trend } from "k6/metrics";
 
-// ─── Custom Metrics ───────────────────────────────────────────────────────────
+
 const errorRate = new Rate("errors");
 const authDuration = new Trend("auth_duration", true);
 const dbDuration = new Trend("db_duration", true);
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+
 const BASE_URL = "http://localhost:5000";
 
 const ADMIN = {
@@ -15,24 +15,24 @@ const ADMIN = {
     password: "hosaam25Z@",
 };
 
-// ─── Load Profile ─────────────────────────────────────────────────────────────
+
 export const options = {
     stages: [
-        { duration: "30s", target: 10 },   // warm-up
-        { duration: "1m", target: 50 },   // ramp to 50 VUs
-        { duration: "1m", target: 50 },   // sustain
-        { duration: "30s", target: 0 },   // ramp down
+        { duration: "30s", target: 10 },   
+        { duration: "1m", target: 50 },   
+        { duration: "1m", target: 50 },   
+        { duration: "30s", target: 0 },   
     ],
     thresholds: {
-        http_req_failed: ["rate<0.05"],    // keep strict — this one already passes ✓
-        http_req_duration: ["p(95)<5000"],   // loosened for localhost
-        errors: ["rate<0.05"],    // will pass once like fix is in
-        auth_duration: ["p(95)<7000"],   // loosened for localhost
-        db_duration: ["p(95)<3000"],   // loosened for localhost
+        http_req_failed: ["rate<0.05"],    
+        http_req_duration: ["p(95)<5000"],   
+        errors: ["rate<0.05"],    
+        auth_duration: ["p(95)<7000"],   
+        db_duration: ["p(95)<3000"],   
     },
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function jsonHeaders(token = null) {
     const h = { "Content-Type": "application/json" };
     if (token) h["Authorization"] = `Bearer ${token}`;
@@ -48,7 +48,7 @@ function firstId(res, ...keys) {
         const val = res.json(k);
         if (val) return val;
     }
-    // try data array
+    
     try {
         const arr = res.json("data");
         if (Array.isArray(arr) && arr.length > 0) return arr[0]._id;
@@ -56,13 +56,13 @@ function firstId(res, ...keys) {
     return null;
 }
 
-// ─── Main VU flow ─────────────────────────────────────────────────────────────
+
 export default function () {
     let userToken = null;
     let userId = null;
     let adminToken = null;
 
-    // Shared IDs discovered during the run
+    
     let destinationId = null;
     let destinationSlug = null;
     let locationId = null;
@@ -71,12 +71,12 @@ export default function () {
     let savedItemId = null;
     let commentId = null;
 
-    // ── 1. Auth ────────────────────────────────────────────────────
+    
     group("Auth Flow", () => {
         const id = uid();
         const email = `load_${id}@test.com`;
 
-        // Register
+        
         const reg = http.post(
             `${BASE_URL}/api/auth/register`,
             JSON.stringify({
@@ -90,7 +90,7 @@ export default function () {
         const regOk = check(reg, { "register: 201": (r) => r.status === 201 });
         errorRate.add(!regOk);
 
-        // ── Force-verify (test env only) ──────────────────────────
+        
         if (regOk) {
             http.post(
                 `${BASE_URL}/api/test/verify-user`,
@@ -98,9 +98,9 @@ export default function () {
                 jsonHeaders()
             );
         }
-        // ─────────────────────────────────────────────────────────
+        
 
-        // Login
+        
         const t0 = Date.now();
         const login = http.post(
             `${BASE_URL}/api/auth/login`,
@@ -121,13 +121,13 @@ export default function () {
 
 
 
-        // GET /me
+        
         if (userToken) {
             const me = http.get(`${BASE_URL}/api/auth/me`, jsonHeaders(userToken));
             check(me, { "GET /me: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Admin login (shared credential — all VUs log in as the same admin)
+        
         const adminLogin = http.post(
             `${BASE_URL}/api/auth/login`,
             JSON.stringify(ADMIN),
@@ -141,9 +141,9 @@ export default function () {
     sleep(1);
     if (!userToken) return;
 
-    // ── 2. Public reads & discovery ────────────────────────────────
+    
     group("Public Reads", () => {
-        // Destinations list
+        
         const t0 = Date.now();
         const dests = http.get(`${BASE_URL}/api/destinations`, jsonHeaders(userToken));
         dbDuration.add(Date.now() - t0);
@@ -157,19 +157,19 @@ export default function () {
             }
         } catch (_) { }
 
-        // Single destination by slug
+        
         if (destinationSlug) {
             const d = http.get(`${BASE_URL}/api/destinations/${destinationSlug}`, jsonHeaders(userToken));
             check(d, { "GET /destinations/:slug: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Destination details
+        
         if (destinationId) {
             const dd = http.get(`${BASE_URL}/api/destinations/details/${destinationId}`, jsonHeaders(userToken));
             check(dd, { "GET /destinations/details/:id: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Places, restaurants, hotels, events — published listings
+        
         for (const path of ["/api/places", "/api/restaurants", "/api/hotels", "/api/events"]) {
             const t1 = Date.now();
             const res = http.get(`${BASE_URL}${path}`, jsonHeaders(userToken));
@@ -177,7 +177,7 @@ export default function () {
             check(res, { [`GET ${path}: 200`]: (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Locations list — grab one ID for later
+        
         const locs = http.get(`${BASE_URL}/api/locations`, jsonHeaders(userToken));
         check(locs, { "GET /locations: 200": (r) => r.status === 200 }) || errorRate.add(1);
         try {
@@ -185,7 +185,7 @@ export default function () {
             if (Array.isArray(arr) && arr.length > 0) locationId = arr[0]._id;
         } catch (_) { }
 
-        // Quests
+        
         const quests = http.get(`${BASE_URL}/api/quests`, jsonHeaders());
         check(quests, { "GET /quests: 200": (r) => r.status === 200 }) || errorRate.add(1);
         try {
@@ -193,7 +193,7 @@ export default function () {
             if (Array.isArray(arr) && arr.length > 0) questId = arr[0]._id;
         } catch (_) { }
 
-        // Categories
+        
         const cats = http.get(`${BASE_URL}/api/categories`, jsonHeaders());
         check(cats, { "GET /categories: 200": (r) => r.status === 200 }) || errorRate.add(1);
         try {
@@ -201,11 +201,11 @@ export default function () {
             if (Array.isArray(arr) && arr.length > 0) categoryId = arr[0]._id;
         } catch (_) { }
 
-        // Achievements
+        
         const ach = http.get(`${BASE_URL}/api/achievements`, jsonHeaders());
         check(ach, { "GET /achievements: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Leaderboard & public photos
+        
         const lb = http.get(`${BASE_URL}/api/game/leaderboard`, jsonHeaders());
         check(lb, { "GET /game/leaderboard: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
@@ -215,25 +215,25 @@ export default function () {
 
     sleep(1);
 
-    // ── 3. Authenticated user actions ──────────────────────────────
+    
     group("User Actions", () => {
-        // My achievements
+        
         const myAch = http.get(`${BASE_URL}/api/achievements/me`, jsonHeaders(userToken));
         check(myAch, { "GET /achievements/me: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Notifications
+        
         const notifs = http.get(`${BASE_URL}/api/notifications`, jsonHeaders(userToken));
         check(notifs, { "GET /notifications: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Mark all notifications read
+        
         const markAll = http.put(`${BASE_URL}/api/notifications/read-all`, null, jsonHeaders(userToken));
         check(markAll, { "PUT /notifications/read-all: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // My saved items
+        
         const saved = http.get(`${BASE_URL}/api/saved`, jsonHeaders(userToken));
         check(saved, { "GET /saved: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Save a destination
+        
         if (destinationId) {
             const saveRes = http.post(
                 `${BASE_URL}/api/saved`,
@@ -241,7 +241,7 @@ export default function () {
                 jsonHeaders(userToken)
             );
             const saveOk = check(saveRes, {
-                "POST /saved: 201 or 400": (r) => [201, 400].includes(r.status), // 400 = already saved, that's ok
+                "POST /saved: 201 or 400": (r) => [201, 400].includes(r.status), 
             });
             errorRate.add(!saveOk);
             if (saveRes.status === 201) {
@@ -249,7 +249,7 @@ export default function () {
             }
         }
 
-        // Like a destination
+        
         if (destinationId) {
             const like = http.post(`${BASE_URL}/api/destinations/${destinationId}/like`, null, jsonHeaders(userToken));
             if (![200, 409].includes(like.status)) {
@@ -258,7 +258,7 @@ export default function () {
             check(like, { "POST /destinations/:id/like: 200 or 409": (r) => [200, 409].includes(r.status) }) || errorRate.add(1);
         }
 
-        // Post a comment on a destination
+        
         if (destinationId) {
             const comment = http.post(
                 `${BASE_URL}/api/comments`,
@@ -272,7 +272,7 @@ export default function () {
             }
         }
 
-        // Get comments for destination
+        
         if (destinationId) {
             const comments = http.get(
                 `${BASE_URL}/api/comments?placeId=${destinationId}`,
@@ -281,7 +281,7 @@ export default function () {
             check(comments, { "GET /comments: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Like a comment
+        
         if (commentId) {
             const likeComment = http.post(
                 `${BASE_URL}/api/comments/${commentId}/like`,
@@ -291,13 +291,13 @@ export default function () {
             check(likeComment, { "POST /comments/:id/like: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Join a quest
+        
         if (questId) {
             const join = http.post(`${BASE_URL}/api/quests/${questId}/join`, null, jsonHeaders(userToken));
             check(join, { "POST /quests/:id/join: 200 or 400": (r) => [200, 400].includes(r.status) }) || errorRate.add(1);
         }
 
-        // Update frame (gamification)
+        
         const frame = http.post(
             `${BASE_URL}/api/game/user/update-frame`,
             JSON.stringify({ frameSlug: "default-frame" }),
@@ -305,7 +305,7 @@ export default function () {
         );
         check(frame, { "POST /game/user/update-frame: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Update profile
+        
         const profile = http.put(
             `${BASE_URL}/api/auth/update-profile`,
             JSON.stringify({ name: `LoadUser ${uid()}` }),
@@ -316,15 +316,15 @@ export default function () {
 
     sleep(1);
 
-    // ── 4. Location posts & community ──────────────────────────────
+    
     group("Location Community", () => {
         if (!locationId) return;
 
-        // Get posts for a location
+        
         const posts = http.get(`${BASE_URL}/api/locations/${locationId}/posts`, jsonHeaders(userToken));
         check(posts, { "GET /locations/:id/posts: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Create a post
+        
         const newPost = http.post(
             `${BASE_URL}/api/locations/${locationId}/posts`,
             JSON.stringify({ content: `Load test post ${uid()}` }),
@@ -332,7 +332,7 @@ export default function () {
         );
         check(newPost, { "POST /locations/:id/posts: 201": (r) => r.status === 201 }) || errorRate.add(1);
 
-        // Get user's game profile
+        
         if (userToken) {
             const userId2 = http.get(`${BASE_URL}/api/auth/me`, jsonHeaders(userToken)).json("_id")
                 || http.get(`${BASE_URL}/api/auth/me`, jsonHeaders(userToken)).json("data._id");
@@ -345,25 +345,25 @@ export default function () {
 
     sleep(1);
 
-    // ── 5. Cleanup & logout ────────────────────────────────────────
+    
     group("Cleanup", () => {
-        // Unsave item
+        
         if (savedItemId) {
             const unsave = http.del(`${BASE_URL}/api/saved/${savedItemId}`, null, jsonHeaders(userToken));
             check(unsave, { "DELETE /saved/:id: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Delete comment
+        
         if (commentId) {
             const delComment = http.del(`${BASE_URL}/api/comments/${commentId}`, null, jsonHeaders(userToken));
             check(delComment, { "DELETE /comments/:id: 200": (r) => r.status === 200 }) || errorRate.add(1);
         }
 
-        // Logout user
+        
         const logout = http.post(`${BASE_URL}/api/auth/logout`, null, jsonHeaders(userToken));
         check(logout, { "POST /auth/logout: 200": (r) => r.status === 200 }) || errorRate.add(1);
 
-        // Logout admin
+        
         if (adminToken) {
             http.post(`${BASE_URL}/api/auth/logout`, null, jsonHeaders(adminToken));
         }

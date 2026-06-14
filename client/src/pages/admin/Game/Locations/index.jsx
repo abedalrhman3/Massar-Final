@@ -109,7 +109,7 @@ function Locations() {
 
   return (
     <div className={styles.page}>
-      {/* Header */}
+      {}
       <div className={styles.header}>
         <div>
           <h2 className={styles.title}>Game Locations</h2>
@@ -121,7 +121,7 @@ function Locations() {
         </button>
       </div>
 
-      {/* Stats */}
+      {}
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
           <span className="material-symbols-outlined">location_on</span>
@@ -153,7 +153,7 @@ function Locations() {
         </div>
       </div>
 
-      {/* Grid */}
+      {}
       {loading ? (
         <div className={styles.empty}>Loading locations...</div>
       ) : locations.length === 0 ? (
@@ -200,7 +200,7 @@ function Locations() {
         </div>
       )}
 
-      {/* Add Modal */}
+      {}
       <div className={`${styles.overlay} ${showModal ? styles.overlayVisible : ""}`} onClick={closeModal}>
         <div className={`${styles.modal} ${showModal ? styles.modalVisible : ""}`} onClick={e => e.stopPropagation()}>
           <div className={styles.modalHeader}>
@@ -256,7 +256,7 @@ function Locations() {
               <input className={styles.input} placeholder="e.g. 30.3285, 35.4444" value={form.coordinatesInput} onChange={e => setForm({ ...form, coordinatesInput: e.target.value })} />
             </div>
 
-            {/* Tasks */}
+            {}
             <div className={styles.tasksSection}>
               <div className={styles.tasksSectionHeader}>
                 <h4 className={styles.sectionTitle}>Tasks</h4>
@@ -304,7 +304,7 @@ function Locations() {
         </div>
       </div>
 
-      {/* Delete Confirm */}
+      {}
       {deleteTarget && (
         <div className={`${styles.overlay} ${styles.overlayVisible}`} onClick={() => setDeleteTarget(null)}>
           <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>

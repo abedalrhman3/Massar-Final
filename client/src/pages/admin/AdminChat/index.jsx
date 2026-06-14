@@ -248,13 +248,13 @@ function AdminChat() {
     return stored ? JSON.parse(stored) : null;
   });
 
-  // Fetch conversations from API on mount
+  
   useEffect(() => {
     const fetchConversations = async () => {
       try {
         const data = await chatService.getConversations();
         if (data && data.length > 0) {
-          // Merge API data with initial data structure
+          
           setConversations((prev) =>
             prev.map((conv) => {
               const apiConv = data.find((c) => c.id === conv.id);
@@ -277,7 +277,7 @@ function AdminChat() {
     fetchConversations();
   }, []);
 
-  // Fetch messages when selecting a conversation
+  
   useEffect(() => {
     if (selectedChat) {
       const fetchMessages = async () => {
@@ -297,14 +297,14 @@ function AdminChat() {
               [selectedChat.id]: formatted,
             }));
           } else if (!messages[selectedChat.id]) {
-            // Use mock messages if no API data
+            
             setMessages((prev) => ({
               ...prev,
               [selectedChat.id]: mockMessages[selectedChat.id] || [],
             }));
           }
         } catch (err) {
-          // Use mock messages on error
+          
           if (!messages[selectedChat.id]) {
             setMessages((prev) => ({
               ...prev,
@@ -317,7 +317,7 @@ function AdminChat() {
     }
   }, [selectedChat]);
 
-  // Filter conversations
+  
   const filteredConversations = conversations.filter((conv) => {
     const matchesSearch = conv.name
       .toLowerCase()
@@ -327,17 +327,17 @@ function AdminChat() {
     return matchesSearch;
   });
 
-  // Select a conversation
+  
   const handleSelectChat = (conv) => {
     setSelectedChat(conv);
     setShowDetails(false);
 
-    // Mark as read
+    
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c)),
     );
 
-    // Load messages if not already loaded
+    
     if (!messages[conv.id]) {
       setMessages((prev) => ({
         ...prev,
@@ -346,12 +346,12 @@ function AdminChat() {
     }
   };
 
-  // Scroll to bottom when messages change
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, selectedChat]);
 
-  // Send message
+  
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !uploadedImage) return;
 
@@ -364,7 +364,7 @@ function AdminChat() {
       image: uploadedImage,
     };
 
-    // Try to save to API
+    
     try {
       await chatService.sendMessage({
         conversationId: selectedChat.id,
@@ -393,7 +393,7 @@ function AdminChat() {
     }
   };
 
-  // Handle image upload
+  
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -405,12 +405,12 @@ function AdminChat() {
     }
   };
 
-  // Online count
+  
   const onlineCount = admins.filter((a) => a.status === "online").length;
 
   return (
     <div className={styles.page}>
-      {/* Column 1 - Conversation List */}
+      {}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <div className={styles.currentUser}>
@@ -496,7 +496,7 @@ function AdminChat() {
         </div>
       </div>
 
-      {/* Column 2 - Chat Area */}
+      {}
       <div className={styles.chatArea}>
         {selectedChat ? (
           <>
@@ -635,7 +635,7 @@ function AdminChat() {
         )}
       </div>
 
-      {/* Column 3 - Details Sidebar */}
+      {}
       {selectedChat && (
         <div
           className={`${styles.detailsSidebar} ${showDetails ? styles.detailsVisible : ""}`}

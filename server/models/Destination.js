@@ -36,7 +36,7 @@ const destinationSchema = new mongoose.Schema(
         default: 'Point',
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number], 
         default: undefined,
       },
     },

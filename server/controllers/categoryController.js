@@ -1,7 +1,7 @@
 const Category = require('../models/Category');
 const AppError = require('../utils/AppError');
 
-// GET /api/categories  — public
+
 exports.getAll = async (req, res, next) => {
   try {
     const categories = await Category.find();
@@ -11,7 +11,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// POST /api/categories  — admin
+
 exports.create = async (req, res, next) => {
   try {
     const category = await Category.create(req.body);
@@ -21,7 +21,7 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// PUT /api/categories/:id  — admin
+
 exports.update = async (req, res, next) => {
   try {
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -32,7 +32,7 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// DELETE /api/categories/:id  — admin
+
 exports.remove = async (req, res, next) => {
   try {
     const category = await Category.findByIdAndDelete(req.params.id);

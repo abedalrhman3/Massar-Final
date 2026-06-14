@@ -21,11 +21,11 @@ const questSchema = new mongoose.Schema(
       lng: { type: Number },
     },
 
-    // ── AI Quest Validation ──────────────────────────────
-    // Plain-English description of what the photo must show.
-    // Sent directly to Gemini as the quest requirement.
-    // Example: "A photo clearly showing the Treasury facade at Petra, Jordan"
-    // If omitted, AI photo validation is skipped for this quest.
+    
+    
+    
+    
+    
     ai_requirement: { type: String, default: null },
   },
   { timestamps: true }

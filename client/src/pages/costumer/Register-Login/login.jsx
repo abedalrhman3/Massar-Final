@@ -110,7 +110,7 @@ const Login = ({ fields, setFields }) => {
         </div>
 
         <div className={styles.socialBtns}>
-          {/* Google */}
+          {}
           <button
             type="button"
             className={`${styles.socialBtn} ${styles.google}`}

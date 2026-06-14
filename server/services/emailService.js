@@ -1,11 +1,11 @@
 const nodemailer = require('nodemailer');
 
-// ── Transporter ──────────────────────────────────────────────────────────────
-// Uses Gmail with an App Password (2FA must be enabled on the Gmail account).
-// Set these in your .env:
-//   EMAIL_USER=you@gmail.com
-//   EMAIL_PASS=your_app_password   ← 16-char Gmail App Password, NOT your login password
-//   CLIENT_URL=http://localhost:5173
+
+
+
+
+
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -14,12 +14,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ── Shared sender label ───────────────────────────────────────────────────────
+
 const FROM = `"Massar" <${process.env.EMAIL_USER}>`;
 
-// ── sendVerificationEmail ─────────────────────────────────────────────────────
-// Sends a one-click email-verification link to a newly registered user.
-// token  — raw (unhashed) token returned by authService
+
+
+
 const sendVerificationEmail = async (email, name, token) => {
   const url = `${process.env.CLIENT_URL}/verify-email/${token}`;
 
@@ -46,8 +46,8 @@ const sendVerificationEmail = async (email, name, token) => {
   });
 };
 
-// ── sendPasswordResetEmail ────────────────────────────────────────────────────
-// Sends a password-reset link. token — raw (unhashed) token.
+
+
 const sendPasswordResetEmail = async (email, name, token) => {
   const url = `${process.env.CLIENT_URL}/reset-password/${token}`;
 

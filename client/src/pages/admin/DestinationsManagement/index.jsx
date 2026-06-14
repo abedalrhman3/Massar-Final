@@ -76,14 +76,14 @@ function DestinationsManagement() {
     return () => { document.body.style.overflow = "unset"; };
   }, [showModal, showDeleteConfirm]);
 
-  // ── Pagination ─────────────────────────────────────────────────────────────
+  
   const totalDestinations = destinations.length;
   const totalPages = Math.ceil(totalDestinations / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalDestinations);
   const currentDestinations = destinations.slice(startIndex, endIndex);
 
-  // ── Modal helpers ──────────────────────────────────────────────────────────
+  
   const openAddModal = () => {
     setEditingDestination(null);
     setNewDest(emptyForm);
@@ -135,7 +135,7 @@ function DestinationsManagement() {
         };
       }
     } catch (_) {
-      // no detail doc yet — that's fine, form stays blank for those fields
+      
     }
 
     setNewDest(base);
@@ -214,21 +214,21 @@ function DestinationsManagement() {
       formData.append("tagline", newDest.tagline);
       formData.append("description", newDest.description);
 
-      // Build GeoJSON location from coordinates string
+      
       if (newDest.coordinates) {
         const [lat, lng] = newDest.coordinates.split(",").map(Number);
         formData.append("location", JSON.stringify({
           type: "Point",
-          coordinates: [lng, lat], // MongoDB expects [lng, lat]
+          coordinates: [lng, lat], 
         }));
       }
 
 
-      // Image — file takes priority over URL
+      
       if (newDest.image) {
         formData.append("image", newDest.image);
       } else if (newDest.imageUrl) {
-        formData.append("imageUrl", newDest.imageUrl); // ← add this
+        formData.append("imageUrl", newDest.imageUrl); 
       }
 
       let destinationId;
@@ -253,7 +253,7 @@ function DestinationsManagement() {
           bestSeason: newDest.bestSeason,
           averageCost: newDest.averageCost,
         },
-        // flat strings → [{name}], skip blanks
+        
         activities: newDest.activities.filter(a => a.trim()).map(name => ({ name })),
         guideSections: [
           { type: 'transport', title: 'How to Get There', content: newDest.travelGuide.howToGetThere, sortOrder: 0 },
@@ -270,7 +270,7 @@ function DestinationsManagement() {
     }
   };
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
+  
   const confirmDelete = async () => {
     try {
       await deleteDestination(showDeleteConfirm);
@@ -282,7 +282,7 @@ function DestinationsManagement() {
     }
   };
 
-  // ── Navigation ─────────────────────────────────────────────────────────────
+  
   const handleCardClick = (dest) => {
     navigate(`/admin/destinations/${dest.slug || toSlug(dest.name)}`);
   };
@@ -292,7 +292,7 @@ function DestinationsManagement() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  
   if (loading) return <div className={styles.page}><div className={styles.loading}>Loading destinations...</div></div>;
   if (error) return <div className={styles.page}><div className={styles.loading} style={{ color: '#dc2626' }}>{error}</div></div>;
 
@@ -311,7 +311,7 @@ function DestinationsManagement() {
         </button>
       </div>
 
-      {/* Stats row */}
+      {}
       <div className={styles.statsRow}>
         <div className={styles.statItem}>
           <p className={styles.statLabel}>Total Listings</p>
@@ -336,7 +336,7 @@ function DestinationsManagement() {
         </div>
       </div>
 
-      {/* Grid */}
+      {}
       <div className={styles.grid}>
         {currentDestinations.map((dest) => (
           <div
@@ -390,13 +390,13 @@ function DestinationsManagement() {
         ))}
       </div>
 
-      {/* Pagination */}
+      {}
       <div className={styles.pagination}>
         <p className={styles.paginationLabel}>
           Showing {startIndex + 1}–{endIndex} of {totalDestinations} destinations
         </p>
 
-        {/* Delete Confirm */}
+        {}
         {showDeleteConfirm && (
           <div className={`${styles.modalOverlay} ${styles.modalOverlayVisible}`} onClick={() => setShowDeleteConfirm(null)}>
             <div className={`${styles.modalContent} ${styles.modalContentVisible}`} onClick={(e) => e.stopPropagation()}>
@@ -415,7 +415,7 @@ function DestinationsManagement() {
           </div>
         )}
 
-        {/* Add / Edit Modal */}
+        {}
         <div
           className={`${styles.modalOverlay} ${showModal ? styles.modalOverlayVisible : ""}`}
           onClick={closeModal}
@@ -432,7 +432,7 @@ function DestinationsManagement() {
             </div>
 
             <div className={styles.modalBody}>
-              {/* Image */}
+              {}
               <div className={styles.imageUpload}>
                 {newDest.imagePreview || newDest.imageUrl ? (
                   <div className={styles.imagePreview}>
@@ -450,7 +450,7 @@ function DestinationsManagement() {
                 )}
               </div>
 
-              {/* Or image URL */}
+              {}
               <div className={styles.formGroup}>
                 <label className={styles.label}>Or paste image URL</label>
                 <input type="text" className={styles.input} placeholder="https://..." value={newDest.imageUrl} onChange={handleImageUrlChange} />
@@ -507,7 +507,7 @@ function DestinationsManagement() {
                 <input type="text" className={styles.input} placeholder="e.g., $50–$100/day" value={newDest.averageCost} onChange={(e) => setNewDest({ ...newDest, averageCost: e.target.value })} />
               </div>
 
-              {/* Activities */}
+              {}
               <h3 className={styles.sectionTitle}>Activities</h3>
               <div className={styles.activitiesList}>
                 {newDest.activities.map((activity, index) => (
@@ -524,7 +524,7 @@ function DestinationsManagement() {
                 </button>
               </div>
 
-              {/* Travel Guide */}
+              {}
               <h3 className={styles.sectionTitle}>Travel Guide</h3>
               {[
                 { field: "howToGetThere", label: "How to Get There" },

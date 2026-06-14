@@ -2,16 +2,16 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./InfoPanel.module.css";
 
-/**
- * InfoPanel
- * Shows route summary (distance + estimated driving time) for the selected destination.
- *
- * Props:
- *   destination  – location object (has .name / .name_en)
- *   routeInfo    – { distanceKm: number, durationMin: number } | null
- *   loading      – boolean (route is being fetched)
- *   onClose      – called when the user dismisses the panel
- */
+
+
+
+
+
+
+
+
+
+
 const InfoPanel = ({ destination, routeInfo, loading, onClose }) => {
     const { i18n } = useTranslation();
     const isAr = i18n.language === "ar";
@@ -39,7 +39,7 @@ const InfoPanel = ({ destination, routeInfo, loading, onClose }) => {
 
     return (
         <div className={styles.panel} dir={isAr ? "rtl" : "ltr"}>
-            {/* Header */}
+            {}
             <div className={styles.header}>
                 <div className={styles.headerLeft}>
                     <span className={styles.icon}>🗺️</span>
@@ -50,7 +50,7 @@ const InfoPanel = ({ destination, routeInfo, loading, onClose }) => {
                 </button>
             </div>
 
-            {/* Body */}
+            {}
             <div className={styles.body}>
                 {loading ? (
                     <div className={styles.loadingRow}>

@@ -4,9 +4,9 @@ const UserSession = require('../models/UserSession');
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/AppError');
 
-// -------------------------------------------------------
-// POST /api/auth/register
-// -------------------------------------------------------
+
+
+
 exports.register = async (req, res, next) => {
   try {
     const { username, is_admin } = req.body;
@@ -17,8 +17,8 @@ exports.register = async (req, res, next) => {
 
     const user = await authService.register(req.body);
 
-    // NOTE: user is NOT logged in automatically until they verify their email.
-    // Return a success message instead of a JWT cookie.
+    
+    
     res.status(201).json({
       success: true,
       message: 'Registration successful. Please check your email to verify your account.',
@@ -29,9 +29,9 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// POST /api/auth/login
-// -------------------------------------------------------
+
+
+
 exports.login = async (req, res, next) => {
   try {
     const { token, user } = await authService.login(req.body);
@@ -49,9 +49,9 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// POST /api/auth/logout
-// -------------------------------------------------------
+
+
+
 exports.logout = async (req, res, next) => {
   try {
     await authService.logout(req.token);
@@ -62,9 +62,9 @@ exports.logout = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// GET /api/auth/verify-email/:token
-// -------------------------------------------------------
+
+
+
 exports.verifyEmail = async (req, res, next) => {
   try {
     await authService.verifyEmail(req.params.token);
@@ -74,13 +74,13 @@ exports.verifyEmail = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// POST /api/auth/forgot-password
-// -------------------------------------------------------
+
+
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     await authService.forgotPassword(req.body.email);
-    // Always return the same response to prevent email enumeration
+    
     res.json({
       success: true,
       message: 'If that email is registered, a reset link has been sent.',
@@ -90,9 +90,9 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// POST /api/auth/reset-password/:token
-// -------------------------------------------------------
+
+
+
 exports.resetPassword = async (req, res, next) => {
   try {
     await authService.resetPassword(req.params.token, req.body.password);
@@ -102,9 +102,9 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// GET /api/auth/me
-// -------------------------------------------------------
+
+
+
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId).select('-passwordHash');
@@ -115,7 +115,7 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
-// GET /api/users/:id  — admin
+
 exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select('-passwordHash');
@@ -126,7 +126,7 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
-// GET /api/auth/users  — admin
+
 exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find().select('-passwordHash');
@@ -136,9 +136,9 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// DELETE /api/auth/users/:id  — admin
-// -------------------------------------------------------
+
+
+
 exports.deleteUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -150,9 +150,9 @@ exports.deleteUser = async (req, res, next) => {
   }
 };
 
-// -------------------------------------------------------
-// PUT /api/auth/users/:id/ban  — admin
-// -------------------------------------------------------
+
+
+
 exports.toggleBanUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
@@ -179,7 +179,7 @@ exports.toggleBanUser = async (req, res, next) => {
   }
 };
 
-// PUT /api/auth/update-profile
+
 exports.updateProfile = async (req, res, next) => {
   try {
     const updates = {};
@@ -197,7 +197,7 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-// PUT /api/auth/update-password
+
 exports.updatePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -216,12 +216,12 @@ exports.updatePassword = async (req, res, next) => {
   }
 };
 
-// POST /api/auth/upload-avatar
+
 exports.uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) return next(new AppError('Please provide an image file', 400));
 
-    // Run strict content safety moderation check
+    
     const { checkPhotoSafety } = require('../services/validateQuestPhotoService');
     console.log(`[AVATAR] Running global safety check for user: ${req.user.userId}`);
     const safetyResult = await checkPhotoSafety(req.file.buffer, req.file.mimetype);

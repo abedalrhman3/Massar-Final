@@ -62,7 +62,7 @@ function extractId(res) {
     return res.body?.data?._id || res.body?._id || null;
 }
 
-// ── Main ─────────────────────────────────────────────────────────
+
 async function run() {
     console.log('\n\x1b[1mRunning full API test suite against', BASE_URL, '\x1b[0m');
 
@@ -70,14 +70,14 @@ async function run() {
     const testEmail = `test_${ts}@example.com`;
     const testUsername = `testuser_${ts}`;
 
-    // ── Change these to your admin credentials ───────────────────
+    
     const adminEmail = 'hosaamazzam.admin@gmail.com';
     const adminPassword = 'hosaam25Z@';
-    // ─────────────────────────────────────────────────────────────
+    
 
-    // ════════════════════════════════════════════════════════════
-    // AUTH
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Auth — happy path');
 
     let r = await request('POST', '/api/auth/register', {
@@ -145,24 +145,24 @@ async function run() {
     r = await request('PUT', `/api/auth/users/${adminId}/ban`, null, false, true);
     log('PUT  /api/auth/users/:id/ban (self-ban → 400)', r, 400);
 
-    // Unban test user so token stays valid
+    
     await request('PUT', `/api/auth/users/${userId}/ban`, null, false, true);
 
-    //reset token
+    
     r = await request('POST', '/api/auth/login', { email: testEmail, password: 'Test@1234' });
     if (r.body?.token) token = r.body.token;
 
-    // ════════════════════════════════════════════════════════════
-    // DESTINATIONS
-    // Note: POST/PUT use single('image') upload middleware.
-    // JSON-only requests will be rejected. Skipping create/update.
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
+    
+    
     section('Destinations');
 
     r = await request('GET', '/api/destinations', null, true);
     log('GET  /api/destinations', r, 200);
 
-    // Grab first destination slug from list for further tests
+    
     const destinations = r.body?.data || r.body?.destinations || [];
     if (destinations.length > 0) {
         destinationSlug = destinations[0].slug;
@@ -185,9 +185,9 @@ async function run() {
 
     note('POST/PUT /api/destinations require multipart/form-data (image upload) — skipped in JSON test');
 
-    // ════════════════════════════════════════════════════════════
-    // CATEGORIES
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Categories');
 
     r = await request('GET', '/api/categories', null, true);
@@ -210,11 +210,11 @@ async function run() {
     r = await request('POST', '/api/categories', { name: 'No auth', type: 'place' }, true, false);
     log('POST /api/categories (non-admin → 403)', r, 403);
 
-    // ════════════════════════════════════════════════════════════
-    // PLACES / RESTAURANTS / HOTELS
-    // All use listingRouter with fields() upload middleware.
-    // POST/PUT require multipart/form-data — skipped.
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
+    
+    
     section('Places');
 
     r = await request('GET', '/api/places', null, true);
@@ -245,10 +245,10 @@ async function run() {
 
     note('POST/PUT /api/hotels require multipart/form-data — skipped in JSON test');
 
-    // ════════════════════════════════════════════════════════════
-    // EVENTS
-    // POST/PUT use fields() upload middleware — skipped.
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
+    
     section('Events');
 
     r = await request('GET', '/api/events', null, true);
@@ -259,9 +259,9 @@ async function run() {
 
     note('POST/PUT /api/events require multipart/form-data (coverImage upload) — skipped in JSON test');
 
-    // ════════════════════════════════════════════════════════════
-    // SAVED
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Saved');
 
     r = await request('GET', '/api/saved', null, true);
@@ -270,7 +270,7 @@ async function run() {
     r = await request('GET', '/api/saved', null, false);
     log('GET  /api/saved (no token → 401)', r, 401);
 
-    // Only test save/unsave if we have a real entity id
+    
     const firstPlace = (r.body?.data || [])[0];
     if (destinationId) {
         r = await request('POST', '/api/saved', { entityId: destinationId, entityType: 'destination' }, true);
@@ -288,9 +288,9 @@ async function run() {
     r = await request('POST', '/api/saved', { entityId: '000000000000000000000000', entityType: 'place' }, true);
     log('POST /api/saved (non-existent entity → 404)', r, 404);
 
-    // ════════════════════════════════════════════════════════════
-    // NOTIFICATIONS
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Notifications');
 
     r = await request('GET', '/api/notifications', null, true);
@@ -302,9 +302,9 @@ async function run() {
     r = await request('GET', '/api/notifications', null, false);
     log('GET  /api/notifications (no token → 401)', r, 401);
 
-    // ════════════════════════════════════════════════════════════
-    // ACHIEVEMENTS
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Achievements');
 
     r = await request('GET', '/api/achievements', null, true);
@@ -332,9 +332,9 @@ async function run() {
     }, true, false);
     log('POST /api/achievements (non-admin → 403)', r, 403);
 
-    // ════════════════════════════════════════════════════════════
-    // LOCATIONS
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Locations');
 
     r = await request('GET', '/api/locations', null, true);
@@ -376,9 +376,9 @@ async function run() {
     r = await request('POST', '/api/locations', { name: 'Missing name_en' }, false, true);
     log('POST /api/locations (missing required fields → 400/500)', r, 400);
 
-    // ════════════════════════════════════════════════════════════
-    // QUESTS
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Quests');
 
     r = await request('GET', '/api/quests', null, false);
@@ -409,9 +409,9 @@ async function run() {
     r = await request('POST', '/api/quests', { title: 'No auth' }, true, false);
     log('POST /api/quests (non-admin → 403)', r, 403);
 
-    // ════════════════════════════════════════════════════════════
-    // PHOTOS
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Photos');
 
     r = await request('GET', '/api/photos', null, false);
@@ -425,9 +425,9 @@ async function run() {
 
     note('POST photo (complete-task) requires multipart/form-data — tested under /api/locations');
 
-    // ════════════════════════════════════════════════════════════
-    // GAME
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Game');
 
     r = await request('GET', '/api/game/leaderboard', null, false);
@@ -444,9 +444,9 @@ async function run() {
     r = await request('POST', '/api/game/user/update-frame', null, false);
     log('POST /api/game/user/update-frame (no token → 401)', r, 401);
 
-    // ════════════════════════════════════════════════════════════
-    // ADMIN ROUTES
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Admin');
 
     r = await request('GET', '/api/admin/settings/budget', null, false, true);
@@ -460,9 +460,9 @@ async function run() {
 
     note('POST /api/admin/upload-asset requires multipart/form-data — skipped');
 
-    // ════════════════════════════════════════════════════════════
-    // CLEANUP
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     section('Cleanup');
 
     if (questId) {
@@ -485,9 +485,9 @@ async function run() {
     r = await request('POST', '/api/auth/logout', null, false, true);
     log('POST /api/auth/logout', r, 200);
 
-    // ════════════════════════════════════════════════════════════
-    // SUMMARY
-    // ════════════════════════════════════════════════════════════
+    
+    
+    
     const passed = results.filter((x) => x.ok).length;
     const failed = results.filter((x) => !x.ok).length;
 

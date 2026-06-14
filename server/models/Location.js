@@ -16,7 +16,7 @@ const locationSchema = new mongoose.Schema(
     description: { type: String },
     description_en: { type: String },
     coordinates: {
-      lat: { type: Number },  // not required — admin can add coordinates later
+      lat: { type: Number },  
       lng: { type: Number },
     },
     budget_category: {

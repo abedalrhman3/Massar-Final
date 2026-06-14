@@ -1,20 +1,20 @@
-// ============================================================
-// MongoDB Schema — Travel / Destinations App
-// ============================================================
-// Run with: mongosh < mongodb-schema.js
-// Or import each validator individually via MongoDB Compass.
-// ============================================================
 
-// Helper: drop & recreate a collection with a JSON Schema validator
+
+
+
+
+
+
+
 function createCollection(db, name, validator) {
   try { db.dropCollection(name); } catch (_) {}
   db.createCollection(name, { validator: { $jsonSchema: validator } });
   print(`✔  ${name}`);
 }
 
-// ============================================================
-// USERS
-// ============================================================
+
+
+
 
 createCollection(db, "users", {
   bsonType: "object",
@@ -33,16 +33,16 @@ createCollection(db, "users", {
 db.users.createIndex({ email: 1 }, { unique: true });
 db.users.createIndex({ role: 1 });
 
-// ============================================================
-// USER SESSIONS
-// ============================================================
+
+
+
 
 createCollection(db, "user_sessions", {
   bsonType: "object",
   required: ["userId", "token", "expiresAt", "createdAt"],
   properties: {
     _id:       { bsonType: "objectId" },
-    userId:    { bsonType: "objectId" },   // ref: users
+    userId:    { bsonType: "objectId" },   
     token:     { bsonType: "string" },
     expiresAt: { bsonType: "date" },
     createdAt: { bsonType: "date" },
@@ -51,11 +51,11 @@ createCollection(db, "user_sessions", {
 
 db.user_sessions.createIndex({ userId: 1 });
 db.user_sessions.createIndex({ token: 1 }, { unique: true });
-db.user_sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
+db.user_sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }); 
 
-// ============================================================
-// DESTINATIONS
-// ============================================================
+
+
+
 
 createCollection(db, "destinations", {
   bsonType: "object",
@@ -90,18 +90,18 @@ db.destinations.createIndex({ slug: 1 }, { unique: true });
 db.destinations.createIndex({ location: "2dsphere" });
 db.destinations.createIndex({ isPublished: 1 });
 
-// ============================================================
-// DESTINATION DETAILS
-// ============================================================
+
+
+
 
 createCollection(db, "destination_details", {
   bsonType: "object",
   required: ["destinationId"],
   properties: {
     _id:           { bsonType: "objectId" },
-    destinationId: { bsonType: "objectId" },   // ref: destinations
+    destinationId: { bsonType: "objectId" },   
 
-    // overview — embedded object
+    
     overview: {
       bsonType: "object",
       properties: {
@@ -115,7 +115,7 @@ createCollection(db, "destination_details", {
       },
     },
 
-    // activities — embedded array
+    
     activities: {
       bsonType: "array",
       items: {
@@ -128,7 +128,7 @@ createCollection(db, "destination_details", {
       },
     },
 
-    // guideSections — embedded array with enum type
+    
     guideSections: {
       bsonType: "array",
       items: {
@@ -149,9 +149,9 @@ createCollection(db, "destination_details", {
 
 db.destination_details.createIndex({ destinationId: 1 }, { unique: true });
 
-// ============================================================
-// CATEGORIES
-// ============================================================
+
+
+
 
 createCollection(db, "categories", {
   bsonType: "object",
@@ -169,22 +169,22 @@ createCollection(db, "categories", {
 
 db.categories.createIndex({ type: 1 });
 
-// ============================================================
-// PLACES
-// ============================================================
+
+
+
 
 createCollection(db, "places", {
   bsonType: "object",
   required: ["destinationId", "categoryId", "isPublished"],
   properties: {
     _id:            { bsonType: "objectId" },
-    destinationId:  { bsonType: "objectId" },   // ref: destinations
-    categoryId:     { bsonType: "objectId" },   // ref: categories
+    destinationId:  { bsonType: "objectId" },   
+    categoryId:     { bsonType: "objectId" },   
     googlePlaceId:  { bsonType: "string" },
     customOverview: { bsonType: "string" },
     isPublished:    { bsonType: "bool" },
 
-    // contact — embedded object
+    
     contact: {
       bsonType: "object",
       properties: {
@@ -203,17 +203,17 @@ db.places.createIndex({ destinationId: 1 });
 db.places.createIndex({ categoryId: 1 });
 db.places.createIndex({ isPublished: 1 });
 
-// ============================================================
-// RESTAURANTS
-// ============================================================
+
+
+
 
 createCollection(db, "restaurants", {
   bsonType: "object",
   required: ["destinationId", "categoryId", "isPublished"],
   properties: {
     _id:            { bsonType: "objectId" },
-    destinationId:  { bsonType: "objectId" },   // ref: destinations
-    categoryId:     { bsonType: "objectId" },   // ref: categories
+    destinationId:  { bsonType: "objectId" },   
+    categoryId:     { bsonType: "objectId" },   
     googlePlaceId:  { bsonType: "string" },
     customOverview: { bsonType: "string" },
     bookingUrl:     { bsonType: "string" },
@@ -237,17 +237,17 @@ db.restaurants.createIndex({ destinationId: 1 });
 db.restaurants.createIndex({ categoryId: 1 });
 db.restaurants.createIndex({ isPublished: 1 });
 
-// ============================================================
-// HOTELS
-// ============================================================
+
+
+
 
 createCollection(db, "hotels", {
   bsonType: "object",
   required: ["destinationId", "categoryId", "isPublished"],
   properties: {
     _id:            { bsonType: "objectId" },
-    destinationId:  { bsonType: "objectId" },   // ref: destinations
-    categoryId:     { bsonType: "objectId" },   // ref: categories
+    destinationId:  { bsonType: "objectId" },   
+    categoryId:     { bsonType: "objectId" },   
     googlePlaceId:  { bsonType: "string" },
     customOverview: { bsonType: "string" },
     bookingUrl:     { bsonType: "string" },
@@ -271,17 +271,17 @@ db.hotels.createIndex({ destinationId: 1 });
 db.hotels.createIndex({ categoryId: 1 });
 db.hotels.createIndex({ isPublished: 1 });
 
-// ============================================================
-// EVENTS
-// ============================================================
+
+
+
 
 createCollection(db, "events", {
   bsonType: "object",
   required: ["destinationId", "categoryId", "name", "startDate", "isPublished"],
   properties: {
     _id:               { bsonType: "objectId" },
-    destinationId:     { bsonType: "objectId" },   // ref: destinations
-    categoryId:        { bsonType: "objectId" },   // ref: categories
+    destinationId:     { bsonType: "objectId" },   
+    categoryId:        { bsonType: "objectId" },   
     name:              { bsonType: "string" },
     startDate:         { bsonType: "date" },
     endDate:           { bsonType: "date" },
@@ -323,16 +323,16 @@ db.events.createIndex({ startDate: 1 });
 db.events.createIndex({ location: "2dsphere" });
 db.events.createIndex({ isPublished: 1 });
 
-// ============================================================
-// SAVED ITEMS
-// ============================================================
+
+
+
 
 createCollection(db, "saved_items", {
   bsonType: "object",
   required: ["userId", "entityType", "entityId", "savedAt"],
   properties: {
     _id:        { bsonType: "objectId" },
-    userId:     { bsonType: "objectId" },   // ref: users
+    userId:     { bsonType: "objectId" },   
     entityType: {
       bsonType: "string",
       enum: ["place", "restaurant", "hotel", "event", "destination"],
@@ -345,16 +345,16 @@ createCollection(db, "saved_items", {
 db.saved_items.createIndex({ userId: 1 });
 db.saved_items.createIndex({ userId: 1, entityType: 1, entityId: 1 }, { unique: true });
 
-// ============================================================
-// NOTIFICATIONS
-// ============================================================
+
+
+
 
 createCollection(db, "notifications", {
   bsonType: "object",
   required: ["userId", "type", "title", "body", "isRead", "createdAt"],
   properties: {
     _id:       { bsonType: "objectId" },
-    userId:    { bsonType: "objectId" },   // ref: users
+    userId:    { bsonType: "objectId" },   
     type:      {
       bsonType: "string",
       enum: ["system", "promo", "update", "reminder"],
@@ -370,9 +370,9 @@ db.notifications.createIndex({ userId: 1 });
 db.notifications.createIndex({ userId: 1, isRead: 1 });
 db.notifications.createIndex({ createdAt: 1 });
 
-// ============================================================
-// ACHIEVEMENTS
-// ============================================================
+
+
+
 
 createCollection(db, "achievements", {
   bsonType: "object",
@@ -388,17 +388,17 @@ createCollection(db, "achievements", {
   },
 });
 
-// ============================================================
-// USER ACHIEVEMENTS
-// ============================================================
+
+
+
 
 createCollection(db, "user_achievements", {
   bsonType: "object",
   required: ["userId", "achievementId", "earnedAt"],
   properties: {
     _id:           { bsonType: "objectId" },
-    userId:        { bsonType: "objectId" },       // ref: users
-    achievementId: { bsonType: "objectId" },       // ref: achievements
+    userId:        { bsonType: "objectId" },       
+    achievementId: { bsonType: "objectId" },       
     earnedAt:      { bsonType: "date" },
   },
 });
@@ -406,7 +406,7 @@ createCollection(db, "user_achievements", {
 db.user_achievements.createIndex({ userId: 1 });
 db.user_achievements.createIndex({ userId: 1, achievementId: 1 }, { unique: true });
 
-// ============================================================
-// Done
-// ============================================================
+
+
+
 print("\n✅  All collections created with validators and indexes.");

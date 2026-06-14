@@ -6,7 +6,7 @@ import { getDestinations } from "@/api/destination";
 import { getReportedPhotos, getBudgetSettings } from "@/api/admin";
 import styles from "./Dashboard.module.css";
 
-// Chart data for different time periods (static — no analytics endpoint)
+
 const chartData = {
   daily: {
     path: "M0,130 C30,125 50,110 80,100 C110,90 130,95 160,80 C190,65 210,70 240,55 C270,40 290,50 320,40 C350,30 380,20 420,15 C460,10 500,25 540,20 C560,18 580,30 600,25",
@@ -40,7 +40,7 @@ const statsData = {
   },
 };
 
-// Map a reported photo into an activity item shape
+
 function photoToActivity(photo) {
   return {
     icon: "flag",
@@ -88,18 +88,18 @@ function Dashboard() {
   const navigate = useNavigate();
   const [chartPeriod, setChartPeriod] = useState("daily");
 
-  // ── Live API calls ──────────────────────────────────────────
+  
   const { data: usersData, loading: usersLoading } = useApi(getAllUsers);
   const { data: destinationsData, loading: destinationsLoading } = useApi(getDestinations);
   const { data: reportedData, loading: reportedLoading } = useApi(getReportedPhotos);
   const { data: budgetData, loading: budgetLoading } = useApi(getBudgetSettings);
 
-  // ── Derived values ──────────────────────────────────────────
+  
   const totalUsers = usersData?.data?.length ?? usersData?.length ?? null;
   const destinations = destinationsData?.data ?? [];
   const totalDestinations = destinations.length || null;
 
-  // Reported photos → activity feed (cap at 5)
+  
   const reportedPhotos = reportedData?.data ?? [];
   const activityItems = reportedPhotos.length > 0
     ? reportedPhotos.slice(0, 5).map(photoToActivity)
@@ -111,13 +111,13 @@ function Dashboard() {
       { icon: "info", text: (<><strong>System Alert:</strong> High traffic spike detected in North America.</>), time: "YESTERDAY" },
     ];
 
-  // Budget ranges for the pro-tip banner
+  
   const budgetRanges = budgetData?.budget_ranges ?? budgetData ?? null;
   const budgetLabel = budgetRanges && !budgetLoading
     ? `Low ≤ $${budgetRanges.low_max} · Mid ≤ $${budgetRanges.mid_max}`
     : null;
 
-  // Top destinations: first 2 published ones, fallback to first 2
+  
   const topDestinations = destinations.length > 0
     ? (destinations.filter((d) => d.isPublished !== false).slice(0, 2).length >= 2
       ? destinations.filter((d) => d.isPublished !== false).slice(0, 2)
@@ -141,7 +141,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Stats */}
+      {}
       <div className={styles.statsGrid}>
         <StatCard
           label="Total Destinations"
@@ -163,7 +163,7 @@ function Dashboard() {
       </div>
 
 
-      {/* Top destinations */}
+      {}
       <div className={styles.destSection}>
         <h2 className={styles.sectionTitle}>Top Performing Destinations</h2>
         {destinationsLoading ? (

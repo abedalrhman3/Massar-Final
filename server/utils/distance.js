@@ -1,13 +1,13 @@
-/**
- * Calculates the Haversine distance in meters between two GPS coordinates.
- * @param {number} lat1
- * @param {number} lon1
- * @param {number} lat2
- * @param {number} lon2
- * @returns {number} Distance in meters
- */
+
+
+
+
+
+
+
+
 function getDistanceInMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Earth radius in meters
+  const R = 6371e3; 
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =

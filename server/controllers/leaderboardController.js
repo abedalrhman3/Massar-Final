@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 
-// GET /api/leaderboard  — public
+
 exports.getLeaderboard = async (req, res, next) => {
   try {
     const users = await User.find()

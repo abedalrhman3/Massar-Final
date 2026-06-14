@@ -1,4 +1,4 @@
-// Chat service - API calls for chat functionality
+
 
 const API_URL = '/api/chat';
 

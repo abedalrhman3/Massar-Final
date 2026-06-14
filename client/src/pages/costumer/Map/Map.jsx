@@ -16,7 +16,7 @@ import QuestsPanel from "./rightPanel/QuestPanel";
 import { placesApi, restaurantsApi, hotelsApi } from "@/api/listings";
 import InfoPanel from "./InfoPanel/InfoPanel";
 
-// Fix Leaflet default icon issue
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -24,7 +24,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// Handles map click for manual location
+
 const ManualLocationPicker = ({ onPick }) => {
   useMapEvents({
     click(e) {
@@ -34,7 +34,7 @@ const ManualLocationPicker = ({ onPick }) => {
   return null;
 };
 
-// Handles map click to clear route coordinates
+
 const MapClickHandler = ({ onMapClick }) => {
   useMapEvents({
     click() {
@@ -44,7 +44,7 @@ const MapClickHandler = ({ onMapClick }) => {
   return null;
 };
 
-// A helper component to center the map when initial coordinates are passed
+
 const MapCenterSetter = ({ coords }) => {
   const map = useMap();
   useEffect(() => {
@@ -287,7 +287,7 @@ const Map = () => {
         isLeftOpen={openPanel === "left"}
       />
 
-      {/* Controls Bar */}
+      {}
       <div className={styles.controlsBar} style={{ zIndex: 10 }}>
         <div className={styles.leftContainer}>
 
@@ -410,7 +410,7 @@ const Map = () => {
         </MapContainer>
       </div>
 
-      {/* ── InfoPanel: floats over map, shown when a destination is selected ── */}
+      {}
       <InfoPanel
         destination={selectedLocation}
         routeInfo={routeInfo}

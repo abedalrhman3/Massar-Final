@@ -21,10 +21,10 @@ const ForgotPassword = () => {
 
     try {
       await client.post("/auth/forgot-password", { email });
-      // Always show a neutral message to avoid email enumeration
+      
       setMessage("If that email is registered, a reset link has been sent.");
     } catch (err) {
-      // Still show the neutral message on error (don't reveal whether email exists)
+      
       setMessage("If that email is registered, a reset link has been sent.");
     } finally {
       setIsLoading(false);

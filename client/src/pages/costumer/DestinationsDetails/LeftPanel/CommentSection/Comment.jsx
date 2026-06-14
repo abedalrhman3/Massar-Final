@@ -11,9 +11,9 @@ import {
 } from "@/api/comments"
 import { useAuth } from "@/context/AuthContext"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 function timeAgo(ts) {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -23,9 +23,9 @@ function timeAgo(ts) {
   return `${Math.floor(s / 86400)} days ago`
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENTS (unchanged structure, keep all classes intact)
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 function Avatar({ initials, color, size = 36 }) {
   return (
@@ -227,9 +227,9 @@ function CommentItem({ comment, currentUserId, isReply = false, onLike, onDislik
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 const CommentSection = forwardRef(({ placeId }, ref) => {
   const [comments, setComments] = useState([])
@@ -280,7 +280,7 @@ const CommentSection = forwardRef(({ placeId }, ref) => {
     setTimeout(() => { el.focus(); el.setSelectionRange(s + before.length, s + before.length + selected.length) }, 0)
   }
 
-  // ── MUTATIONS ───────────────────────────────────────────────────────────────
+  
 
   async function submitComment() {
     const text = input.trim()
@@ -291,7 +291,7 @@ const CommentSection = forwardRef(({ placeId }, ref) => {
       return
     }
 
-    // Optimistic placeholder
+    
     const tempId = `temp-${Date.now()}`
     const userName = user?.name || user?.username || "You"
     const initials = userName.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() || "YO"
@@ -334,7 +334,7 @@ const CommentSection = forwardRef(({ placeId }, ref) => {
       setComments(prev => mutateVoteFromServer(prev, id, { likes, dislikes, liked, disliked }))
     } catch (err) {
       console.error("Failed to like comment:", err)
-      setComments(prev => mutateLike(prev, id, "like")) // rollback
+      setComments(prev => mutateLike(prev, id, "like")) 
     }
   }
 
@@ -425,7 +425,7 @@ const CommentSection = forwardRef(({ placeId }, ref) => {
         </button>
       </h2>
 
-      {/* ── COMPOSER ── */}
+      {}
       <div className={styles.composer}>
         <textarea
           ref={textareaRef}
@@ -458,7 +458,7 @@ const CommentSection = forwardRef(({ placeId }, ref) => {
         </div>
       </div>
 
-      {/* ── COMMENTS LIST ── */}
+      {}
       <div className={styles["comments-list"]}>
         {loading ? (
           <p className={styles["empty-state"]}>Loading comments…</p>
@@ -486,9 +486,9 @@ const CommentSection = forwardRef(({ placeId }, ref) => {
 CommentSection.displayName = "CommentSection"
 export default CommentSection
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PURE IMMUTABLE HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 function mutateLike(comments, id, kind) {
   return comments.map(c => {

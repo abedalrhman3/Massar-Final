@@ -141,7 +141,7 @@ function Quests() {
         </button>
       </div>
 
-      {/* Stats */}
+      {}
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
           <span className="material-symbols-outlined">map</span>
@@ -170,7 +170,7 @@ function Quests() {
         </div>
       </div>
 
-      {/* List */}
+      {}
       {loading ? (
         <div className={styles.empty}>Loading quests...</div>
       ) : quests.length === 0 ? (
@@ -229,7 +229,7 @@ function Quests() {
         </div>
       )}
 
-      {/* Add Modal */}
+      {}
       <div className={`${styles.overlay} ${showModal ? styles.overlayVisible : ""}`} onClick={closeModal}>
         <div className={`${styles.modal} ${showModal ? styles.modalVisible : ""}`} onClick={e => e.stopPropagation()}>
           <div className={styles.modalHeader}>
@@ -276,7 +276,7 @@ function Quests() {
               </div>
             </div>
 
-            {/* Location picker */}
+            {}
             <div className={styles.formGroup}>
               <label className={styles.label}>Linked Locations</label>
               {allLocations.length === 0 ? (
@@ -294,7 +294,7 @@ function Quests() {
               )}
             </div>
 
-            {/* Badge & Icon uploads */}
+            {}
             <div className={styles.row2}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Completion Badge</label>
@@ -330,7 +330,7 @@ function Quests() {
         </div>
       </div>
 
-      {/* Delete Confirm */}
+      {}
       {deleteTarget && (
         <div className={`${styles.overlay} ${styles.overlayVisible}`} onClick={() => setDeleteTarget(null)}>
           <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>

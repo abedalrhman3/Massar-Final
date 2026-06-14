@@ -1,17 +1,17 @@
 import styles from "./About.module.css";
-//import Footer from "../../components/Footer/Footer";
 
-// Icons
+
+
 import star from "../../../assets/images/icons/star.png";
 import shine from "../../../assets/images/icons/shine.png";
 import play from "../../../assets/images/icons/play.png";
-/* import tourGuide from "../../../assets/images/icons/tour-guide.png";
-import location from "../../../assets/images/icons/location.png";
-import walk from "../../../assets/images/icons/walk.png"; */
+
+
+
 import Ai from "/images/ai.png";
 import Game from "/images/game.png";
 import Event from "/images/event.png";
-// Decor
+
 import about1 from "../../../assets/images/decor/about-1.png";
 import about2 from "../../../assets/images/decor/about-2.png";
 import about3 from "../../../assets/images/decor/about-3.jpg";
@@ -126,7 +126,7 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
-      {/* <Footer /> */}
+      {}
     </>
   );
 }

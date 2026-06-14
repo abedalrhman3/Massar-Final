@@ -303,7 +303,7 @@ const baseDestinations = [
   },
 ];
 
-// Duplicate destinations to reach 55 total
+
 export const destinations = [
   ...baseDestinations,
   ...baseDestinations.slice(0, 25),

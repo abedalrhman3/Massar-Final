@@ -147,7 +147,7 @@ function Reports() {
         </div>
       )}
 
-      {/* Action Confirmation Modals */}
+      {}
       {confirmAction && (
         <div className={styles.overlay} onClick={() => setConfirmAction(null)}>
           <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
@@ -183,14 +183,14 @@ function Reports() {
                   Select additional actions to apply to this rejected photo or user.
                 </p>
                 <div className={styles.optionsList}>
-                  {/* <label className={styles.optionLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deletePhotoOpt}
-                      onChange={(e) => setDeletePhotoOpt(e.target.checked)}
-                    />
-                    <span>Delete photo permanently from DB & Cloudinary</span>
-                  </label> */}
+                  {
+
+
+
+
+
+
+}
                   <label className={styles.optionLabel}>
                     <input
                       type="checkbox"
@@ -222,7 +222,7 @@ function Reports() {
         </div>
       )}
 
-      {/* Full-Size Lightbox Overlay */}
+      {}
       {lightboxPhoto && (
         <div className={styles.lightboxOverlay} onClick={() => setLightboxPhoto(null)}>
           <button className={styles.lightboxCloseBtn} onClick={() => setLightboxPhoto(null)}>

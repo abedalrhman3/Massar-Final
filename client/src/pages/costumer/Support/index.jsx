@@ -45,7 +45,7 @@ const team = [
 ];
 
 function Support() {
-  // add to your existing useState imports area
+  
   const [hoveredMember, setHoveredMember] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -131,7 +131,7 @@ function Support() {
             )}
 
             <div className={styles.formRow}>
-              {/* Name */}
+              {}
               <div className={styles.inputWrapper}>
                 <input
                   type="text"
@@ -148,7 +148,7 @@ function Support() {
                 </label>
               </div>
 
-              {/* Email */}
+              {}
               <div className={styles.inputWrapper}>
                 <input
                   type="email"
@@ -166,7 +166,7 @@ function Support() {
               </div>
             </div>
 
-            {/* Subject */}
+            {}
             <div className={styles.inputWrapper}>
               <input
                 type="text"
@@ -183,7 +183,7 @@ function Support() {
               </label>
             </div>
 
-            {/* Message */}
+            {}
             <div className={styles.textareaWrapper}>
               <textarea
                 id="field-message"
@@ -219,7 +219,7 @@ function Support() {
             </button>
           </div>
 
-          {/* Sidebar */}
+          {}
           <div className={styles.infoCol}>
             <div className={styles.immediateCard}>
               <h3 className={styles.immediateTitle}>Immediate Assistance</h3>
@@ -239,7 +239,7 @@ function Support() {
           </div>
         </div>
 
-        {/* Team */}
+        {}
         <div className={styles.teamSection}>
           <h2 className={styles.teamTitle}>Our Support Team</h2>
           <div className={styles.teamGrid}>
@@ -264,7 +264,7 @@ function Support() {
               </div>
             ))}
 
-            {/* Skills Modal */}
+            {}
             {showSkills && (
               <div className={styles.modalOverlay} onClick={() => setShowSkills(false)}>
                 <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>

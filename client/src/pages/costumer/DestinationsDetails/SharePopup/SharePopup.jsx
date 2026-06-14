@@ -18,7 +18,7 @@ const PLATFORMS = [
   {
     label: "Instagram",
     icon: InstagramImage,
-    // Instagram has no direct web share URL; open the app/site home instead
+    
     getUrl: (url, title) =>
       `https://www.instagram.com/`,
   },
@@ -52,7 +52,7 @@ const SharePopup = ({ onClose, shareUrl, shareTitle = "Check this out!" }) => {
   const [copied, setCopied] = useState(false);
   const popupRef = useRef();
 
-  // Close on outside click
+  
   useEffect(() => {
     function handler(e) {
       if (popupRef.current && !popupRef.current.contains(e.target)) onClose();
@@ -61,7 +61,7 @@ const SharePopup = ({ onClose, shareUrl, shareTitle = "Check this out!" }) => {
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
-  // Close on Escape
+  
   useEffect(() => {
     function handler(e) { if (e.key === "Escape") onClose(); }
     document.addEventListener("keydown", handler);

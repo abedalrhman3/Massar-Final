@@ -5,7 +5,7 @@ import AdminSidebar from "@/pages/admin/AdminSidebar";
 import { getSavedItems, removeSavedItem } from "@/api/saved";
 import { getDestinations } from "@/api/destination";
 
-// ── Stars ─────────────────────────────────────────────────────────
+
 const Stars = ({ rating = 0 }) => (
   <span className={styles.stars}>
     {Array.from({ length: 5 }).map((_, i) => (
@@ -14,7 +14,7 @@ const Stars = ({ rating = 0 }) => (
   </span>
 );
 
-// ── Remove Button ─────────────────────────────────────────────────
+
 const RemoveButton = ({ savedId, onRemove }) => {
   const [loading, setLoading] = useState(false);
   const handleRemove = async () => {
@@ -36,9 +36,9 @@ const RemoveButton = ({ savedId, onRemove }) => {
   );
 };
 
-// ── Helper: extract a display string from location field ──────────
-// Destination & Place use GeoJSON { type, coordinates } — not renderable.
-// Fall back to other address-like fields if present.
+
+
+
 function getLocationLabel(entity) {
   if (!entity) return "";
   if (typeof entity.location === "string") return entity.location;
@@ -57,7 +57,7 @@ const SECTION_ANCHOR = {
   event: "events",
 };
 
-// ── PAGE ──────────────────────────────────────────────────────────
+
 export default function SavedLists() {
   const navigate = useNavigate();
   const [activeEventIndex, setActiveEventIndex] = useState(0);
@@ -71,7 +71,7 @@ export default function SavedLists() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Load ─────────────────────────────────────────────────────
+  
   const loadSaved = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -84,7 +84,7 @@ export default function SavedLists() {
       const items = savedRes.data?.data ?? [];
       const allDests = destsRes.data?.data ?? [];
 
-      // Build _id → slug lookup
+      
       const destSlugMap = {};
       for (const d of allDests) {
         destSlugMap[String(d._id)] = d.slug;
@@ -112,7 +112,7 @@ export default function SavedLists() {
 
   useEffect(() => { loadSaved(); }, [loadSaved]);
 
-  // ── Remove from local state ───────────────────────────────────
+  
   const handleRemove = useCallback((savedId) => {
     setSaved((prev) => {
       const next = {};
@@ -123,7 +123,7 @@ export default function SavedLists() {
     });
   }, []);
 
-  // ── Navigate helpers ──────────────────────────────────────────
+  
   const goToDestination = useCallback((slug) => {
     if (slug) navigate(`/destinations/${slug}`);
   }, [navigate]);
@@ -151,7 +151,7 @@ export default function SavedLists() {
   const currentEvent = events[activeEventIndex]?.entity ?? null;
   const destItems = saved.destination;
 
-  // ── States ────────────────────────────────────────────────────
+  
   if (loading) {
     return (
       <main className={styles.main}>
@@ -187,7 +187,7 @@ export default function SavedLists() {
         </p>
       </div>
 
-      {/* ── Saved Destinations / Places ── */}
+      {}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Saved Destinations</h2>
@@ -222,7 +222,7 @@ export default function SavedLists() {
         )}
       </section>
 
-      {/* ── Saved Places ── */}
+      {}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Saved Places</h2>
@@ -255,7 +255,7 @@ export default function SavedLists() {
         )}
       </section>
 
-      {/* ── Restaurants & Hotels ── */}
+      {}
       <div className={styles.twoColSection}>
         <section>
           <h2 className={styles.sectionTitle} style={{ marginBottom: 16 }}>Restaurants</h2>
@@ -314,7 +314,7 @@ export default function SavedLists() {
         </section>
       </div>
 
-      {/* ── Events (Carousel) ── */}
+      {}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Events</h2>

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
-    // ── Core fields ─────────────────────────────────────
+    
     name: {
       type: String,
       required: [true, 'Name is required'],
@@ -37,15 +37,15 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false },
 
-    // ── Email verification ───────────────────────────────
+    
     emailVerificationToken: { type: String, default: null },
     emailVerificationExpires: { type: Date, default: null },
 
-    // ── Password reset ───────────────────────────────────
+    
     passwordResetToken: { type: String, default: null },
     passwordResetExpires: { type: Date, default: null },
 
-    // ── Gamification fields ──────────────────────────────
+    
     username: {
       type: String,
       unique: true,

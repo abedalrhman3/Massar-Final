@@ -1,43 +1,43 @@
-// Imports: React hooks and CSS module
+
 import { useRef, useState } from "react";
 import styles from "./Chatbot.module.css";
 
 function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading, setIsLoading, isRateLimited, handleSafetyViolation }) {
-  // Refs for textarea and hidden file input
+  
   const inputRef = useRef();
   const fileInputRef = useRef();
 
-  // State to store the uploaded file (base64 data, preview URL, etc.)
+  
   const [uploadedFile, setUploadedFile] = useState(null);
 
-  // Handles form submission — sends user message and triggers bot response
+  
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (isLoading) return;
     const userMessage = inputRef.current.value.trim();
     if (!userMessage && !uploadedFile) return;
 
-    // Immediately disable input and buttons by setting isLoading to true
+    
     setIsLoading(true);
 
     const messageText = userMessage || `📎 ${uploadedFile?.name}`;
     inputRef.current.value = "";
     inputRef.current.style.height = "47px";
 
-    // Add user message to chat history
+    
     setChatHistory((history) => [
       ...history,
       { role: "user", text: messageText, file: uploadedFile || null },
     ]);
 
-    // Step 1 — show Thinking... dots after 600ms
+    
     setTimeout(() => {
       setChatHistory((history) => [
         ...history,
         { role: "model", text: "Thinking..." },
       ]);
 
-      // Step 2 — call API after dots are rendered
+      
       setTimeout(() => {
         generateBotResponse([
           ...chatHistory,
@@ -47,11 +47,11 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
       }, 100);
     }, 600);
 
-    // Clear uploaded file after sending
+    
     setUploadedFile(null);
   };
 
-  // Handles file selection — reads file as base64 and stores in state
+  
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -105,7 +105,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
     }
   };
 
-  // Auto-resizes textarea height as user types
+  
   const handleInput = () => {
     const input = inputRef.current;
     input.style.height = "47px";
@@ -117,7 +117,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
 
   return (
     <form action="#" className={styles.chatForm} onSubmit={handleFormSubmit}>
-      {/* Message input textarea */}
+      {}
       <textarea
         ref={inputRef}
         placeholder={isRateLimited ? "Rate limited" : isLoading ? "Thinking" : "type something"}
@@ -129,7 +129,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
       />
 
       <div className={styles.chatControls}>
-        {/* Hidden file input triggered by attach button */}
+        {}
         <input
           ref={fileInputRef}
           type="file"
@@ -139,14 +139,14 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
           disabled={isLoading}
         />
 
-        {/* File upload wrapper — shows image preview and cancel button when file is attached */}
+        {}
         <div className={styles.fileUploadWrapper}>
           {uploadedFile && (
             <>
-              {/* Preview of the attached image */}
+              {}
               <img src={uploadedFile.previewUrl} alt="attachment" />
 
-              {/* Cancel button — visible on hover over the image */}
+              {}
               <button
                 type="button"
                 className={`${styles.fileCancelBtn} ${styles.materialSymbolsRounded}`}
@@ -158,7 +158,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
             </>
           )}
 
-          {/* Attach button — hidden when a file is already uploaded */}
+          {}
           <button
             type="button"
             className={`${styles.attachBtn} ${styles.materialSymbolsRounded}`}
@@ -170,7 +170,7 @@ function ChatForm({ chatHistory, setChatHistory, generateBotResponse, isLoading,
           </button>
         </div>
 
-        {/* Send button — visible only when textarea has content */}
+        {}
         <button
           type="submit"
           className={`${styles.sendBtn} ${styles.materialSymbolsRounded}`}

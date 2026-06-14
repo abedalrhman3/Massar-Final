@@ -13,10 +13,10 @@ import { getSavedItems } from "@/api/saved";
 import { buildComposed } from "./DestinationDetails.utils";
 
 import LeftPanelSkeleton from "./SkeletonLoading/LeftPanelSkeleton/LeftPanelSkeleton";
-/* import RightPanelSkeleton from "./Skeleton/RightPanel/rightPanelSkeleton"; */
 
-// The controller returns populated items: { _id, entityType, entity: { _id, ... } }
-// Build a lookup: entity._id → savedItem._id
+
+
+
 function buildSavedMap(savedItems) {
     const map = {};
     for (const item of savedItems) {
@@ -50,7 +50,7 @@ const DestinationDetails = () => {
                 setLoading(true);
                 setError(null);
 
-                // 1. Fetch destination metadata by slug
+                
                 const destRes = await getDestination(slug);
                 const dest = destRes.data?.data;
                 if (!dest) {
@@ -60,7 +60,7 @@ const DestinationDetails = () => {
                 }
                 const destId = dest._id;
 
-                // 2. Fetch everything in parallel
+                
                 const [detailsRes, placesRes, restaurantsRes, hotelsRes, eventsRes, savedRes] = await Promise.all([
                     getDestinationDetails(destId).catch((err) => {
                         console.warn("Details fetch failed, using fallback:", err);
@@ -97,7 +97,7 @@ const DestinationDetails = () => {
                 const events = eventsRes.data?.data || [];
                 const savedItems = savedRes.data?.data || [];
 
-                // 3. Build savedMap and enrich each entity
+                
                 const savedMap = buildSavedMap(savedItems);
 
                 const enrichedPlaces = attachSavedId(places, savedMap);
@@ -108,7 +108,7 @@ const DestinationDetails = () => {
                 const destSavedId = savedMap[String(destId)] ?? null;
                 const enrichedDest = destSavedId ? { ...dest, savedId: destSavedId } : dest;
 
-                // 4. Compose
+                
                 const composed = buildComposed(
                     enrichedDest,
                     details,
@@ -130,9 +130,9 @@ const DestinationDetails = () => {
         fetchDetails();
     }, [slug]);
 
-    /* if (loading) return <div className={styles.loading}>Loading...</div>; */
-    /* if (error) return <div className={styles.error}>{error}</div>;
-    if (!destination) return <div className={styles.notFound}>Data not found</div>; */
+    
+    
+
 
     return (
         <main className={styles.main}>
@@ -144,15 +144,15 @@ const DestinationDetails = () => {
                 />
             )}
 
-            {/* Render MapView immediately with safe fallbacks or loading state */}
+            {}
             <MapView
-                lat={destination ? destination.lat : 31.9522}  /* Optional: standard Jordan coordinate fallback */
+                lat={destination ? destination.lat : 31.9522}  
                 lng={destination ? destination.lng : 35.9106}
                 name={destination ? destination.name : "Loading..."}
                 selectedCard={selectedCard}
             />
 
-            {/* 3. Conditional Step: Show skeleton while loading, real panel when true */}
+            {}
             {loading ? (
                 <LeftPanelSkeleton />
             ) : (

@@ -5,7 +5,7 @@ import eventImage from "/images/detailPage/icons/event.png";
 import hotelImage from "/images/detailPage/icons/home.png";
 import { Bookmark } from "lucide-react";
 import styles from "./Card.module.css";
-import { saveItem, removeSavedItem } from "@/api/saved"; // ✅ correct path
+import { saveItem, removeSavedItem } from "@/api/saved"; 
 
 const TYPE_TO_ENTITY = {
     place: "place",

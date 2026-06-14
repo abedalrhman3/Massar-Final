@@ -10,7 +10,7 @@ const upload = require('../middleware/upload');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
-// ---------- Google OAuth ----------
+
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get(
   '/google/callback',
@@ -41,25 +41,25 @@ router.get(
   }
 );
 
-// ---------- Email verification ----------
+
 router.get('/verify-email/:token', verifyEmail);
 
-// ---------- Password reset (public — no auth required) ----------
+
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 
-// ---------- Local Auth ----------
+
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', protect, logout);
 router.get('/me', protect, getMe);
 
-// ---------- Profile updates ----------
+
 router.put('/update-profile', protect, updateProfile);
 router.put('/update-password', protect, updatePassword);
 router.post('/upload-avatar', protect, upload.single('avatar'), uploadAvatar);
 
-// ---------- Admin user management ----------
+
 router.get('/users', protect, adminOnly, getAllUsers);
 router.get('/users/:id', protect, adminOnly, getUser);
 router.delete('/users/:id', protect, adminOnly, deleteUser);

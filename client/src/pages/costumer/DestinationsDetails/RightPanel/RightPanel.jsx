@@ -9,12 +9,12 @@ import api from "@/api/client";
 
 const DEFAULT_TABS = ["About", "Reviews", "Contact", "Photos"];
 
-// Seeded mock reviews generator to provide realistic reviews client-side
+
 function getMockReviews(card) {
     const section = card.details?.section || "";
     const name = card.name || "this location";
 
-    // Seeded random based on card ID to keep reviews consistent for the same card
+    
     let seed = 0;
     const cardId = String(card._id || card.id || "123");
     for (let i = 0; i < cardId.length; i++) {
@@ -26,11 +26,11 @@ function getMockReviews(card) {
         return x - Math.floor(x);
     };
 
-    // Determine average rating (between 4.2 and 4.9)
+    
     const rating = (4.2 + random() * 0.7).toFixed(1);
     const reviewsNumber = Math.floor(15 + random() * 50);
 
-    // Distribute stars
+    
     const fiveStarReviews = Math.floor(reviewsNumber * (0.6 + random() * 0.25));
     const fourStarReviews = Math.floor(reviewsNumber * (0.15 + random() * 0.15));
     const threeStarReviews = Math.floor(reviewsNumber * (0.02 + random() * 0.05));
@@ -75,7 +75,7 @@ function getMockReviews(card) {
     else if (s.includes("dining") || s.includes("rest") || s.includes("food")) selectedPool = poolRestaurants;
     else if (s.includes("event")) selectedPool = poolEvents;
 
-    // Pick 3-4 random comments from the pool
+    
     const numComments = 3 + Math.floor(random() * 2);
     const comments = [];
     const poolCopy = [...selectedPool];
@@ -107,14 +107,14 @@ const RightPanel = ({ card, onClose }) => {
 
     const { details } = card;
 
-    // Reset tab and reviews when card changes
+    
     useEffect(() => {
         setActiveTab("About");
         setReviews(null);
         setReviewsError(null);
     }, [card]);
 
-    // Fetch reviews lazily when the Reviews tab is opened
+    
     useEffect(() => {
         if (activeTab !== "Reviews" || reviews !== null || card.subSection === "traditionalDining") return;
 
@@ -135,7 +135,7 @@ const RightPanel = ({ card, onClose }) => {
         return () => clearTimeout(timer);
     }, [activeTab, card._id, reviews, card.subSection, card]);
 
-    // ── Traditional dining: simple fallback ──────────────────────────────
+    
     if (card.subSection === "traditionalDining") {
         return (
             <div className={styles["right-panel"]}>
@@ -155,12 +155,12 @@ const RightPanel = ({ card, onClose }) => {
 
     const { about, contact, photos, book } = details;
 
-    // Only hotels get a Book tab
+    
     const tabs = details.section === "hotels"
         ? [...DEFAULT_TABS, "Book"]
         : DEFAULT_TABS;
 
-    // ── About ─────────────────────────────────────────────────────────────
+    
     const renderAbout = () => {
         if (details.section === "events") {
             return (
@@ -184,7 +184,7 @@ const RightPanel = ({ card, onClose }) => {
             );
         }
 
-        // place | restaurant | hotel
+        
         return (
             <div className={styles["tab-content"]}>
                 <div className={styles.header}>
@@ -215,7 +215,7 @@ const RightPanel = ({ card, onClose }) => {
         );
     };
 
-    // ── Reviews ───────────────────────────────────────────────────────────
+    
     const renderReviews = () => {
         if (reviewsLoading) {
             return <div className={styles["tab-content"]}><p>Loading reviews…</p></div>;
@@ -293,7 +293,7 @@ const RightPanel = ({ card, onClose }) => {
         );
     };
 
-    // ── Contact ───────────────────────────────────────────────────────────
+    
     const renderContact = () => {
         const methods = contact?.methods || [];
 
@@ -352,7 +352,7 @@ const RightPanel = ({ card, onClose }) => {
         );
     };
 
-    // ── Photos ────────────────────────────────────────────────────────────
+    
     const renderPhotos = () => (
         <div className={styles["tab-content"]}>
             <div className={styles["photos-grid"]}>
@@ -364,10 +364,10 @@ const RightPanel = ({ card, onClose }) => {
         </div>
     );
 
-    // ── Book ──────────────────────────────────────────────────────────────
+    
     const renderBook = () => {
         if (details.section !== "hotels") {
-            // Shouldn't happen, but guard anyway
+            
             return null;
         }
         return (

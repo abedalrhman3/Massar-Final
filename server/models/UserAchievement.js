@@ -20,7 +20,7 @@ const userAchievementSchema = new mongoose.Schema(
   { timestamps: false }
 );
 
-// A user can only earn each achievement once
+
 userAchievementSchema.index({ userId: 1, achievementId: 1 }, { unique: true });
 userAchievementSchema.index({ userId: 1 });
 

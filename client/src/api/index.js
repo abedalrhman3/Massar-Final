@@ -1,7 +1,7 @@
-// Central re-export — import everything from one place in your components
+
 export * from './auth';
 export * from './destination';
-export * from './listings';   // placesApi, restaurantsApi, hotelsApi
+export * from './listings';   
 export * from './events';
 export * from './categories';
 export * from './locations';

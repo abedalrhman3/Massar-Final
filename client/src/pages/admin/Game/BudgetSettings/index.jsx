@@ -87,7 +87,7 @@ function BudgetSettings() {
         </div>
       </div>
 
-      {/* Settings Form */}
+      {}
       <div className={styles.formCard}>
         <h3 className={styles.formTitle}>Adjust Thresholds</h3>
         <p className={styles.formDesc}>

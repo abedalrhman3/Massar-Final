@@ -89,7 +89,7 @@ function UserProfile() {
   }
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-  // Guard: if avatar_url is already an absolute URL (Cloudinary), don't prepend SERVER.
+  
   const avatarSrc = user?.avatar_url
     ? (user.avatar_url.startsWith("http") ? user.avatar_url : `${SERVER}${user.avatar_url}`)
     : defaultAvatar;

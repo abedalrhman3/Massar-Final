@@ -24,7 +24,7 @@ const savedItemSchema = new mongoose.Schema(
   { timestamps: false }
 );
 
-// Prevent a user from saving the same item twice
+
 savedItemSchema.index({ userId: 1, entityType: 1, entityId: 1 }, { unique: true });
 savedItemSchema.index({ userId: 1 });
 

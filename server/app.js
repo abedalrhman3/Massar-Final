@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
-// Passport initialization
+
 const passport = require('passport');
 require('./config/passport');
 app.use(passport.initialize());
@@ -19,12 +19,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
-//test only
+
 if (process.env.NODE_ENV === 'test') {
   app.use('/api/test', require('./routes/testOnly'));
 }
 
-// routes
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/destinations', require('./routes/destinations'));
 app.use('/api/categories', require('./routes/categories'));

@@ -1,7 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 
-// Import all models
+
 const Achievement     = require("./models/Achievement");
 const Badge           = require("./models/Badge");
 const Category        = require("./models/Category");
@@ -63,9 +63,9 @@ async function migrate(modelName, field, defaultValue) {
 async function main() {
   await mongoose.connect(process.env.MONGO_URI);
 
-  // ✏️ Add your migrations here
+  
   const migrations = [
-    // { model: "place", field: "name", value: "" },
+    
       { model: "place", field: "profilePicture", value: "" },
   ];
 

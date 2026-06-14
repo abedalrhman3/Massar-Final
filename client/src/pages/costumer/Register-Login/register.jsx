@@ -5,7 +5,7 @@ import styles from "./registerLogin.module.css";
 import { register } from "@/api/auth";
 import { BASE_URL } from "@/api/client";
 
-// Dropdown for Birthdate
+
 const Dropdown = ({ options, placeholder, value, setValue }) => {
   const [open, setOpen] = React.useState(false);
   return (
@@ -125,7 +125,7 @@ const Register = ({
     );
   }
 
-  // ── Registration form ───────────────────────────────────────────────────────
+  
   return (
     <div className={`${styles.formBox} ${styles.register}`}>
       <form onSubmit={handleSubmit}>

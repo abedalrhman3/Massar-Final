@@ -3,7 +3,7 @@ const { updateFrame } = require('../services/gameService');
 const { uploadAsset } = require('../services/uploadService');
 const AppError = require('../utils/AppError');
 
-// POST /api/user/update-frame  — private
+
 exports.updateFrame = async (req, res, next) => {
   try {
     const { frameSlug } = req.body;
@@ -14,7 +14,7 @@ exports.updateFrame = async (req, res, next) => {
   }
 };
 
-// GET /api/users/:id/profile  — public
+
 exports.getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
@@ -30,7 +30,7 @@ exports.getProfile = async (req, res, next) => {
   }
 };
 
-// POST /api/admin/upload-asset  — admin
+
 exports.uploadAsset = async (req, res, next) => {
   try {
     if (!req.file) return next(new AppError('No file uploaded', 400));

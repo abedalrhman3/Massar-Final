@@ -3,9 +3,9 @@ const Quest = require('../models/Quest');
 const Badge = require('../models/Badge');
 const { sendNotification } = require('./notificationService');
 
-// -------------------------------------------------------
-// Calculate level from total XP
-// -------------------------------------------------------
+
+
+
 const calculateLevel = (totalXp) => {
   const level = Math.floor(totalXp / 100) + 1;
   if (level >= 5) return 'Legend';
@@ -13,10 +13,10 @@ const calculateLevel = (totalXp) => {
   return 'Explorer';
 };
 
-// -------------------------------------------------------
-// Complete a task at a location
-// Called after photo is uploaded and verified
-// -------------------------------------------------------
+
+
+
+
 const completeTask = async (userId, locationId, taskIndex, location) => {
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
@@ -25,7 +25,7 @@ const completeTask = async (userId, locationId, taskIndex, location) => {
   const task = location.tasks && location.tasks[tIndex] ? location.tasks[tIndex] : null;
   const xpReward = task ? task.xp : location.xp_reward;
 
-  // Grant XP and update level
+  
   user.total_xp += xpReward;
   user.current_level = calculateLevel(user.total_xp);
 
@@ -38,7 +38,7 @@ const completeTask = async (userId, locationId, taskIndex, location) => {
     tIndex === location.tasks.length - 1;
 
   if (isFinalTask) {
-    // Grant location badge if not already earned
+    
     if (location.badge_id && !user.unlocked_badges.includes(location.badge_id._id)) {
       user.unlocked_badges.push(location.badge_id._id);
       badgeGranted = location.badge_id;
@@ -51,12 +51,12 @@ const completeTask = async (userId, locationId, taskIndex, location) => {
       );
     }
 
-    // Mark location as completed
+    
     if (!user.completed_locations.map(String).includes(String(location._id))) {
       user.completed_locations.push(location._id);
     }
 
-    // Check quest completion
+    
     const quests = await Quest.find({ locations: location._id });
     for (const q of quests) {
       if (user.completed_quests.map(String).includes(String(q._id))) continue;
@@ -70,12 +70,12 @@ const completeTask = async (userId, locationId, taskIndex, location) => {
         user.total_xp += q.bonus_xp;
         user.current_level = calculateLevel(user.total_xp);
 
-        // Grant title reward
+        
         if (q.title_reward && !user.unlocked_titles.includes(q.title_reward)) {
           user.unlocked_titles.push(q.title_reward);
         }
 
-        // Create/grant quest badge
+        
         if (q.badge_url) {
           let questBadge = await Badge.findOne({ icon_url: q.badge_url });
           if (!questBadge) {
@@ -103,7 +103,7 @@ const completeTask = async (userId, locationId, taskIndex, location) => {
       }
     }
 
-    // Rare badge — unlock if user has 5+ badges
+    
     if (user.unlocked_badges.length >= 5) {
       const rareBadge = await Badge.findOne({ is_rare: true, title_en: 'Jordan Legend' });
       if (rareBadge && !user.unlocked_badges.map(String).includes(String(rareBadge._id))) {
@@ -130,9 +130,9 @@ const completeTask = async (userId, locationId, taskIndex, location) => {
   };
 };
 
-// -------------------------------------------------------
-// Update active profile frame
-// -------------------------------------------------------
+
+
+
 const updateFrame = async (userId, frameSlug) => {
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');

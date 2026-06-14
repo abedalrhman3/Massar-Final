@@ -1,9 +1,9 @@
 import { useState } from "react";
 import styles from "./AdminModal.module.css";
 
-// Validate coordinates format (±DD.DDDD, ±DDD.DDDD)
+
 const validateCoordinates = (value) => {
-  if (!value) return true; // Allow empty
+  if (!value) return true; 
   const coordRegex = /^[+-]?\d{1,3}\.\d{4,6},\s*[+-]?\d{1,3}\.\d{4,6}$/;
   return coordRegex.test(value.trim());
 };

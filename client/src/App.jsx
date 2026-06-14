@@ -12,20 +12,20 @@ import SaveList from "./pages/costumer/SaveList/SaveList";
 import Gallery from "./pages/costumer/Gallery/Gallery";
 import Banned from "./pages/costumer/Banned/Banned"
 
-// Register-Login Pages
+
 import RegisterLogin, {
   ForgotPassword,
   ResetPassword,
   VerifyEmail,
 } from "./pages/costumer/Register-Login/Register-Login";
 
-// User Profile
+
 import UserProfile from "./pages/admin/UserProfile"
 import UserSettings from "./pages/admin/Settings/index"
 import UserDashboard from "./pages/costumer/UserAccount/UserDashboard";
-//import UserProfile from "./pages/costumer/UserProfile/UserProfile";
 
-// Admin Panel Layout & Pages
+
+
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import DestinationsManagement from "./pages/admin/DestinationsManagement";
@@ -42,22 +42,22 @@ import Quests from "./pages/admin/Game/Quests/index";
 import Reports from "./pages/admin/Game/Reports/index"
 
 
-// Shared Components
+
 import Chatbot from "./components/Chatbot/Chatbot";
 import Footer from "./components/Footer/Footer";
 import Navbar from "./components/Navbar/Navbar";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 
-// ── Private Route Guard — requires logged-in user ────────────────
+
 const PrivateRoute = ({ children }) => {
   const { user, loading, isBanned } = useAuth();
 
-  if (loading) return null; // AuthProvider already blocks render until resolved
+  if (loading) return null; 
   return user ? children : <Navigate to="/login" replace />;
 };
 
 
-// ── Admin Route Guard — requires admin role ───────────────────────
+
 const AdminGuard = () => {
   const { user, isAdmin, loading, isBanned } = useAuth();
   if (loading) return null;
@@ -66,7 +66,7 @@ const AdminGuard = () => {
   return <AdminLayout />;
 };
 
-// ── Customer Layout (Navbar + Footer) ────────────────────────────
+
 const CustomerLayout = () => (
   <>
     <Navbar />
@@ -98,7 +98,7 @@ function App() {
   return (
     <>
       <Routes>
-        {/* ── Customer Pages ────────────────────────────────────── */}
+        {}
         <Route element={<CustomerLayout />}>
           <Route
             path="/"
@@ -177,14 +177,14 @@ function App() {
 
 
 
-        {/* ── Auth Pages ────────────────────────────────────────── */}
+        {}
         <Route path="/login" element={<RegisterLogin />} />
         <Route path="/register" element={<RegisterLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-        {/* ── User Account Pages ────────────────────────────────── */}
+        {}
         <Route
           path="/settings"
           element={
@@ -202,7 +202,7 @@ function App() {
           }
         />
 
-        {/* ── Admin Dashboard Routes ────────────────────────────── */}
+        {}
         <Route
           path="/admin"
           element={
@@ -227,7 +227,7 @@ function App() {
           <Route path="game/reports" element={<Reports />} />
         </Route>
 
-        {/* Fallback */}
+        {}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

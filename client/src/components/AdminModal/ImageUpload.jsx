@@ -8,7 +8,7 @@ function ImageUpload({ value, onChange, multiple = false, label = "Upload Image"
     const files = Array.from(e.target.files);
 
     if (multiple) {
-      // For multiple files, convert to base64
+      
       const readers = files.map((file) => {
         return new Promise((resolve) => {
           const reader = new FileReader();
@@ -22,7 +22,7 @@ function ImageUpload({ value, onChange, multiple = false, label = "Upload Image"
         onChange([...existingImages, ...results]);
       });
     } else {
-      // For single file
+      
       const file = files[0];
       if (file) {
         const reader = new FileReader();
@@ -33,7 +33,7 @@ function ImageUpload({ value, onChange, multiple = false, label = "Upload Image"
       }
     }
 
-    // Reset input
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -85,7 +85,7 @@ function ImageUpload({ value, onChange, multiple = false, label = "Upload Image"
     );
   }
 
-  // Single image upload
+  
   return (
     <div className={styles.formGroup}>
       <label className={styles.label}>{label}</label>

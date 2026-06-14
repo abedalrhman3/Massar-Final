@@ -3,24 +3,24 @@ const router = express.Router();
 
 console.log('[CHAT] Loading free keyword-based chatbot...');
 
-// ===== SLIDING WINDOW RATE LIMITER =====
-const SLIDING_WINDOW_MESSAGES = 5;
-const SLIDING_WINDOW_SECONDS = 60; // 1 minute
 
-// In-memory rate limit storage: { clientId: { firstMessageTime, count } }
+const SLIDING_WINDOW_MESSAGES = 5;
+const SLIDING_WINDOW_SECONDS = 60; 
+
+
 const userRateWindows = {};
 
-// Get client identifier (IP address)
+
 function getClientId(req) {
   return req.ip || req.connection.remoteAddress || 'unknown';
 }
 
-// Detect language from message content
+
 function detectLanguage(message) {
   if (!message) return 'en';
-  // Arabic Unicode range
+  
   const arabicPattern = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
-  // Turkish-specific characters
+  
   const turkishPattern = /[şığüçöİĞÜÇÖŞĞÜÇÖ]/;
 
   if (arabicPattern.test(message)) return 'ar';
@@ -28,10 +28,10 @@ function detectLanguage(message) {
   return 'en';
 }
 
-// Check sliding window rate limit
+
 function checkSlidingWindowRateLimit(clientId, currentTime) {
   if (!userRateWindows[clientId]) {
-    // First message from this client
+    
     userRateWindows[clientId] = {
       firstMessageTime: currentTime,
       count: 1
@@ -42,7 +42,7 @@ function checkSlidingWindowRateLimit(clientId, currentTime) {
   const window = userRateWindows[clientId];
   const elapsed = currentTime - window.firstMessageTime;
 
-  // Window expired - reset
+  
   if (elapsed > SLIDING_WINDOW_SECONDS) {
     userRateWindows[clientId] = {
       firstMessageTime: currentTime,
@@ -51,10 +51,10 @@ function checkSlidingWindowRateLimit(clientId, currentTime) {
     return { isLimited: false, unblockTime: 0 };
   }
 
-  // Within window - increment count
+  
   window.count += 1;
 
-  // Check if limit exceeded
+  
   if (window.count > SLIDING_WINDOW_MESSAGES) {
     const unblockTime = window.firstMessageTime + SLIDING_WINDOW_SECONDS;
     const remainingSeconds = Math.ceil(unblockTime - currentTime);
@@ -68,7 +68,7 @@ function checkSlidingWindowRateLimit(clientId, currentTime) {
   return { isLimited: false, unblockTime: 0 };
 }
 
-// Format unblock time as string
+
 function formatUnblockTime(timestamp) {
   const date = new Date(timestamp * 1000);
   const hours = String(date.getHours()).padStart(2, '0');
@@ -77,7 +77,7 @@ function formatUnblockTime(timestamp) {
   return `${hours}:${minutes}:${seconds}`;
 }
 
-// Get rate limit message in detected language
+
 function getRateLimitMessage(unblockTime, detectedLang) {
   const unblockTimeStr = formatUnblockTime(unblockTime);
 
@@ -90,7 +90,7 @@ function getRateLimitMessage(unblockTime, detectedLang) {
   return messages[detectedLang] || messages.en;
 }
 
-// MongoDB models
+
 const Destination = require('../models/Destination');
 const DestinationDetail = require('../models/DestinationDetail');
 const Place = require('../models/Place');
@@ -98,7 +98,7 @@ const Restaurant = require('../models/Restaurant');
 const Hotel = require('../models/Hotel');
 const Event = require('../models/Event');
 
-// NOT FOUND message
+
 const NOT_FOUND_MESSAGE = `This destination hasn't been added by us yet, but it might be in the future! Would you like me to recommend some other stunning places instead? 🌟
 
 You can ask about places like:
@@ -110,7 +110,7 @@ You can ask about places like:
 
 Which one interests you?`;
 
-// General responses for non-destination questions
+
 const GENERAL_RESPONSES = {
   greetings: [
     "Hello! Welcome to Massar! 🇯🇴 I'm here to help you discover the beautiful destinations of Jordan. Would you like to explore places like Petra, Wadi Rum, Jerash, or the Dead Sea?",
@@ -133,48 +133,48 @@ const GENERAL_RESPONSES = {
   ]
 };
 
-// Get random response from array
+
 function getRandomResponse(responses) {
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
-// Check if message is a greeting
+
 function isGreeting(message) {
   const greetings = ['hello', 'hi', 'hey', 'marhaba', 'ahlan', 'مرحبا', 'السلام'];
   return greetings.some(g => message.toLowerCase().includes(g));
 }
 
-// Check if message is asking for help
+
 function isHelp(message) {
   const helpWords = ['help', 'what can you do', 'how can you help', 'مساعدة', 'كيف تساعدني'];
   return helpWords.some(h => message.toLowerCase().includes(h));
 }
 
-// Check if message is thanking
+
 function isThanks(message) {
   const thanks = ['thank', 'thanks', 'shukran', 'شكرا', 'appreciate'];
   return thanks.some(t => message.toLowerCase().includes(t));
 }
 
-// Destination keywords
+
 const DESTINATION_KEYWORDS = [
   'petra', 'wadi rum', 'jerash', 'amman', 'dead sea', 'aqaba', 'madaba', 'mount nebo', 'mt nebo',
   'karak', 'ajloun', 'umm qais', 'dana', 'mujib', 'qasr amra', 'little petra', 'siq',
   'destination', 'place', 'visit', 'travel', 'tour', 'trip'
 ];
 
-// Check if message is about a destination
+
 function isDestinationQuestion(message) {
   if (!message) return false;
   const lower = message.toLowerCase();
   return DESTINATION_KEYWORDS.some(keyword => lower.includes(keyword));
 }
 
-// Search database for a place
+
 async function searchDatabase(query) {
   const searchTerm = query.toLowerCase().trim();
 
-  // Search destinations
+  
   const destinations = await Destination.find({
     $or: [
       { name: { $regex: searchTerm, $options: 'i' } },
@@ -183,7 +183,7 @@ async function searchDatabase(query) {
     ]
   }).limit(5);
 
-  // Get destination details
+  
   let destinationDetails = [];
   if (destinations.length > 0) {
     const destIds = destinations.map(d => d._id);
@@ -192,7 +192,7 @@ async function searchDatabase(query) {
     }).limit(5);
   }
 
-  // Search places
+  
   const places = await Place.find({
     $or: [
       { name: { $regex: searchTerm, $options: 'i' } },
@@ -200,7 +200,7 @@ async function searchDatabase(query) {
     ]
   }).populate('destinationId', 'name').limit(5);
 
-  // Search restaurants
+  
   const restaurants = await Restaurant.find({
     $or: [
       { name: { $regex: searchTerm, $options: 'i' } },
@@ -208,7 +208,7 @@ async function searchDatabase(query) {
     ]
   }).populate('destinationId', 'name').limit(5);
 
-  // Search hotels
+  
   const hotels = await Hotel.find({
     $or: [
       { name: { $regex: searchTerm, $options: 'i' } },
@@ -216,7 +216,7 @@ async function searchDatabase(query) {
     ]
   }).populate('destinationId', 'name').limit(5);
 
-  // Search events
+  
   const events = await Event.find({
     $or: [
       { name: { $regex: searchTerm, $options: 'i' } },
@@ -227,7 +227,7 @@ async function searchDatabase(query) {
   return { destinations, destinationDetails, places, restaurants, hotels, events };
 }
 
-// Format database results into a response
+
 function formatDestinationResponse(results) {
   const { destinations, destinationDetails, places, restaurants, hotels, events } = results;
 
@@ -393,7 +393,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // General question - not about destinations
+    
     console.log('[CHAT] General question - using default response');
     return res.json({ reply: getRandomResponse(GENERAL_RESPONSES.general) });
 
