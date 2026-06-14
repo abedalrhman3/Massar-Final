@@ -8,8 +8,11 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const COLLECTIONS = [
+<<<<<<< HEAD
 
     'usersessions',
+=======
+>>>>>>> last-version
     'userachievements',
     'notifications',
     'saveditems',

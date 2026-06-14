@@ -1304,9 +1304,12 @@ async function seed() {
   console.log(`   Badges       : ${totalBadges}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
+<<<<<<< HEAD
   const destinations = await Destination.find({});
   console.log(destinations);
 
+=======
+>>>>>>> last-version
   await mongoose.disconnect();
 }
 
