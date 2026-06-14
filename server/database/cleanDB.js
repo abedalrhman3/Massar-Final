@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const COLLECTIONS = [
-    'users',
+
     'usersessions',
     'userachievements',
     'notifications',
