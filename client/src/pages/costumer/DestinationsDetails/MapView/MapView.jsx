@@ -74,12 +74,12 @@ const RoutingController = ({ from, to }) => {
                 routes[0].coordinates.map((c) => [c.lat, c.lng])
             );
 
-            
+
             const distanceKm = (routes[0].summary.totalDistance || 0) / 1000;
 
-            
-            
-            
+
+
+
             const leftPad = distanceKm < 5
                 ? LEFT_PANEL_WIDTH + 800
                 : distanceKm < 20
@@ -101,6 +101,7 @@ const RoutingController = ({ from, to }) => {
                 paddingBottomRight: [400, bottomRightPad],
                 animate: true,
                 duration: 1,
+                maxZoom: 15,
             });
         });
 
@@ -125,10 +126,10 @@ const MapView = ({ lat, lng, name, selectedCard }) => {
 
     const position = hasCoords ? [lat, lng] : FALLBACK;
 
-    
+
     const cardCoords = (() => {
         const c = selectedCard?._rawItem?.location?.coordinates;
-        
+
         return c && c.length === 2 ? [c[1], c[0]] : null;
     })();
 
@@ -146,12 +147,12 @@ const MapView = ({ lat, lng, name, selectedCard }) => {
 
             <MapController position={position} />
 
-            {}
+            { }
             {hasCoords && cardCoords && (
                 <RoutingController from={position} to={cardCoords} />
             )}
 
-            {}
+            { }
             {hasCoords && (
                 <Marker position={position}>
                     <Popup>{name}</Popup>

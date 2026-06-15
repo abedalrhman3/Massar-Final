@@ -73,7 +73,7 @@ function Quests() {
   };
 
   const handleSave = async () => {
-    if (!form.title) { setError("Arabic title is required."); return; }
+    if (!form.title_en) { setError("English title is required."); return; }
 
     setSaving(true);
     try {
@@ -94,9 +94,9 @@ function Quests() {
       }
 
       const res = await createQuest({
-        title: form.title,
+        /* title: form.title, */
         title_en: form.title_en,
-        description: form.description,
+        /* description: form.description, */
         description_en: form.description_en,
         bonus_xp: Number(form.bonus_xp),
         title_reward: form.title_reward,
@@ -141,7 +141,7 @@ function Quests() {
         </button>
       </div>
 
-      {}
+      { }
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
           <span className="material-symbols-outlined">map</span>
@@ -170,7 +170,7 @@ function Quests() {
         </div>
       </div>
 
-      {}
+      { }
       {loading ? (
         <div className={styles.empty}>Loading quests...</div>
       ) : quests.length === 0 ? (
@@ -185,7 +185,7 @@ function Quests() {
                 )}
                 <div className={styles.cardTitles}>
                   <h3 className={styles.questTitle}>{quest.title_en || quest.title}</h3>
-                  <p className={styles.questTitleAr}>{quest.title}</p>
+
                 </div>
                 <button className={styles.deleteBtn} onClick={() => setDeleteTarget(quest._id)}>
                   <span className="material-symbols-outlined">delete</span>
@@ -229,7 +229,7 @@ function Quests() {
         </div>
       )}
 
-      {}
+      { }
       <div className={`${styles.overlay} ${showModal ? styles.overlayVisible : ""}`} onClick={closeModal}>
         <div className={`${styles.modal} ${showModal ? styles.modalVisible : ""}`} onClick={e => e.stopPropagation()}>
           <div className={styles.modalHeader}>
@@ -241,20 +241,20 @@ function Quests() {
 
           <div className={styles.modalBody}>
             <div className={styles.row2}>
-              <div className={styles.formGroup}>
+              {/* <div className={styles.formGroup}>
                 <label className={styles.label}>Arabic Title *</label>
                 <input className={styles.input} placeholder="عنوان المهمة" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-              </div>
+              </div> */}
               <div className={styles.formGroup}>
                 <label className={styles.label}>English Title</label>
                 <input className={styles.input} placeholder="Quest Title" value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })} />
               </div>
             </div>
 
-            <div className={styles.formGroup}>
+            {/*  <div className={styles.formGroup}>
               <label className={styles.label}>Arabic Description</label>
               <textarea className={styles.textarea} rows={2} placeholder="وصف المهمة..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-            </div>
+            </div> */}
 
             <div className={styles.formGroup}>
               <label className={styles.label}>English Description</label>
@@ -276,7 +276,7 @@ function Quests() {
               </div>
             </div>
 
-            {}
+            { }
             <div className={styles.formGroup}>
               <label className={styles.label}>Linked Locations</label>
               {allLocations.length === 0 ? (
@@ -294,7 +294,7 @@ function Quests() {
               )}
             </div>
 
-            {}
+            { }
             <div className={styles.row2}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Completion Badge</label>
@@ -330,7 +330,7 @@ function Quests() {
         </div>
       </div>
 
-      {}
+      { }
       {deleteTarget && (
         <div className={`${styles.overlay} ${styles.overlayVisible}`} onClick={() => setDeleteTarget(null)}>
           <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>

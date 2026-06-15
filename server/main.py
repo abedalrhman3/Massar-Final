@@ -1120,21 +1120,21 @@ async def validate_quest_photo_with_gemini(
             "reason": "AI validation service is not configured."
         }
 
-    prompt = f"""You are a strict content moderator and quest validator for a Jordan travel app called Masar.
+    prompt = f"""You are a quest validator for a Jordan travel app called Masar.
 
 Analyze this image and answer TWO questions. Respond ONLY in valid JSON with no extra text, no markdown fences.
 
 QUESTION 1 — Content Safety:
-Is this image appropriate for all ages?
-Flag as inappropriate (is_appropriate: false) if you see:
-- Sexual or adult content of any kind
-- Graphic violence, gore, or disturbing imagery
+Is this image appropriate? Only flag as inappropriate (is_appropriate: false) if the image CLEARLY contains:
+- Explicit sexual or pornographic content
+- Graphic gore or extreme violence
 - Hate symbols or extremist content
-- Nudity (partial or full)
+- Full nudity
+Normal travel photos, selfies, people visiting landmarks, landscapes, and food photos are ALL appropriate. When in doubt, mark as appropriate.
 
 QUESTION 2 — Quest Fulfillment:
 Quest requirement: "{quest_requirement}"
-Does this image clearly fulfill the quest requirement? Be strict — the image must directly and visibly show what is required. A vague or unrelated photo should fail.
+Does this image show what the quest requires? The photo does not need to be perfect — if it reasonably shows the required location or activity, mark it as fulfilled.
 
 Respond with EXACTLY this JSON and nothing else:
 {{

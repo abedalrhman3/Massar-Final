@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "./RightPanel.module.css";
 import { MapPin, Clock, Calendar, CircleDollarSign, Phone } from "lucide-react";
+import { Mail, Globe, MessageCircle } from "lucide-react";
 import whatsapp from "/icons/whatsapp.png";
 import facebook from "/icons/facebook-panel.png";
 import instagram from "/icons/instagram-panel.png";
@@ -14,7 +15,7 @@ function getMockReviews(card) {
     const section = card.details?.section || "";
     const name = card.name || "this location";
 
-    
+
     let seed = 0;
     const cardId = String(card._id || card.id || "123");
     for (let i = 0; i < cardId.length; i++) {
@@ -26,11 +27,11 @@ function getMockReviews(card) {
         return x - Math.floor(x);
     };
 
-    
+
     const rating = (4.2 + random() * 0.7).toFixed(1);
     const reviewsNumber = Math.floor(15 + random() * 50);
 
-    
+
     const fiveStarReviews = Math.floor(reviewsNumber * (0.6 + random() * 0.25));
     const fourStarReviews = Math.floor(reviewsNumber * (0.15 + random() * 0.15));
     const threeStarReviews = Math.floor(reviewsNumber * (0.02 + random() * 0.05));
@@ -75,7 +76,7 @@ function getMockReviews(card) {
     else if (s.includes("dining") || s.includes("rest") || s.includes("food")) selectedPool = poolRestaurants;
     else if (s.includes("event")) selectedPool = poolEvents;
 
-    
+
     const numComments = 3 + Math.floor(random() * 2);
     const comments = [];
     const poolCopy = [...selectedPool];
@@ -107,14 +108,14 @@ const RightPanel = ({ card, onClose }) => {
 
     const { details } = card;
 
-    
+
     useEffect(() => {
         setActiveTab("About");
         setReviews(null);
         setReviewsError(null);
     }, [card]);
 
-    
+
     useEffect(() => {
         if (activeTab !== "Reviews" || reviews !== null || card.subSection === "traditionalDining") return;
 
@@ -135,7 +136,7 @@ const RightPanel = ({ card, onClose }) => {
         return () => clearTimeout(timer);
     }, [activeTab, card._id, reviews, card.subSection, card]);
 
-    
+
     if (card.subSection === "traditionalDining") {
         return (
             <div className={styles["right-panel"]}>
@@ -155,12 +156,12 @@ const RightPanel = ({ card, onClose }) => {
 
     const { about, contact, photos, book } = details;
 
-    
+
     const tabs = details.section === "hotels"
         ? [...DEFAULT_TABS, "Book"]
         : DEFAULT_TABS;
 
-    
+
     const renderAbout = () => {
         if (details.section === "events") {
             return (
@@ -184,7 +185,7 @@ const RightPanel = ({ card, onClose }) => {
             );
         }
 
-        
+
         return (
             <div className={styles["tab-content"]}>
                 <div className={styles.header}>
@@ -215,7 +216,7 @@ const RightPanel = ({ card, onClose }) => {
         );
     };
 
-    
+
     const renderReviews = () => {
         if (reviewsLoading) {
             return <div className={styles["tab-content"]}><p>Loading reviews…</p></div>;
@@ -293,7 +294,7 @@ const RightPanel = ({ card, onClose }) => {
         );
     };
 
-    
+
     const renderContact = () => {
         const methods = contact?.methods || [];
 
@@ -320,6 +321,8 @@ const RightPanel = ({ card, onClose }) => {
         const getIcon = (type) => {
             switch (type) {
                 case "phone": return <Phone size={17} />;
+                case "email": return <Mail size={17} />;
+                case "website": return <Globe size={17} />;
                 case "whatsapp": return <img src={whatsapp} alt="whatsapp" width={17} />;
                 case "facebook": return <img src={facebook} alt="facebook" width={17} />;
                 case "instagram": return <img src={instagram} alt="instagram" width={17} />;
@@ -352,7 +355,7 @@ const RightPanel = ({ card, onClose }) => {
         );
     };
 
-    
+
     const renderPhotos = () => (
         <div className={styles["tab-content"]}>
             <div className={styles["photos-grid"]}>
@@ -364,10 +367,10 @@ const RightPanel = ({ card, onClose }) => {
         </div>
     );
 
-    
+
     const renderBook = () => {
         if (details.section !== "hotels") {
-            
+
             return null;
         }
         return (

@@ -18,7 +18,7 @@ function Tooltip({ text }) {
 }
 
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 4;
 
 function Section({ title, destinations, showTooltip, tooltipText, loading, isSearch, onLikeToggle }) {
     const [visible, setVisible] = useState(PAGE_SIZE);
@@ -120,7 +120,7 @@ function Tours() {
 
     return (
         <>
-            {}
+            { }
             <div className={styles.heroWrapper}>
                 <div className={styles.toursHero}>
                     <span className={styles.heroEyebrow}>Discover Jordan</span>
@@ -135,7 +135,7 @@ function Tours() {
 
             <div className={styles.toursPage}>
                 {isSearching ? (
-                    
+
                     <div className={styles.searchWrapper}>
                         <Section
                             title={`Search results for "${query}"`}
@@ -149,7 +149,7 @@ function Tours() {
                         </div>
                     </div>
                 ) : (
-                    
+
                     <>
                         <Section title="Top Destinations" destinations={byRating.slice(0, 10)} loading={loading} onLikeToggle={handleLikeToggle} />
                         <Section title="Trending" destinations={byLikes.slice(0, 10)} loading={loading} onLikeToggle={handleLikeToggle} />

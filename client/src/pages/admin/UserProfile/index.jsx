@@ -207,11 +207,11 @@ function UserProfile() {
     navigate(`/admin/settings?tab=${encodeURIComponent(targetTab)}`);
   };
 
-  
+
   const badges = user?.earned_quest_badges ?? [];
   const [showAllBadges, setShowAllBadges] = useState(false);
 
-  
+
   const stats = {
     xp: user?.total_xp ?? 0,
     photosNumber: user?.uploaded_photos ?? 0,
@@ -250,7 +250,7 @@ function UserProfile() {
             </label>
           </div>
 
-          {}
+          { }
           {showAvatarPopup && (
             <div className={styles.avatarPopupOverlay} onClick={() => setShowAvatarPopup(false)}>
               <div className={styles.avatarPopup} onClick={(e) => e.stopPropagation()}>
@@ -275,7 +275,7 @@ function UserProfile() {
             <p className={styles.userEmail}>{currentProfileData.email}</p>
             <div className={styles.badgeRow}>
               <span className={styles.roleBadge}>{currentProfileData.role}</span>
-              {}
+              { }
             </div>
           </div>
         </div>
@@ -291,16 +291,16 @@ function UserProfile() {
                 {(showAllBadges ? badges : badges.slice(0, 4)).map((badge) => (
                   <div
                     key={badge._id ?? badge.quest_id}
-                    className={`${styles.achievementItem} ${badge.is_rare ? styles.achievementRare : ""}`}
+                    className={`${styles.achievementItem}`}
                   >
-                    <div className={`${styles.achievementIcon} ${badge.is_rare ? styles.achievementVeteran : styles.achievementVerified}`}>
+                    <div className={`${styles.achievementIcon} `}>
                       <img
                         src={badge.icon_url}
                         alt={badge.title_en}
                         className={styles.badgeImg}
                       />
                     </div>
-                    <span className={styles.achievementLabel}>{badge.title_en}</span>
+                    {/* <span className={styles.achievementLabel}>{badge.title_en}</span> */}
                   </div>
                 ))}
               </div>

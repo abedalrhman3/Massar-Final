@@ -81,7 +81,7 @@ function TutorialOverlay({ onDone }) {
     else onDone();
   };
 
-  
+
   const tipStyle = hlRect
     ? step.circle
       ? {
@@ -114,7 +114,7 @@ function TutorialOverlay({ onDone }) {
 
   return (
     <>
-      {}
+      { }
       <div
         onClick={onDone}
         style={{
@@ -125,10 +125,10 @@ function TutorialOverlay({ onDone }) {
         }}
       />
 
-      {}
+      { }
       {hlRect && <div style={hlStyle} />}
 
-      {}
+      { }
       <div
         style={{
           ...tipStyle,
@@ -152,7 +152,7 @@ function TutorialOverlay({ onDone }) {
           {step.desc}
         </div>
 
-        {}
+        { }
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 5 }}>
             {TUTORIAL_STEPS.map((_, i) => (
@@ -203,7 +203,7 @@ function Home() {
   const { user } = useAuth();
   const [showTutorial, setShowTutorial] = useState(false);
 
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % images.length);
@@ -211,10 +211,10 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  
+
   useEffect(() => {
     if (user) {
-      const key = `massar_tutorial_seen_${user.uid}`; 
+      const key = `massar_tutorial_seen_${user.uid}`;
       if (!localStorage.getItem(key)) {
         const t = setTimeout(() => setShowTutorial(true), 600);
         return () => clearTimeout(t);
@@ -223,7 +223,7 @@ function Home() {
   }, [user]);
 
   const handleTutorialDone = () => {
-    const key = `massar_tutorial_seen_${user.uid}`; 
+    const key = `massar_tutorial_seen_${user.uid}`;
     localStorage.setItem(key, "true");
     setShowTutorial(false);
   };
@@ -282,7 +282,7 @@ function Home() {
           <button
             className={styles.learnMoreBtn}
             style={{ zIndex: 100, position: "relative" }}
-            onClick={() => navigate("/destinations/wadi-rum")}
+            onClick={() => navigate("/destinations/wadi-rum-1")}
           >
             learn more
           </button>
@@ -334,7 +334,7 @@ function Home() {
           </figcaption>
           <button
             className={styles.learnMoreBtn}
-            onClick={() => navigate("/destinations/dead-sea-1")}
+            onClick={() => navigate("/destinations/the-dead-sea")}
           >
             learn more
           </button>

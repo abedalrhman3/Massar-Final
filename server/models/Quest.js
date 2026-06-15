@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const questSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    title_en: { type: String },
+    title: { type: String },
+    title_en: { type: String, required: true },
     description: { type: String },
-    description_en: { type: String },
+    description_en: { type: String, required: true },
     locations: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -21,11 +21,11 @@ const questSchema = new mongoose.Schema(
       lng: { type: Number },
     },
 
-    
-    
-    
-    
-    
+
+
+
+
+
     ai_requirement: { type: String, default: null },
   },
   { timestamps: true }
