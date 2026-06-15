@@ -4,8 +4,8 @@
 }
 
 .avatar {
-    width: 38px;
-    height: 38px;
+    width: 5rem;
+    height: 5rem;
     border-radius: 50%;
     background: white;
     color: black;
@@ -23,6 +23,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top;
 }
 
 /* Show dropdown on hover */
