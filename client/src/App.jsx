@@ -36,7 +36,7 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminUserProfile from "./pages/admin/UserProfile";
 import AdminChat from "./pages/admin/AdminChat";
 import Game from "./pages/admin/Game/index";
-import Locations from "./pages/admin/Game/locations/index";
+import Locations from "./pages/admin/Game/Locations/index";
 import BudgetSettings from "./pages/admin/Game/BudgetSettings/index";
 import Quests from "./pages/admin/Game/Quests/index";
 import Reports from "./pages/admin/Game/Reports/index"
